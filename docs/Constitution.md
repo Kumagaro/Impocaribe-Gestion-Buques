@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.9.1 |
+| Versión | 1.0.0 |
 | Fecha | 2026-10-12 |
-| Estado | Propuesta para ratificar |
+| Estado | Ratificada · lista para implementación |
 | Ámbito | Todo el código, specs, planes y tareas del repositorio |
 
 Este documento fija los principios que no se negocian durante el desarrollo. Toda spec, plan, tarea o línea de código debe cumplirlos. Si algo los contradice, gana la constitución, y si la constitución está equivocada, se enmienda siguiendo la sección 10, nunca se ignora.
@@ -307,14 +307,4 @@ Constitution.md  →  spec.md + ui-spec.md  →  plan.md  →  tasks.md  →  im
 
 | Versión | Fecha | Cambio |
 |---|---|---|
-| 1.0.0 | 2026-10-12 | Versión inicial |
-| 1.9.1 | 2026-10-12 | Proceso SDD: `ui-spec.md` como parte de la spec |
-| 1.9.0 | 2026-10-12 | Artículo XII: recursos limitados (servidor en 4 GB de RAM) |
-| 1.8.0 | 2026-10-12 | Artículo XIV.9: validación de campos con errores, advertencias y ayudas |
-| 1.7.0 | 2026-10-12 | Escrituras idempotentes (D15), ediciones simultáneas detectadas (Art. II.5 y II.6) |
-| 1.6.0 | 2026-10-12 | Artículo XV (apagones), D14 (un solo servidor), tres instaladores, creación del servidor desde la app, dos montajes de red, descubrimiento, identidad del servidor y emparejamiento |
-| 1.5.0 | 2026-10-12 | Artículo XIV: interfaces completas, fluidas y propias de teléfono, tablet y escritorio; Motion e iconos animados; pruebas de interfaz conectada al servidor; WebView mínimo en Android |
-| 1.4.0 | 2026-10-12 | Artículo XIII sobre pruebas, umbrales de mutación y cobertura, números nunca reutilizados, sesiones absolutas, nuevo conteo del plazo y correcciones en DM vencidas |
-| 1.3.0 | 2026-10-12 | Interfaz incluida en cada app, copia local cifrada sincronizada con el servidor, actualizaciones con versión mínima, Android 7 explícito |
-| 1.2.0 | 2026-10-12 | Firma oficial y cuño oficial únicos de la empresa; camión con uno o más remolques |
-| 1.1.0 | 2026-10-12 | Asignaciones de una DM a varios buques, motivo obligatorio en decisiones, camión repetido con decisión, aviso al día 25 y reactivación de DM |
+| 1.0.0 | 2026-10-12 | Versión ratificada para la implementación. Consolida todas las revisiones de borrador hechas durante la especificación del MVP |

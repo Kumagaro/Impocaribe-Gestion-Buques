@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.6.0 (borrador) |
+| Versión | 1.0.0 |
 | Fecha | 2026-10-12 |
-| Spec | `spec.md` 1.9.0 (secciones 5.19 a 5.23) |
-| Constitución | 1.9.0 (Artículos VIII, XII, XIV y XV) |
-| Estado | En revisión |
+| Spec | `spec.md` 1.0.0 (secciones 5.19 a 5.23) |
+| Constitución | 1.0.0 (Artículos VIII, XII, XIV y XV) |
+| Estado | Aprobada · lista para implementación |
 
 Este documento dice **qué ve y qué puede hacer** el usuario en cada pantalla, en teléfono, tablet y escritorio. No dice cómo se programa: eso va en el plan. Las maquetas que se aprueban en las tareas deben cumplir lo que dice aquí.
 

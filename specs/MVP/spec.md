@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 1.10.0 |
+| Versión | 1.0.0 |
 | Fecha | 2026-10-12 |
-| Constitución | 1.9.1 |
-| Estado | Aprobada, con una verificación legal pendiente (ACLARAR-23) |
-| Parte 2 | `ui-spec.md` 1.6.0: especificación de interfaz por pantalla y catálogo de campos |
+| Constitución | 1.0.0 |
+| Estado | Aprobada · lista para implementación (la verificación legal ACLARAR-23 sigue abierta y no bloquea) |
+| Parte 2 | `ui-spec.md` 1.0.0: especificación de interfaz por pantalla y catálogo de campos |
 | Fuente | Prototipo `Ordenes-de-Carga-IMPOCARIBE.html` (9 vistas), Excel de Impocaribe y decisiones del responsable |
 
 Esta spec describe **qué** hace el sistema y **por qué**. No menciona tecnología: eso va en `plan.md`.

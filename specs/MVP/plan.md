@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versión | 0.11.0 (borrador) |
+| Versión | 1.1.0 |
 | Fecha | 2026-10-12 |
-| Spec | `spec.md` 1.10.0 y `ui-spec.md` 1.6.0 |
-| Constitución | 1.9.1 |
-| Estado | En revisión |
+| Spec | `spec.md` 1.0.0 y `ui-spec.md` 1.0.0 |
+| Constitución | 1.0.0 |
+| Estado | Aprobado · listo para implementación |
 
 Este documento describe **cómo** se construye lo que pide la spec. Cada decisión cita los requisitos (RF, RNF) o los artículos de la constitución que la motivan.
 
@@ -1175,3 +1175,69 @@ Aplica el **Artículo XIII** de la constitución: las pruebas confirman que el c
 | R-15 | UPS sin conexión USB: Windows no sabe que funciona con batería | La guía recomienda un UPS con USB. Sin él, el sistema depende de que PostgreSQL resista el apagado brusco, que sí lo hace |
 | R-16 | El aviso de apagado solo funciona si la app de escritorio está abierta en la PC servidor | La app se configura para iniciarse con Windows en la PC servidor |
 | R-12 | Carga de aprobación: maquetas y referencias visuales de unas 27 pantallas, en 3 clases y 2 temas | Aprobación por fases, junto con cada grupo de tareas, y referencias limitadas a los estados clave |
+
+## 13. Creación del proyecto, entorno de desarrollo y flujo de trabajo
+
+El código empieza desde cero. Esta sección fija cómo se crea el proyecto y cómo se trabaja en él.
+
+### 13.1 Equipo de desarrollo
+
+| Requisito | Versión o detalle | Para qué |
+|---|---|---|
+| Sistema operativo | Windows 10 u 11 de 64 bits (recomendado) | Electron, el ayudante de instalación, los servicios de Windows y los instaladores solo se prueban de verdad en Windows |
+| Node.js | LTS vigente, fijada en `.nvmrc` y en `engines` | Todo el monorepo |
+| pnpm | Fijada en `packageManager` del `package.json` raíz (Corepack) | Espacios de trabajo |
+| Git | Reciente, con `core.autocrlf=false` | Control de versiones |
+| PostgreSQL | 16, instalado como servicio local (o en Docker si está disponible) | Desarrollo y pruebas de integración contra base real |
+| JDK y Android SDK | La versión de JDK que exija la versión de Capacitor elegida; SDK con API 24 (Android 7) y API 34 (Android 14), y sus emuladores | App Android y pruebas de humo |
+| Máquinas virtuales | Windows 10 y Windows 11 limpias, una con 4 GB de RAM | Pruebas de instalación y de consumo |
+| Editor | VS Code con las extensiones recomendadas del repositorio | Uniformidad |
+
+El script `pnpm doctor` comprueba todo lo anterior y explica qué falta.
+
+### 13.2 Repositorio
+
+```
+impocaribe-ordenes/
+├─ Constitution.md
+├─ README.md                 # Qué es, cómo arrancar, enlaces a specs y a docs/
+├─ docs/
+│  ├─ desarrollo.md          # Entorno, comandos y flujo de trabajo
+│  └─ referencia/            # Prototipo HTML aprobado (solo lectura)
+├─ specs/001-mvp/            # spec, ui-spec, plan, tasks
+├─ packages/                 # shared, server, web, desktop, android
+├─ setup/  build/            # Ayudante de instalación y generación de instaladores
+├─ fixtures/                 # Escenario del Excel (T de la fase F0)
+├─ .github/ o equivalente    # CI y plantilla de revisión
+├─ .nvmrc  .editorconfig  .gitattributes  .gitignore  .env.example
+└─ pnpm-workspace.yaml  package.json  tsconfig.base.json
+```
+
+- **Nada de secretos en el repositorio.** Solo `.env.example` con valores de ejemplo; el código de instalación, las contraseñas y las claves nunca se suben.
+- **`.gitattributes`** fija los finales de línea y marca como binarios los PDF de referencia, las imágenes y las capturas visuales.
+- Los datos reales del Excel no se suben: solo el fixture anonimizado si el responsable lo pide (T del escenario Excel).
+
+### 13.3 Flujo de trabajo por tarea
+
+1. Crear una rama `tNNN-descripcion-corta` desde `main`.
+2. Leer la tarea y las secciones del mapa de lectura.
+3. Escribir las pruebas y verlas fallar (Constitución, Art. XIII).
+4. Implementar.
+5. `pnpm verify` en verde.
+6. Commits con el prefijo de la tarea (`T042: …`).
+7. Solicitud de integración con la plantilla, que repite la definición de terminado como lista de comprobación.
+8. Revisión del responsable cuando la tarea lo exige (maquetas, referencias visuales, escenario Excel); integración en `main` solo con CI en verde.
+
+### 13.4 Integración continua
+
+En cada envío a una rama y antes de integrar en `main`:
+
+| Trabajo | Sistema | Qué ejecuta |
+|---|---|---|
+| Verificación | Linux | Tipos, lint, unitarias, propiedades, integración con PostgreSQL 16, mutación incremental, cobertura, contrato y componentes |
+| Escritorio | Windows | Compilación de Electron e instaladores; pruebas que dependen de Windows |
+| Android | Linux con SDK | Compilación del APK de depuración |
+| Nocturno | Linux | Mutación completa, extremo a extremo y regresión visual |
+
+Mientras no exista un servicio de CI, `pnpm verify` se ejecuta obligatoriamente en un hook previo al envío.
+
