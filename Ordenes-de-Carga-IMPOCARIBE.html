@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Órdenes de Carga Impocaribe</title>
+<style>
+:root{
+  --ink:#14202B; --ink-2:#4A5C6B; --ink-3:#7A8B99;
+  --ground:#EFF3F6; --surface:#FFFFFF; --surface-2:#F7F9FB;
+  --line:#D3DDE5; --line-2:#E6ECF1;
+  --accent:#1A3E96; --accent-soft:#E4EAF7; --accent-ink:#15327A;
+  --mk-azul:#16368C; --mk-gris:#8A8A80;
+  --ok:#1B7A4B; --ok-soft:#E2F2E9;
+  --warn:#9A5B02; --warn-soft:#FBEFD9;
+  --bad:#AE241C; --bad-soft:#FBE6E4;
+  --shadow:0 1px 2px rgba(20,32,43,.08), 0 4px 12px rgba(20,32,43,.05);
+  --ui:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:Consolas,"SF Mono",Menlo,"DejaVu Sans Mono",monospace;
+  --doc:"Times New Roman",Times,serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#E3EBF2; --ink-2:#9CB0C0; --ink-3:#71879A;
+    --ground:#0D141C; --surface:#151F2A; --surface-2:#1B2733;
+    --line:#2B3A48; --line-2:#233140;
+    --accent:#7B9DE8; --accent-soft:#16203A; --accent-ink:#A8C1F2;
+    --mk-azul:#7B9DE8; --mk-gris:#A8A89C;
+    --ok:#4FBB84; --ok-soft:#122A20;
+    --warn:#D89B3C; --warn-soft:#2E2312;
+    --bad:#E4746A; --bad-soft:#331716;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --mk-azul:#7B9DE8; --mk-gris:#A8A89C;
+  --ink:#E3EBF2; --ink-2:#9CB0C0; --ink-3:#71879A;
+  --ground:#0D141C; --surface:#151F2A; --surface-2:#1B2733;
+  --line:#2B3A48; --line-2:#233140;
+  --accent:#7B9DE8; --accent-soft:#16203A; --accent-ink:#A8C1F2;
+    --mk-azul:#7B9DE8; --mk-gris:#A8A89C;
+  --ok:#4FBB84; --ok-soft:#122A20;
+  --warn:#D89B3C; --warn-soft:#2E2312;
+  --bad:#E4746A; --bad-soft:#331716;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none !important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:224px 1fr;min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;padding:16px 12px}
+.brand{padding:4px 8px 16px;border-bottom:1px solid var(--line-2);margin-bottom:12px}
+.brand b{display:block;font-size:15px;letter-spacing:-.01em}
+.brand span{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:8px 10px;color:var(--ink-2);cursor:pointer;font-size:13.5px}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.nav .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55;flex:none}
+.side-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line-2);font-size:11.5px;color:var(--ink-3);display:flex;flex-direction:column;gap:8px}
+.offline{display:flex;align-items:center;gap:7px;color:var(--ok);font-weight:600}
+.offline::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.themebtn{background:none;border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink-2);cursor:pointer;font-size:11.5px}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top h1{margin:0;font-size:16px;font-weight:650;letter-spacing:-.01em}
+.top .sub{font-size:12.5px;color:var(--ink-3)}
+.user{margin-left:auto;display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-2)}
+.avatar{width:27px;height:27px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.02em}
+.role{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3)}
+.view{padding:22px 24px 48px;max-width:1180px}
+.demo-note{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 32%,transparent);color:var(--warn);border-radius:7px;padding:9px 13px;font-size:12.5px;margin-bottom:20px}
+.demo-note b{color:var(--warn)}
+/* ---------- pieces ---------- */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:22px}
+.stat{background:var(--surface);padding:13px 15px}
+.stat .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3)}
+.stat .v{font-size:23px;font-weight:650;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
+.stat .n{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.stat.alert .v{color:var(--bad)}
+.stat.good .v{color:var(--ok)}
+
+h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);margin:0 0 11px;font-weight:650}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:24px}
+.panel-h{padding:12px 15px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.panel-h h3{margin:0;font-size:14px;font-weight:650}
+.panel-h .muted{font-size:12px;color:var(--ink-3)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:650;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--surface-2)}
+.num{font-variant-numeric:tabular-nums;text-align:right;font-family:var(--mono);font-size:12.5px}
+.code{font-family:var(--mono);font-size:12.5px;letter-spacing:-.01em}
+.nowrap{white-space:nowrap}
+.who{font-size:12px;color:var(--ink-2)}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:11px;font-size:11px;font-weight:650;letter-spacing:.01em;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.info{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.mute{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
+
+.bar{position:relative;height:7px;border-radius:4px;background:var(--line-2);overflow:hidden;min-width:96px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:var(--accent);display:block}
+.bar i.full{background:var(--ok)}
+.bar i.low{background:var(--warn)}
+.barwrap{display:flex;align-items:center;gap:9px}
+.barpct{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:36px;text-align:right}
+
+.btn{text-transform:none;letter-spacing:normal;display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:7px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:none;color:var(--ink-2);border-color:var(--line)}
+.btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.spacer{margin-left:auto}
+
+/* forms */
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:15px;padding:16px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.wide{grid-column:1/-1}
+label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:650}
+input,select{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13.5px;width:100%}
+input:disabled,select:disabled{color:var(--ink-2)}
+.auto{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--accent-ink);font-weight:600}
+.hint{font-size:11px;color:var(--ink-3)}
+.hint.auto-h{color:var(--accent)}
+input.err{border-color:var(--bad);background:var(--bad-soft)}
+.msg{display:flex;gap:8px;align-items:flex-start;padding:10px 13px;border-radius:7px;font-size:12.5px;margin:0 16px 14px}
+.msg.bad{background:var(--bad-soft);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 30%,transparent)}
+.msg.ok{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
+.msg b{display:block;margin-bottom:1px}
+/* saldo card */
+.saldo{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--line-2);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.saldo div{background:var(--surface-2);padding:11px 14px}
+.saldo .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.saldo .v{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.saldo .v.bad{color:var(--bad)} .saldo .v.ok{color:var(--ok)} .saldo .v.warn{color:var(--warn)}
+
+/* timeline cliente */
+.steps{display:flex;flex-wrap:wrap;gap:0;padding:4px 0}
+.step{display:flex;align-items:center;gap:7px;padding:5px 13px 5px 0;font-size:12px;color:var(--ink-3)}
+.step .mk{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:9px;flex:none;background:var(--surface)}
+.step.done{color:var(--ink-2)} .step.done .mk{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.now{color:var(--accent-ink);font-weight:650} .step.now .mk{border-color:var(--accent);background:var(--accent-soft)}
+.step::after{content:"";width:15px;height:1px;background:var(--line);margin-left:6px}
+.step:last-child::after{display:none}
+
+/* documento impreso */
+.paper-wrap{background:var(--surface-2);padding:22px;display:flex;justify-content:center;overflow-x:auto}
+.paper{background:#fff;color:#000;width:660px;min-width:660px;padding:26px 30px;border:1px solid #000;font-family:var(--doc);font-size:12.5px;line-height:1.55}
+.paper h4{text-align:center;font-size:14px;margin:0 0 16px;font-weight:700;text-decoration:none}
+.paper .ln{border-bottom:1px solid #000;display:inline-block;min-width:120px}
+.paper .row{display:flex;gap:18px;margin-bottom:9px;flex-wrap:wrap}
+.paper .lbl{white-space:nowrap}
+.paper table{width:100%;font-size:12px;border-collapse:collapse;margin:8px 0 4px;color:#000}
+.paper table th{background:none;color:#000;font-family:var(--doc);text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;text-decoration:underline;border:0;padding:3px 4px;text-align:left}
+.paper table td{border:0;border-bottom:1px solid #000;padding:5px 4px;color:#000}
+.paper .rule{border-top:1px solid #000;margin:9px 0}
+.paper .small{font-size:11px;font-weight:700}
+.paper .sig{display:flex;align-items:flex-end;gap:14px;margin-top:8px}
+.stamp{width:88px;height:52px;border:2px solid #12457c;border-radius:50%/40%;display:grid;place-items:center;text-align:center;color:#12457c;font-size:7.5px;font-weight:700;line-height:1.15;transform:rotate(-6deg);letter-spacing:.02em}
+.paper .anul{color:#AE241C;border:3px solid #AE241C;padding:3px 14px;font-weight:700;letter-spacing:.1em;transform:rotate(-11deg);display:inline-block;font-size:16px;position:absolute;top:120px;left:50%}
+.paper-rel{position:relative}
+
+/* versiones */
+.vers{display:flex;flex-direction:column;gap:0}
+.ver{display:flex;gap:13px;padding:13px 15px;border-bottom:1px solid var(--line-2)}
+.ver:last-child{border-bottom:0}
+.ver .mk{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+.ver.v-anul .mk{background:var(--bad)} .ver.v-ok .mk{background:var(--ok)} .ver.v-draft .mk{background:var(--warn)}
+.ver .body{min-width:0;flex:1}
+.ver .t{font-size:13px;font-weight:650;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ver .m{font-size:12px;color:var(--ink-3);margin-top:2px}
+.ver .m em{font-style:normal;color:var(--ink-2)}
+
+/* errores */
+.errlist{display:flex;flex-direction:column}
+.err-i{display:flex;gap:13px;padding:13px 15px;border-bottom:1px solid var(--line-2)}
+.err-i:last-child{border-bottom:0}
+.err-n{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--bad);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.2}
+.err-b{min-width:0}
+.err-b b{display:block;font-size:13.5px;margin-bottom:2px}
+.err-b p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.err-b .ev{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-top:5px;display:block}
+
+/* login */
+.login{max-width:352px;margin:44px auto;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);overflow:hidden}
+.login-h{padding:22px 22px 4px;text-align:center}
+.login-h b{font-size:16px;display:block}
+.login-h span{font-size:12px;color:var(--ink-3)}
+.users{display:flex;flex-direction:column;gap:1px;background:var(--line-2);margin-top:16px;border-top:1px solid var(--line-2)}
+.users button{background:var(--surface);border:0;padding:12px 18px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:11px}
+.users button:hover{background:var(--surface-2)}
+.users .avatar{width:31px;height:31px;font-size:11.5px}
+.users .nm{font-size:13.5px;font-weight:600}
+.users .rl{font-size:11px;color:var(--ink-3)}
+
+.btn.mini{padding:3px 9px;font-size:11.5px;border-radius:5px}
+
+/* carga de cuño y firma */
+.paper .sig img{max-height:44px;max-width:118px;object-fit:contain;vertical-align:bottom}
+
+/* marca del cliente */
+.logo-svg{display:block;height:auto}
+.side .logo-svg{width:172px}
+.marca .logo-svg{width:186px}
+.paper .logo-svg{width:150px}
+.marca{margin-left:auto;display:flex;align-items:center;gap:13px}
+.marca .razon{text-align:right;line-height:1.25}
+.marca .razon b{display:block;font-size:12.5px;font-weight:650}
+.marca .razon span{display:block;font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.sesion{display:flex;align-items:center;gap:8px;padding-top:2px}
+.sesion .avatar{width:24px;height:24px;font-size:9.5px}
+.sesion .s-n{font-size:11.5px;color:var(--ink-2);line-height:1.2}
+.sesion .s-r{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.paper-logo{height:44px;width:auto}
+.paper .logo-svg{--mk-azul:#16368C;--mk-gris:#8A8A80}
+
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .side{flex-direction:row;align-items:center;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;gap:10px}
+  .brand{border:0;padding:0 10px 0 0;margin:0;flex:none}
+  .brand span{display:none}
+  .nav{flex-direction:row;gap:4px}
+  .nav button{white-space:nowrap;padding:7px 11px}
+  .side-foot{margin:0 0 0 auto;border:0;padding:0;flex-direction:row;align-items:center;flex:none}
+  .view{padding:16px 14px 40px}
+  .top{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <b>Órdenes de Carga</b>
+      <span>Impocaribe SURL</span>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-v="tablero" aria-current="true"><i class="dot"></i>Tablero</button>
+      <button data-v="dm"><i class="dot"></i>Embarques (DM)</button>
+      <button data-v="buscar"><i class="dot"></i>Buscar por DM</button>
+      <button data-v="nueva"><i class="dot"></i>Nueva orden</button>
+      <button data-v="editar"><i class="dot"></i>Editar orden</button>
+      <button data-v="orden"><i class="dot"></i>Orden impresa</button>
+      <button data-v="anular"><i class="dot"></i>Anular y reiniciar</button>
+      <button data-v="errores"><i class="dot"></i>Errores detectados</button>
+      <button data-v="acceso"><i class="dot"></i>Acceso y permisos</button>
+    </nav>
+    <div class="side-foot">
+      <div class="sesion">
+        <span class="avatar" id="ua">YG</span>
+        <span><span class="s-n" id="un">Yahisa García Acosta</span><br><span class="s-r" id="ur">Apoderada</span></span>
+      </div>
+      <span class="offline">Funciona sin internet</span>
+      <span>Datos en este equipo · copia en USB</span>
+      <button class="themebtn" id="theme">Cambiar tema</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div>
+        <h1 id="vt">Tablero de extracción</h1>
+        <div class="sub" id="vs">Puerto Habana · Terminal Haiphong</div>
+      </div>
+      <div class="marca">
+        <div class="razon">
+          <b>Agencia Importadora Caribe S.U.R.L.</b>
+          <span>Miramar, Playa · La Habana</span>
+        </div>
+        <svg class="logo-svg" viewBox="0 0 340 78" role="img" aria-label="Impocaribe SURL" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(4,4)">
+    <path d="M54 7 A32.5 32.5 0 1 0 54 63" fill="none" stroke="var(--mk-gris)" stroke-width="11" stroke-linecap="butt"/>
+    <g fill="none" stroke="var(--mk-azul)" stroke-width="3.1">
+      <circle cx="35" cy="35" r="22.5"/>
+      <ellipse cx="35" cy="35" rx="9" ry="22.5"/>
+      <ellipse cx="35" cy="35" rx="9" ry="22.5" transform="rotate(60 35 35)"/>
+      <ellipse cx="35" cy="35" rx="9" ry="22.5" transform="rotate(120 35 35)"/>
+      <line x1="12.5" y1="35" x2="57.5" y2="35"/>
+    </g>
+    <circle cx="35" cy="35" r="4.4" fill="var(--mk-azul)"/>
+  </g>
+  <text x="76" y="42" font-family="Segoe UI,system-ui,Arial,sans-serif" font-size="30" font-weight="700" letter-spacing="2.4" fill="var(--mk-azul)">IMPOCARIBE</text>
+  <text x="78" y="63" font-family="Segoe UI,system-ui,Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="5.5" fill="var(--mk-gris)">SURL</text>
+</svg>
+      </div>
+    </header>
+    <main class="view" id="view"></main>
+  </div>
+</div>
+<script>
+/* ============ DATOS REALES (Excel "Orden De Carga puerto habana ULTIMO2") ============ */
+const RAW = {"dms": [{"dm": "00436", "marca": "ARMALIN ALMIRAL", "cliente": "PANNIS S.U.R.L.", "tonTot": 123.75, "tonCar": 57.6, "bbTot": 155, "bbCar": 72, "pendExcel": 18.15, "bbPendExcel": 83}, {"dm": "00435", "marca": "ARMALIN ALMIRAL", "cliente": "GA&A S.R.L.", "tonTot": 19.75, "tonCar": 17.44, "bbTot": 25, "bbCar": 24, "pendExcel": 2.31, "bbPendExcel": 1}, {"dm": "00437", "marca": "DELICIA DYD", "cliente": "EDDY ALEXI ROMERO DÍAZ", "tonTot": null, "tonCar": 175.18, "bbTot": 0, "bbCar": 240, "pendExcel": -223.18, "bbPendExcel": -240}, {"dm": "00443", "marca": "DELICIA DYD", "cliente": "ILÉN FERNÁNDEZ PÉREZ", "tonTot": 24.5, "tonCar": 0, "bbTot": 31, "bbCar": 0, "pendExcel": 24.5, "bbPendExcel": 31}, {"dm": "00431", "marca": "DOSEL", "cliente": "NUEVOS TIEMPOS S.R.L.", "tonTot": 900.25, "tonCar": 480.44, "bbTot": 1125, "bbCar": 649, "pendExcel": 34.81, "bbPendExcel": 476}, {"dm": "00442", "marca": "DOST (DO)", "cliente": "GRUPO COMERCIAL RB S.R.L.", "tonTot": 118.75, "tonCar": 76.8, "bbTot": 148, "bbCar": 96, "pendExcel": -30.05, "bbPendExcel": 52}, {"dm": "00434", "marca": "KENLOQUIN POLACO", "cliente": "FUSION S.R.L.", "tonTot": 631.5, "tonCar": 218.94, "bbTot": 789, "bbCar": 316, "pendExcel": 168.56, "bbPendExcel": 473}, {"dm": "00433", "marca": "PLANTIN 1 (p)", "cliente": "SLEO S.R.L.", "tonTot": 24.75, "tonCar": 0, "bbTot": 31, "bbCar": 0, "pendExcel": 24.75, "bbPendExcel": 31}, {"dm": "00432", "marca": "PLANTIN 1 (p)", "cliente": "LOS SAAVEDRAS S.U.R.L.", "tonTot": 24.75, "tonCar": 0, "bbTot": 31, "bbCar": 0, "pendExcel": 24.75, "bbPendExcel": 31}, {"dm": "00439", "marca": "YIN DYD", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "tonTot": 412.5, "tonCar": 290.04, "bbTot": 516, "bbCar": 384, "pendExcel": 26.46, "bbPendExcel": 132}, {"dm": "00441", "marca": "YIN DYD", "cliente": "JORGE LUIS VAZQUEZ HERRERA", "tonTot": 172, "tonCar": 53.66, "bbTot": 215, "bbCar": 72, "pendExcel": 94.34, "bbPendExcel": 143}, {"dm": "00440", "marca": "YIN DYD", "cliente": "BOSCARGO S.U.R.L", "tonTot": 248, "tonCar": 111.52, "bbTot": 310, "bbCar": 144, "pendExcel": 16.48, "bbPendExcel": 166}], "ordenes": [{"row": 2, "orden": 500, "fecha": "04/09/2026", "fechaISO": "2026-09-04", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "ALEXEY SARDIÑA GUTIRREZ", "cant": 24, "patio": 18.06, "nota": ""}, {"row": 3, "orden": 501, "fecha": "04/09/2026", "fechaISO": "2026-09-04", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "YOANDRY TEJIDO GONZALEZ", "cant": 24, "patio": 17.32, "nota": "CANCELADAS"}, {"row": 4, "orden": 502, "fecha": "04/09/2026", "fechaISO": "2026-09-04", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "JOSE EDUARDO FERNADEZ", "cant": 24, "patio": 18.46, "nota": "OJO"}, {"row": 5, "orden": 503, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "LUIS JAVIER MARIN DIAZ", "cant": 24, "patio": 17.24, "nota": ""}, {"row": 6, "orden": 504, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ASNEY MARCILLA MORALES", "cant": 24, "patio": 16.34, "nota": ""}, {"row": 7, "orden": 505, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "MARIO GONZALEZ CARDENAS", "cant": 24, "patio": 17.18, "nota": ""}, {"row": 8, "orden": 506, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "YASMANY TEJEDA OLIVERA", "cant": 24, "patio": 17.32, "nota": ""}, {"row": 9, "orden": 507, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "JOSE LAZARO AMADOR", "cant": null, "patio": null, "nota": "CANCELADA"}, {"row": 10, "orden": 508, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "JUAN PABLO GUANCHE RODRIGUEZ", "cant": 24, "patio": 17.52, "nota": ""}, {"row": 11, "orden": 509, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "RAFAEL GALINDO SANABRIA", "cant": 24, "patio": 17.1, "nota": ""}, {"row": 12, "orden": 510, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "MAYKEL NUÑEZ GATO", "cant": 24, "patio": 17.34, "nota": ""}, {"row": 13, "orden": 511, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "JORGE LUIS VAZQUEZ HERRERA", "marca": "ARMALIN ALMIRAL", "chofer": "FRAN JOSUE MOREJON VALDEZ", "cant": 24, "patio": 17.6, "nota": ""}, {"row": 14, "orden": 512, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ORGENIS BONNE OSORIO", "cant": 24, "patio": 16.82, "nota": ""}, {"row": 15, "orden": 513, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ORGENIS BONNE OSORIO", "cant": null, "patio": null, "nota": "CANCELADA"}, {"row": 16, "orden": 514, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "JORGE LUIS NOROÑA", "cant": 24, "patio": 17.96, "nota": ""}, {"row": 17, "orden": 515, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ANGEL FRANCISCO SEGUI VARONA", "cant": 16, "patio": 12.22, "nota": ""}, {"row": 18, "orden": 516, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "HECTOR ISMAEL CRUZ RONDON", "cant": 24, "patio": 17.24, "nota": ""}, {"row": 19, "orden": 516, "fecha": "05/09/2026", "fechaISO": "2026-09-05", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "LISBAN CHAVEZ FIGUEROIA", "cant": 24, "patio": 17.64, "nota": ""}, {"row": 20, "orden": 521, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "PEDRO GONZALES CARDENAS", "cant": 24, "patio": 17.28, "nota": ""}, {"row": 21, "orden": 522, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ROLANDO PERES GONZALEZ", "cant": 24, "patio": 18.06, "nota": ""}, {"row": 22, "orden": 523, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "JUAN FRANCISCO GONZALES CRESPO", "cant": 24, "patio": 17.2, "nota": ""}, {"row": 23, "orden": 524, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "HECTOR CRUZ ROLDON", "cant": 24, "patio": 17.82, "nota": ""}, {"row": 24, "orden": 525, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "JORGE LUIS NOROÑA", "cant": 24, "patio": 17.46, "nota": ""}, {"row": 25, "orden": 526, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ANGEL FRANCISCO SEGUI VARONA", "cant": 18, "patio": 13.98, "nota": ""}, {"row": 26, "orden": 527, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "JORGE LUIS VAZQUEZ HERRERA", "marca": "DELICIA DYD", "chofer": "EDUARDO MARALES GOMEZ", "cant": 24, "patio": 18.02, "nota": ""}, {"row": 27, "orden": 528, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "JORGE LUIS VAZQUEZ HERRERA", "marca": "DELICIA DYD", "chofer": "YOAN LADA CONSUEGRA", "cant": 24, "patio": 18.04, "nota": ""}, {"row": 28, "orden": 529, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ORGENIS BONNE OSORIO", "cant": 24, "patio": 18.08, "nota": ""}, {"row": 29, "orden": 530, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "YULIESKY PRIETO GARCIA", "cant": 24, "patio": 17.18, "nota": ""}, {"row": 30, "orden": 531, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "YANSEL BARBARO RUSSINYOL BALMORI", "cant": 24, "patio": 17.98, "nota": ""}, {"row": 31, "orden": 532, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "FELIX ARAMILLO MARRERO", "cant": 25, "patio": 16.42, "nota": ""}, {"row": 32, "orden": 533, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "JULIO CESAR PAE AMARO", "cant": 24, "patio": 16.78, "nota": ""}, {"row": 33, "orden": 534, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "JUAN PABLO GUANCHE RODRIGUEZ", "cant": 24, "patio": 16.8, "nota": ""}, {"row": 34, "orden": 535, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "MAYKEL NUÑEZ GATO", "cant": 24, "patio": 18.1, "nota": ""}, {"row": 35, "orden": 536, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "WLIFREDO MONTERREY RIOS", "cant": 24, "patio": 16.8, "nota": ""}, {"row": 36, "orden": 537, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "EDUAR BATISTA PUENTE", "cant": 24, "patio": 17.24, "nota": ""}, {"row": 37, "orden": 538, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "PEDRO ANTONIO MORENO YERO", "cant": 24, "patio": 17.44, "nota": ""}, {"row": 38, "orden": 539, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "ALBERTO CINTANA REINA", "cant": 24, "patio": 18.26, "nota": ""}, {"row": 39, "orden": 540, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "GA&A S.R.L.", "marca": "ARMALIN ALMIRAL", "chofer": "VLADIMIR FIGUEREDO FIGUEREDO", "cant": 24, "patio": 17.44, "nota": ""}, {"row": 40, "orden": 541, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "CARLOS RAFAEL RIVERA FERNANDEZ", "cant": 24, "patio": 18.42, "nota": ""}, {"row": 41, "orden": 542, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "JUAN CARLOS MIRANDA GLEZ", "cant": 24, "patio": 16.54, "nota": ""}, {"row": 42, "orden": 543, "fecha": "06/09/2026", "fechaISO": "2026-09-06", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "MAYKEL HERNANDEZ LOPEZ", "cant": 24, "patio": 17.2, "nota": ""}, {"row": 43, "orden": 544, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "MARIO GONZALEZ CARDENAS", "cant": 24, "patio": 17.2, "nota": ""}, {"row": 44, "orden": 545, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ASNEY MARCILLA MORALES", "cant": 24, "patio": 16.7, "nota": ""}, {"row": 45, "orden": 546, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "PABLO JESUS AVILAALMEIDA", "cant": 24, "patio": 18.16, "nota": ""}, {"row": 46, "orden": 547, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "PEDRO GONZALEZ CARDENAS", "cant": 24, "patio": 16.66, "nota": ""}, {"row": 47, "orden": 548, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ANGEL FRANCISCO SEGUI VARONA", "cant": 18, "patio": 13.42, "nota": ""}, {"row": 48, "orden": 549, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ORGENIS BONNE OSORIO", "cant": 24, "patio": 17.48, "nota": ""}, {"row": 49, "orden": 550, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ARAMIS GUTIERREZ AZCUY", "cant": 24, "patio": 17.52, "nota": ""}, {"row": 50, "orden": 551, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "JUAN CARLOS MIRANDA GONZALEZ", "cant": 24, "patio": 17.34, "nota": ""}, {"row": 51, "orden": 552, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "RAFAEL GALINDO SANABRIA", "cant": 24, "patio": 17.78, "nota": ""}, {"row": 52, "orden": 553, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ANTONIO PAU ESCALONA", "cant": 24, "patio": 16.6, "nota": ""}, {"row": 53, "orden": 554, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ALEXANDER FERNANDEZ SANCHEZ", "cant": 24, "patio": 17.08, "nota": ""}, {"row": 54, "orden": 555, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "LAZARO CAPOTE DOMAS", "cant": 24, "patio": 16.64, "nota": ""}, {"row": 55, "orden": 556, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "YUDELFI CRUZ ROSARIO", "cant": 24, "patio": 17.16, "nota": ""}, {"row": 56, "orden": 557, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "PANNIS S.U.R.L.", "marca": "ARMALIN ALMIRAL", "chofer": "HECTOR AGUIRRE ANAYA", "cant": null, "patio": null, "nota": ""}, {"row": 57, "orden": 558, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ERASMO RODRIGUEZ RODRIGUEZ", "cant": null, "patio": null, "nota": ""}, {"row": 58, "orden": 559, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "HECTOR CRUZ ROLDON", "cant": null, "patio": null, "nota": ""}, {"row": 59, "orden": 560, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ENRIQUE QUICUTIN ANAYA", "cant": null, "patio": null, "nota": ""}, {"row": 60, "orden": 561, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ALEXI CABRERA GONZALEZ", "cant": null, "patio": null, "nota": ""}, {"row": 61, "orden": 562, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "ALBERTO CINTANA REINA", "cant": 24, "patio": 17.58, "nota": ""}, {"row": 62, "orden": 563, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "CARLOS RAFAEL RIVERA FERNANDEZ", "cant": null, "patio": null, "nota": ""}, {"row": 63, "orden": 564, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "PANNIS S.U.R.L.", "marca": "ARMALIN ALMIRAL", "chofer": "FRAN JOSUE MOREJON VALDEZ", "cant": null, "patio": null, "nota": ""}, {"row": 64, "orden": 565, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "OTOMAR SORRILLA GUERRA", "cant": null, "patio": null, "nota": ""}, {"row": 65, "orden": 566, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "NELSON PACUAS GACOMINO MACHADO", "cant": null, "patio": null, "nota": "CANCELADA"}, {"row": 66, "orden": 567, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ONOES RAMIREZ PLANO", "cant": null, "patio": null, "nota": "CANCELADA"}, {"row": 67, "orden": 568, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ADRIEL VINAGERA GUILLON", "cant": null, "patio": null, "nota": ""}, {"row": 68, "orden": 569, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "YUNIOR RODRIGUES ACOSTA", "cant": null, "patio": null, "nota": ""}, {"row": 69, "orden": 570, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "SOENNY REYES SESE", "cant": null, "patio": null, "nota": ""}, {"row": 70, "orden": 571, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "LAZARO RAUDEL ARIAN FRANCO", "cant": null, "patio": null, "nota": ""}, {"row": 71, "orden": 572, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "YOANNIS CASOLE FAJARDO", "cant": null, "patio": null, "nota": ""}, {"row": 72, "orden": 573, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "RAFAEL RIUZ FREIGES", "cant": null, "patio": null, "nota": ""}, {"row": 73, "orden": 574, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "VICTOR IBRAHIN TRIANA LOPEZ", "cant": null, "patio": null, "nota": ""}, {"row": 74, "orden": 575, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "GRUPO COMERCIAL RB S.R.L.", "marca": "DOST (DO)", "chofer": "NEDIS RAFAEL GOMEZ LEON", "cant": null, "patio": null, "nota": ""}, {"row": 75, "orden": 576, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "GRUPO COMERCIAL RB S.R.L.", "marca": "DOST (DO)", "chofer": "REINIER RODRIGUEZ TABARES", "cant": null, "patio": null, "nota": ""}, {"row": 76, "orden": 577, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "GRUPO COMERCIAL RB S.R.L.", "marca": "DOST (DO)", "chofer": "YOANDRIS MARTINEZ PEREZ", "cant": null, "patio": null, "nota": ""}, {"row": 77, "orden": 578, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "GRUPO COMERCIAL RB S.R.L.", "marca": "DOST (DO)", "chofer": "WALTER EDUARDO REYES CORREA", "cant": null, "patio": null, "nota": ""}, {"row": 78, "orden": 579, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "YULIESKY PRIETO GARCIA", "cant": null, "patio": null, "nota": ""}, {"row": 79, "orden": 580, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "MARIO GONZALEZ CARDENAS", "cant": null, "patio": null, "nota": ""}, {"row": 80, "orden": 581, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "ASNEY MARCILLA MORALES", "cant": null, "patio": null, "nota": ""}, {"row": 81, "orden": 582, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "PEDRO GONZALEZ CARDENAS", "cant": null, "patio": null, "nota": ""}, {"row": 82, "orden": 583, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "PABLO JESUS AVILAALMEIDA", "cant": null, "patio": null, "nota": ""}, {"row": 83, "orden": 584, "fecha": "07/09/2026", "fechaISO": "2026-09-07", "cliente": "NUEVOS TIEMPOS S.R.L.", "marca": "DOSEL", "chofer": "LUIS ROLDAN RODRIGUES MOYA", "cant": null, "patio": null, "nota": ""}, {"row": 84, "orden": 585, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "ORGENIS BONNE OSORIO", "cant": 24, "patio": null, "nota": ""}, {"row": 85, "orden": 586, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "EDDY ALEXI ROMERO DÍAZ", "marca": "DELICIA DYD", "chofer": "JUAN CARLOS MIRANDA GLEZ", "cant": 24, "patio": null, "nota": ""}, {"row": 86, "orden": 587, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ADRIEL VINAGERA GUILLON", "cant": 24, "patio": null, "nota": ""}, {"row": 87, "orden": 588, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "YOANDRY TEJIDO GONZALEZ", "cant": 24, "patio": null, "nota": ""}, {"row": 88, "orden": 589, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "ALEXEY SARDIÑA GUTIRREZ", "cant": 24, "patio": null, "nota": ""}, {"row": 89, "orden": 590, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "FUSION S.R.L.", "marca": "KENLOQUIN POLACO", "chofer": "ERASMO RODRIGUEZ RODRIGUEZ", "cant": 24, "patio": null, "nota": ""}, {"row": 90, "orden": 591, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "SADRIC ABDEL ORTIZ HURTADO", "marca": "YIN DYD", "chofer": "REINIER RODRIGUEZ TABARES", "cant": 24, "patio": null, "nota": ""}, {"row": 91, "orden": 592, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "BOSCARGO S.U.R.L", "marca": "YIN DYD", "chofer": "HIBAN VERA SANCHEZ", "cant": 24, "patio": null, "nota": ""}, {"row": 92, "orden": 593, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "PANNIS S.U.R.L.", "marca": "ARMALIN ALMIRAL", "chofer": "YASMANY CARRILLO LEGORBURO", "cant": 24, "patio": null, "nota": ""}, {"row": 93, "orden": 594, "fecha": "08/09/2026", "fechaISO": "2026-09-08", "cliente": "", "marca": "", "chofer": "", "cant": null, "patio": null, "nota": ""}]};
+
+const BUQUE = {nombre:"Eagle 1", mfto:"0080/2026", bl:"B/L 1", puerto:"PUERTO HABANA — HAIPONG", comprador:"Agencia Importadora CARIBE SURL"};
+
+const USUARIOS = [
+  {ini:"YG", nom:"Yahisa García Acosta", rol:"Apoderada",  permisos:"Crea, cierra, anula y ve todo"},
+  {ini:"OP", nom:"Operador de patio",    rol:"Operador",   permisos:"Crea y edita borradores. No cierra ni anula"},
+  {ini:"CN", nom:"Consulta",             rol:"Solo lectura", permisos:"Ve el tablero y los reportes. No toca nada"}
+];
+let usuario = USUARIOS[0];
+
+/* saldos calculados por el sistema */
+function saldo(d){
+  const tt = (d.tonTot===null||d.tonTot===undefined) ? null : d.tonTot;
+  const bt = d.bbTot || 0;
+  return {
+    tonTot: tt, tonCar: d.tonCar||0,
+    tonPend: tt===null ? null : +(tt-(d.tonCar||0)).toFixed(2),
+    bbTot: bt, bbCar: d.bbCar||0,
+    bbPend: bt===0 && (d.bbCar||0)>0 ? null : bt-(d.bbCar||0),
+    faltaTotal: tt===null || (bt===0 && (d.bbCar||0)>0),
+    pct: tt ? Math.min(100,Math.round((d.tonCar||0)/tt*100)) : (bt? Math.round((d.bbCar||0)/bt*100) : 0)
+  };
+}
+const DMS = RAW.dms.map(d=>({...d, s:saldo(d)}));
+const ORD = RAW.ordenes.map(o=>({...o, estado: /CANCEL/i.test(o.nota||"") ? "anulada" : "oficial"}));
+ORD.push({orden:595, fecha:"09/09/2026", cliente:"NUEVOS TIEMPOS S.R.L.", marca:"DOSEL",
+  chofer:"LUIS JAVIER MARIN DIAZ", cant:24, patio:null, nota:"", estado:"borrador"});
+
+const fmt = n => n===null||n===undefined ? "—" : Number(n).toLocaleString("es-CU",{minimumFractionDigits:2,maximumFractionDigits:2});
+const ent = n => n===null||n===undefined ? "—" : Number(n).toLocaleString("es-CU");
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function pasoCliente(pct, faltaTotal){
+  if(faltaTotal) return 3;
+  if(pct===0) return 2;
+  if(pct>=100) return 5;
+  return 3;
+}
+const PASOS = ["En buque","Manifestada","DM presentada","En extracción","Entregada"];
+
+function stepsHTML(pct, falta){
+  const cur = pasoCliente(pct, falta);
+  return '<div class="steps">'+PASOS.map((p,i)=>{
+    const n=i+1; const cls = n<cur?"done":(n===cur?"now":"");
+    const txt = (n===4&&cur===4)?p:(n===4?p:p);
+    return `<span class="step ${cls}"><i class="mk">${n<cur?"✓":""}</i>${esc(txt)}</span>`;
+  }).join("")+'</div>';
+}
+
+/* ============ ROUTER ============ */
+const VIEWS = {};
+let actual = "tablero";
+const TIT = {
+  tablero:["Tablero de extracción","Puerto Habana · Terminal Haiphong · datos reales al 8 de septiembre de 2026"],
+  dm:["Embarques por DM","12 declaraciones activas · 2 700,50 t contratadas"],
+  buscar:["Seguimiento por DM","Escriba el número y vea el embarque completo"],
+  nueva:["Nueva orden de carga","El sistema valida contra el saldo del DM antes de imprimir"],
+  editar:["Editar orden de carga","Qué se puede cambiar y quién puede cambiarlo"],
+  orden:["Orden de carga No. 187","Documento oficial · formato de Impocaribe"],
+  anular:["Anular y reiniciar","Nada se borra: cada versión queda registrada"],
+  errores:["Errores detectados en el Excel actual","Auditoría automática del archivo vigente"],
+  acceso:["Acceso y permisos","Cada trabajador entra con su usuario"]
+};
+function refrescaVista(){
+  document.getElementById("view").innerHTML = VIEWS[actual]();
+  if(actual==="nueva") initNueva();
+  conectarAdjuntos(refrescaVista);
+}
+function ir(v){
+  actual=v;
+  document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-current", b.dataset.v===v ? "true":"false"));
+  document.getElementById("vt").textContent = TIT[v][0];
+  document.getElementById("vs").textContent = TIT[v][1];
+  document.getElementById("view").innerHTML = VIEWS[v]();
+  if(v==="nueva") initNueva();
+  if(v==="buscar") initBuscar();
+  if(v==="editar") initEditar();
+  conectarAdjuntos(refrescaVista);
+  window.scrollTo(0,0);
+}
+document.getElementById("nav").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-v]"); if(b) ir(b.dataset.v);
+});
+document.getElementById("theme").addEventListener("click",()=>{
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur==="dark" : matchMedia("(prefers-color-scheme:dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+});
+
+const NOTA = '<div class="demo-note"><b>Prototipo de demostración.</b> Construido con los datos reales del archivo Excel de Impocaribe (12 DM, 92 órdenes del 4 al 8 de septiembre de 2026). Sirve para revisar y aprobar el diseño; todavía no guarda información.</div>';
+
+/* ============ TABLERO ============ */
+VIEWS.tablero = () => {
+  const totT = DMS.reduce((a,d)=>a+(d.tonTot||0),0);
+  const carT = DMS.reduce((a,d)=>a+(d.tonCar||0),0);
+  const pendT = DMS.filter(d=>!d.s.faltaTotal).reduce((a,d)=>a+(d.s.tonPend||0),0);
+  const ofic = ORD.filter(o=>o.estado==="oficial").length;
+  const anul = ORD.filter(o=>o.estado==="anulada").length;
+  const borr = ORD.filter(o=>o.estado==="borrador").length;
+  const incompletos = DMS.filter(d=>d.s.faltaTotal).length;
+
+  const filas = DMS.slice().sort((a,b)=>b.s.pct-a.s.pct).map(d=>{
+    const s=d.s;
+    const cls = s.pct>=100?"full":(s.pct<25?"low":"");
+    const nOrd = ORD.filter(o=>o.cliente===d.cliente && o.estado!=="anulada").length;
+    return `<tr class="click" onclick="ir('dm')">
+      <td class="code">${esc(d.dm)}</td>
+      <td><div style="font-weight:600">${esc(d.cliente)}</div><div class="who">${esc(d.marca)}</div></td>
+      <td class="num">${fmt(d.tonTot)}</td>
+      <td class="num">${fmt(d.tonCar)}</td>
+      <td class="num">${s.faltaTotal?'<span class="pill bad">falta el total</span>':fmt(s.tonPend)}</td>
+      <td class="num">${ent(s.bbPend)}</td>
+      <td><div class="barwrap"><span class="bar"><i class="${cls}" style="width:${s.pct}%"></i></span><span class="barpct">${s.pct}%</span></div></td>
+      <td class="num">${nOrd}</td>
+    </tr>`;
+  }).join("");
+
+  return NOTA + `
+  <div class="strip">
+    <div class="stat"><div class="k">Contratado</div><div class="v">${fmt(totT)}</div><div class="n">toneladas · 12 DM</div></div>
+    <div class="stat good"><div class="k">Extraído</div><div class="v">${fmt(carT)}</div><div class="n">${Math.round(carT/totT*100)}% del total</div></div>
+    <div class="stat"><div class="k">Pendiente</div><div class="v">${fmt(pendT)}</div><div class="n">toneladas por sacar</div></div>
+    <div class="stat"><div class="k">Órdenes</div><div class="v">${ofic}</div><div class="n">${borr} en borrador · ${anul} anuladas</div></div>
+    <div class="stat alert"><div class="k">Requieren atención</div><div class="v">${incompletos}</div><div class="n">DM sin total declarado</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Extracción por declaración de mercancías</h3>
+      <span class="muted">Buque ${esc(BUQUE.nombre)} · Mfto ${esc(BUQUE.mfto)}</span>
+      <span class="spacer pill info">El saldo lo calcula el sistema</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>DM</th><th>Cliente / marca</th><th style="text-align:right">Total t</th><th style="text-align:right">Cargado t</th><th style="text-align:right">Pendiente t</th><th style="text-align:right">Bigbags pend.</th><th>Avance</th><th style="text-align:right">Órdenes</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Alertas de hoy</h3><span class="muted">9 de septiembre de 2026</span></div>
+    <div class="errlist">
+      <div class="err-i"><div class="err-n">2</div><div class="err-b"><b>DM sin total declarado</b><p>Los DM 00437 (Eddy Alexi Romero Díaz) y 00443 no tienen el total del embarque cargado. Sin ese dato no se puede calcular el pendiente ni frenar un sobregiro.</p><span class="ev">Detectado al importar el Excel · fila 6 de RESUMEN DE CARGA</span></div></div>
+      <div class="err-i"><div class="err-n">1</div><div class="err-b"><b>Orden en borrador desde ayer</b><p>La orden 595 de Nuevos Tiempos S.R.L. sigue sin cerrarse. Si el camión ya salió, hay que oficializarla hoy.</p><span class="ev">Creada por Operador de patio · 08/09/2026</span></div></div>
+      <div class="err-i"><div class="err-n">4</div><div class="err-b"><b>DM sin movimiento</b><p>SLEO S.R.L., Los Saavedras S.U.R.L., Ilén Fernández Pérez y Grupo Comercial RB no registran extracción esta semana. Vigilar el plazo de 30 días de la Aduana.</p><span class="ev">Decreto-Ley 162, artículo 130</span></div></div>
+    </div>
+  </div>`;
+};
+/* ============ EMBARQUES (DM) ============ */
+VIEWS.dm = () => {
+  return NOTA + DMS.slice().sort((a,b)=>a.dm.localeCompare(b.dm)).map(d=>{
+    const s=d.s;
+    const ords = ORD.filter(o=>o.cliente===d.cliente);
+    const cls = s.pct>=100?"full":(s.pct<25?"low":"");
+    const filas = ords.length ? ords.slice(0,6).map(o=>`<tr>
+        <td class="code">${o.orden}</td><td class="nowrap">${esc(o.fecha)}</td>
+        <td class="who">${esc(o.chofer)}</td>
+        <td class="num">${o.cant??"—"}</td><td class="num">${o.patio?fmt(o.patio):"—"}</td>
+        <td>${o.estado==="anulada"?'<span class="pill bad">Anulada</span>':o.estado==="borrador"?'<span class="pill warn">Borrador</span>':'<span class="pill ok">Oficial</span>'}</td>
+      </tr>`).join("")
+      : `<tr><td colspan="6" style="color:var(--ink-3);padding:16px 12px">Sin órdenes registradas. Mercancía en puerto sin extraer.</td></tr>`;
+    return `<div class="panel">
+      <div class="panel-h">
+        <h3>DM ${esc(d.dm)} · ${esc(d.cliente)}</h3>
+        <span class="muted">${esc(d.marca)} · Harina de trigo en bigbags</span>
+        <span class="spacer"></span>
+        <div class="barwrap"><span class="bar" style="min-width:120px"><i class="${cls}" style="width:${s.pct}%"></i></span><span class="barpct">${s.pct}%</span></div>
+      </div>
+      <div class="saldo">
+        <div><div class="k">Total contratado</div><div class="v ${s.tonTot===null?'bad':''}">${s.tonTot===null?"falta":fmt(s.tonTot)}</div></div>
+        <div><div class="k">Cargado</div><div class="v">${fmt(s.tonCar)}</div></div>
+        <div><div class="k">Pendiente</div><div class="v ${s.tonPend===null?'bad':(s.tonPend<=0?'ok':'warn')}">${s.tonPend===null?"no calculable":fmt(s.tonPend)}</div></div>
+        <div><div class="k">Bigbags total</div><div class="v">${s.bbTot?ent(s.bbTot):'<span style="color:var(--bad)">falta</span>'}</div></div>
+        <div><div class="k">Bigbags pend.</div><div class="v ${s.bbPend===null?'bad':''}">${s.bbPend===null?"no calculable":ent(s.bbPend)}</div></div>
+      </div>
+      <div style="padding:12px 15px 4px">${stepsHTML(s.pct, s.faltaTotal)}</div>
+      ${s.faltaTotal?`<div class="msg bad" style="margin-top:8px"><span>⚠</span><span><b>Falta el total del embarque</b>En el Excel actual este DM arrastra pendientes negativos (${fmt(d.pendExcel)} t) porque nunca se cargó el total contratado. El sistema no deja crear órdenes hasta que se registre.</span></div>`:""}
+      <div class="scroll"><table>
+        <thead><tr><th>Orden</th><th>Fecha</th><th>Chofer</th><th style="text-align:right">Bigbags</th><th style="text-align:right">Peso patio</th><th>Estado</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table></div>
+      ${ords.length>6?`<div style="padding:9px 15px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--line-2)">y ${ords.length-6} órdenes más de este cliente</div>`:""}
+    </div>`;
+  }).join("");
+};
+
+/* ============ NUEVA ORDEN ============ */
+VIEWS.nueva = () => {
+  const opts = DMS.map(d=>`<option value="${esc(d.dm)}">DM ${esc(d.dm)} — ${esc(d.cliente)}</option>`).join("");
+  return NOTA + `
+  <div class="panel">
+    <div class="panel-h"><h3>Orden de carga No. <span class="code" style="font-size:14px">596</span></h3>
+      <span class="muted">Número asignado por el sistema · 09/09/2026</span>
+      <span class="spacer pill mute">Borrador</span></div>
+
+    <div class="form">
+      <div class="field">
+        <label for="f-dm">Declaración de mercancías</label>
+        <select id="f-dm">${opts}</select>
+        <span class="hint">Al elegir el DM se completan cliente, marca, buque y manifiesto</span>
+      </div>
+      <div class="field"><label>Cliente / destinatario</label><input id="f-cli" class="auto" readonly><span class="hint auto-h">Lo trae el sistema</span></div>
+      <div class="field"><label>Marca</label><input id="f-marca" class="auto" readonly><span class="hint auto-h">Lo trae el sistema</span></div>
+      <div class="field"><label>Buque y manifiesto</label><input id="f-buque" class="auto" readonly value="${esc(BUQUE.nombre)} · Mfto ${esc(BUQUE.mfto)}"><span class="hint auto-h">Lo trae el sistema</span></div>
+
+      <div class="field"><label for="f-bb">Cantidad de bigbags</label><input id="f-bb" type="number" min="1" value="24"><span class="hint" id="h-bb">Máximo según el saldo del DM</span></div>
+      <div class="field"><label for="f-ton">Peso bruto (t)</label><input id="f-ton" type="number" step="0.01" value="17.28"><span class="hint">Peso pesado en patio</span></div>
+      <div class="field"><label for="f-trans">Transportista</label>
+        <select id="f-trans"><option>POLIMEROS DEL CARIBE</option><option>TRANSCARGA HABANA</option></select>
+        <span class="hint">Al elegirlo aparecen sus vehículos y choferes</span></div>
+      <div class="field"><label for="f-chofer">Chofer</label>
+        <select id="f-chofer">
+          <option data-ci="84011905548" data-lic="84011905548">ANTONIO PAU ESCALONA</option>
+          <option data-ci="79082114233" data-lic="79082114233">LUIS JAVIER MARIN DIAZ</option>
+          <option data-ci="82043067719" data-lic="82043067719">JUAN CARLOS MIRANDA GONZÁLEZ</option>
+          <option data-ci="85110248806" data-lic="85110248806">PEDRO GONZÁLEZ CÁRDENAS</option>
+        </select>
+        <span class="hint">Un solo nombre por chofer: se acabaron las variantes</span></div>
+      <div class="field"><label>Carné de identidad</label><input id="f-ci" class="auto" readonly><span class="hint auto-h">Del registro del chofer</span></div>
+      <div class="field"><label>Licencia de conducción</label><input id="f-lic" class="auto" readonly><span class="hint auto-h">Del registro del chofer</span></div>
+      <div class="field"><label>Chapa / remolque</label><input id="f-chapa" class="auto" readonly value="W011612 · Remolque W006877"><span class="hint auto-h">Del vehículo</span></div>
+      <div class="field"><label for="f-porte">Carta de porte</label><input id="f-porte" value="22352"><span class="hint">Se teclea cada vez</span></div>
+      <div class="field"><label for="f-lot">LOT No.</label><input id="f-lot" placeholder="—"><span class="hint">Opcional</span></div>
+      <div class="field"><label for="f-hr">Hoja de ruta No.</label><input id="f-hr" placeholder="—"><span class="hint">Opcional</span></div>
+      <div class="field"><label for="f-cont">Siglas y número del contenedor</label><input id="f-cont" placeholder="Sin contenedor"><span class="hint">Vacío si es carga suelta en bigbags</span></div>
+      <div class="field"><label for="f-fcarga">Fecha de carga</label><input id="f-fcarga" type="date" value="2026-09-09"><span class="hint">No puede ser anterior a la emisión</span></div>
+    </div>
+
+    <div class="saldo" id="saldo-box"></div>
+    <div id="alertas"></div>
+
+    <div style="padding:14px 16px;border-top:1px solid var(--line-2)" class="btnrow">
+      <button class="btn" id="btn-imp">Revisar e imprimir</button>
+      <label class="btn ghost" style="cursor:pointer">Adjuntar firma<input type="file" id="n-up-firma" accept="image/*" hidden></label>
+      <label class="btn ghost" style="cursor:pointer">Adjuntar cuño<input type="file" id="n-up-cuno" accept="image/*" hidden></label>
+      <button class="btn ghost">Guardar borrador</button>
+      <span class="spacer hint" id="n-up-est"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Qué revisa el sistema antes de imprimir</h3></div>
+    <div class="errlist">
+      <div class="err-i"><div class="err-n">1</div><div class="err-b"><b>Que no se sobregire el DM</b><p>Si los bigbags o el peso superan lo que queda del embarque, la orden no se imprime. Es la regla que hoy falta y produce los pendientes negativos.</p></div></div>
+      <div class="err-i"><div class="err-n">2</div><div class="err-b"><b>Que el número no se repita</b><p>El número lo pone el sistema en secuencia. No puede haber dos órdenes 516 ni saltos del 516 al 521.</p></div></div>
+      <div class="err-i"><div class="err-n">3</div><div class="err-b"><b>Que el camión no esté duplicado</b><p>Avisa si ese vehículo ya tiene una orden abierta el mismo día para el mismo cliente.</p></div></div>
+      <div class="err-i"><div class="err-n">4</div><div class="err-b"><b>Que el carné y la licencia estén completos</b><p>Once dígitos en el carné. Vienen del registro del chofer, no se teclean.</p></div></div>
+      <div class="err-i"><div class="err-n">5</div><div class="err-b"><b>Que el DM esté dentro del plazo</b><p>Avisa cuando se acercan los 30 días para extraer del puerto que fija la Ley de Aduanas.</p></div></div>
+    </div>
+  </div>`;
+};
+
+function initNueva(){
+  const $=id=>document.getElementById(id);
+  const sel=$("f-dm"), bb=$("f-bb"), ton=$("f-ton"), ch=$("f-chofer");
+  function pinta(){
+    const d = DMS.find(x=>x.dm===sel.value) || DMS[0];
+    const s = d.s;
+    $("f-cli").value=d.cliente; $("f-marca").value=d.marca;
+    const o=ch.selectedOptions[0]; $("f-ci").value=o.dataset.ci; $("f-lic").value=o.dataset.lic;
+    const nbb=+bb.value||0, nton=+ton.value||0;
+    const restBB = s.bbPend===null?null:s.bbPend-nbb;
+    const restT  = s.tonPend===null?null:+(s.tonPend-nton).toFixed(2);
+    $("h-bb").textContent = s.bbPend===null? "Este DM no tiene total declarado" : "Quedan "+ent(s.bbPend)+" bigbags en el embarque";
+    $("saldo-box").innerHTML = `
+      <div><div class="k">Saldo del DM ${esc(d.dm)}</div><div class="v ${s.tonPend===null?'bad':''}">${s.tonPend===null?"sin total":fmt(s.tonPend)+" t"}</div></div>
+      <div><div class="k">Esta orden</div><div class="v">${ent(nbb)} bb · ${fmt(nton)} t</div></div>
+      <div><div class="k">Quedaría</div><div class="v ${restT===null?'bad':(restT<0?'bad':(restT===0?'ok':''))}">${restT===null?"—":fmt(restT)+" t"}</div></div>
+      <div><div class="k">Bigbags restantes</div><div class="v ${restBB===null?'bad':(restBB<0?'bad':'')}">${restBB===null?"—":ent(restBB)}</div></div>`;
+    const al=[]; let bloquea=false;
+    if(s.faltaTotal){bloquea=true;al.push(`<div class="msg bad"><span>⛔</span><span><b>No se puede imprimir</b>El DM ${esc(d.dm)} no tiene el total del embarque registrado. Cárguelo primero en Embarques.</span></div>`);}
+    if(restT!==null && restT<0){bloquea=true;al.push(`<div class="msg bad"><span>⛔</span><span><b>Sobregiro del embarque</b>Esta orden pasa el saldo por ${fmt(Math.abs(restT))} t. Quedan ${fmt(s.tonPend)} t en el DM ${esc(d.dm)}.</span></div>`);}
+    if(restBB!==null && restBB<0){bloquea=true;al.push(`<div class="msg bad"><span>⛔</span><span><b>Bigbags insuficientes</b>Pide ${ent(nbb)} y solo quedan ${ent(s.bbPend)}.</span></div>`);}
+    if(nbb>0 && nton>0 && nton/nbb>0.95){al.push(`<div class="msg bad"><span>⚠</span><span><b>Peso fuera de lo normal</b>${fmt(nton/nbb)} t por bigbag. En sus registros el promedio es 0,72 t. Revise el peso de patio.</span></div>`);}
+    if(!bloquea && !al.length) al.push(`<div class="msg ok"><span>✓</span><span><b>Todo cuadra</b>La orden queda dentro del saldo del DM. Al imprimir pasa a oficial y el saldo se descuenta solo.</span></div>`);
+    $("alertas").innerHTML=al.join("");
+    ton.classList.toggle("err", restT!==null&&restT<0); bb.classList.toggle("err", restBB!==null&&restBB<0);
+    $("btn-imp").disabled = bloquea || usuario.rol==="Solo lectura";
+  }
+  [sel,bb,ton,ch].forEach(el=>el.addEventListener("input",pinta));
+  $("btn-imp").addEventListener("click",()=>ir("orden"));
+  pinta();
+}
+/* ============ ORDEN IMPRESA ============ */
+function paperHTML(anulada){
+  return `<div class="paper-rel"><div class="paper">
+    <h4>"ORDEN DE CARGA"</h4>
+    ${anulada?'<span class="anul">ANULADA</span>':''}
+    <div class="row"><span class="lbl">Fecha de Emisión: <span class="ln">29.08.2026</span></span>
+      <span class="lbl" style="margin-left:auto">No. de Orden: <span class="ln">187</span></span></div>
+    <div class="row"><span class="lbl">Nombre del Comprador Interno <span class="ln" style="min-width:290px">${esc(BUQUE.comprador)}</span></span></div>
+    <div style="margin:12px 0 4px">Se autoriza cargar en ${esc(BUQUE.puerto)},<br>
+      el día <span class="ln" style="min-width:78px">30/08/2026</span>, las mercancías que a continuación se relacionan :</div>
+    <table>
+      <thead><tr><th>Tipo de Producto</th><th>Siglas y Número del Contenedor</th><th style="text-align:right">Cantidad de Bultos</th><th style="text-align:right">Peso Bruto</th></tr></thead>
+      <tbody><tr><td>Harina De Trigo</td><td></td><td style="text-align:right">25</td><td style="text-align:right">25 000.00</td></tr></tbody>
+    </table>
+    <div class="rule"></div>
+    <div class="row small"><span>Nombre del Buque: ${esc(BUQUE.nombre)}</span><span>Mfto No. ${esc(BUQUE.mfto)}</span><span>B/L.1</span><span>DM No. 341</span></div>
+    <div style="margin:10px 0 4px">CON DESTINO A: calle 277 no 24003 entre 244 y 242 reparto Abel Santamaría, Boyeros</div>
+    <div class="rule"></div>
+    <div>Nombre del Destinatario : MPM NUEVOS TIEMPOS</div>
+    <div class="rule"></div>
+    <div style="margin-top:10px">Vehículo Perteneciente a: POLIMEROS DEL CARIBE</div>
+    <div class="small" style="margin-top:9px">Chapa No W011612&nbsp;&nbsp; LOT No.<span class="ln" style="min-width:70px"></span> Hoja Ruta No.<span class="ln" style="min-width:60px"></span> Carta Porte No 22352</div>
+    <div class="small" style="margin-top:9px">Chapa Tractivo No.<span class="ln" style="min-width:90px"></span> Remolque No W006877&nbsp;&nbsp; Remolque No.<span class="ln" style="min-width:50px"></span></div>
+    <div class="small" style="margin-top:9px">Basificado en : LA HABANA</div>
+    <div class="small" style="margin-top:9px">Conducido por : ANTONIO PAU ESCALONA</div>
+    <div class="small" style="margin-top:9px">Carné de Identidad : 84011905548 &nbsp;&nbsp;&nbsp; Licencia de Conducción No. 84011905548</div>
+    <div class="rule"></div>
+    <div class="small" style="margin-top:8px">Nombre y Apellidos del representante del Comprador Interno YAHISA GARCIA ACOSTA</div>
+    <div class="small" style="margin-top:9px">No. Credencial 00351004171201 &nbsp;&nbsp;&nbsp;&nbsp; Cargo Apoderada</div>
+    <div class="sig"><span class="small">Firma y Cuño Oficial:</span>
+      ${SELLOS.firma
+        ? `<img src="${SELLOS.firma}" alt="Firma">`
+        : '<span style="border-bottom:1px solid #000;min-width:130px;display:inline-block;height:34px"></span>'}
+      ${SELLOS.cuno
+        ? `<img src="${SELLOS.cuno}" alt="Cuño">`
+        : '<span class="stamp">CUÑO<br>OFICIAL</span>'}</div>
+  </div></div>`;
+}
+VIEWS.orden = () => NOTA + `
+  <div class="panel">
+    <div class="panel-h"><h3>Vista de impresión</h3>
+      <span class="muted">Mismo formato que usan hoy, sin cambiar una línea</span>
+      <span class="spacer pill ok">Oficial · camión salió</span></div>
+    <div class="paper-wrap">${paperHTML(false)}</div>
+    <div style="padding:14px 16px;border-top:1px solid var(--line-2)" class="btnrow">
+      <button class="btn">Imprimir</button>
+      <label class="btn ghost" style="cursor:pointer">Adjuntar firma<input type="file" id="up-firma" accept="image/*" hidden></label>
+      <label class="btn ghost" style="cursor:pointer">Adjuntar cuño<input type="file" id="up-cuno" accept="image/*" hidden></label>
+      <button class="btn ghost" id="up-quitar">Quitar</button>
+      <button class="btn ghost" onclick="ir('anular')">Anular esta orden</button>
+      <span class="spacer hint" id="up-est"></span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3>Lo que el sistema completó solo</h3><span class="muted">De 21 datos del documento, el operador teclea 5</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Dato</th><th>Origen</th></tr></thead>
+      <tbody>
+        <tr><td>No. de orden</td><td><span class="pill info">Secuencia del sistema</span></td></tr>
+        <tr><td>Comprador interno, buque, manifiesto, B/L, DM</td><td><span class="pill info">Del embarque</span></td></tr>
+        <tr><td>Destinatario y dirección</td><td><span class="pill info">Del registro de clientes</span></td></tr>
+        <tr><td>Transportista, chapa, remolque</td><td><span class="pill info">Del registro de vehículos</span></td></tr>
+        <tr><td>Chofer, carné, licencia</td><td><span class="pill info">Del registro de choferes</span></td></tr>
+        <tr><td>Representante, credencial, cargo</td><td><span class="pill info">Del usuario que firma</span></td></tr>
+        <tr><td>Producto, bultos, peso, carta de porte, fecha de carga</td><td><span class="pill mute">Se teclea</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3>Cómo se guardan la firma y el cuño</h3><span class="muted">Se cargan una vez y quedan disponibles para todas las órdenes</span></div>
+    <div class="errlist">
+      <div class="err-i"><div class="err-n">1</div><div class="err-b"><b>Solo la apoderada las carga</b><p>Ningún otro usuario puede subirlas, verlas ni descargarlas. Se guardan cifradas y ligadas a su usuario.</p></div></div>
+      <div class="err-i"><div class="err-n">2</div><div class="err-b"><b>Nunca salen en un borrador</b><p>Entran en el documento solo cuando la orden pasa a oficial.</p></div></div>
+      <div class="err-i"><div class="err-n">3</div><div class="err-b"><b>No viajan en respaldos ni exportaciones</b><p>Una copia del respaldo o del Excel exportado no lleva la firma dentro.</p></div></div>
+      <div class="err-i"><div class="err-n">4</div><div class="err-b"><b>Queda registro de cada uso</b><p>Qué orden, quién firmó, a qué hora y desde qué equipo.</p></div></div>
+    </div>
+  </div>`;
+
+/* ============ ANULAR ============ */
+VIEWS.anular = () => NOTA + `
+  <div class="panel">
+    <div class="panel-h"><h3>Orden 187 · historial completo</h3>
+      <span class="muted">Caso real: emitida el 29, corregida el 30</span></div>
+    <div class="vers">
+      <div class="ver v-anul"><i class="mk"></i><div class="body">
+        <div class="t">Versión 1 <span class="pill bad">Anulada</span></div>
+        <div class="m">29/08/2026 16:42 · anulada por <em>Yahisa García Acosta</em> el 30/08/2026 07:58</div>
+        <div class="m">Motivo registrado: <em>«contenedor mal consignado y cargo del representante incompleto»</em></div>
+      </div></div>
+      <div class="ver v-ok"><i class="mk"></i><div class="body">
+        <div class="t">Versión 2 <span class="pill ok">Oficial</span> <span class="pill mute">mismo número 187</span></div>
+        <div class="m">30/08/2026 08:14 · creada automáticamente con los datos de la versión 1 · cerrada por <em>Yahisa García Acosta</em></div>
+        <div class="m">Corregido: contenedor y cargo del representante</div>
+      </div></div>
+    </div>
+    <div class="msg ok" style="margin:14px 16px"><span>✓</span><span><b>El saldo se repuso solo</b>Al anular la versión 1, las 25 toneladas volvieron al saldo del DM. Al cerrar la versión 2, se descontaron otra vez. Nadie tuvo que ajustar nada a mano.</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Cómo se ve el documento anulado</h3><span class="muted">Se conserva, no se borra</span></div>
+    <div class="paper-wrap">${paperHTML(true)}</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Órdenes anuladas esta semana</h3><span class="muted">En el Excel eran notas sueltas: «CANCELADA», «CANCELADAS», «OJO»</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Chofer</th><th>Estado</th></tr></thead>
+      <tbody>${ORD.filter(o=>o.estado==="anulada").map(o=>`<tr>
+        <td class="code">${o.orden}</td><td class="nowrap">${esc(o.fecha)}</td>
+        <td>${esc(o.cliente)}</td><td class="who">${esc(o.chofer)}</td>
+        <td><span class="pill bad">Anulada</span></td></tr>`).join("")}</tbody>
+    </table></div>
+  </div>`;
+/* ============ BUSCAR / SEGUIMIENTO POR DM ============ */
+VIEWS.buscar = () => NOTA + `
+  <div class="panel">
+    <div class="panel-h"><h3>Buscar embarque</h3><span class="muted">Escriba el DM, el cliente o la marca</span></div>
+    <div style="padding:16px">
+      <input id="q" placeholder="Ejemplo: 00431 · Nuevos Tiempos · Dosel" autocomplete="off" style="font-size:15px;padding:11px 13px">
+      <div id="sug" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:7px"></div>
+    </div>
+  </div>
+  <div id="ficha"></div>`;
+
+function initBuscar(){
+  const q=document.getElementById("q"), sug=document.getElementById("sug"), fi=document.getElementById("ficha");
+  sug.innerHTML = DMS.slice(0,6).map(d=>`<button class="btn ghost" style="padding:5px 11px;font-size:12px" onclick="verDM('${d.dm}')">DM ${esc(d.dm)}</button>`).join("")
+    + `<span class="hint" style="align-self:center;margin-left:4px">o escriba arriba</span>`;
+  q.addEventListener("input",()=>{
+    const t=q.value.trim().toLowerCase();
+    if(!t){fi.innerHTML="";return;}
+    const m=DMS.filter(d=>d.dm.toLowerCase().includes(t)||d.cliente.toLowerCase().includes(t)||d.marca.toLowerCase().includes(t));
+    fi.innerHTML = m.length ? m.map(d=>fichaDM(d)).join("")
+      : `<div class="panel"><div style="padding:22px;color:var(--ink-3)">Ningún embarque coincide con «${esc(q.value)}». Los DM activos van del 00431 al 00443.</div></div>`;
+  });
+  q.focus();
+  fi.addEventListener("click",e=>{ if(e.target.closest("[data-edit]")) ir("editar"); });
+}
+function verDM(dm){ document.getElementById("q").value=dm; document.getElementById("q").dispatchEvent(new Event("input")); }
+
+function fichaDM(d){
+  const s=d.s, cls=s.pct>=100?"full":(s.pct<25?"low":"");
+  const ords=ORD.filter(o=>o.cliente===d.cliente);
+  const of=ords.filter(o=>o.estado==="oficial").length, an=ords.filter(o=>o.estado==="anulada").length, bo=ords.filter(o=>o.estado==="borrador").length;
+  const dias = 12;
+  const filas = ords.length ? ords.map(o=>`<tr>
+      <td class="code">${o.orden}</td><td class="nowrap">${esc(o.fecha)}</td>
+      <td class="who">${esc(o.chofer)}</td><td class="num">${o.cant??"—"}</td>
+      <td class="num">${o.patio?fmt(o.patio):"—"}</td>
+      <td>${o.estado==="anulada"?'<span class="pill bad">Anulada</span>':o.estado==="borrador"?'<span class="pill warn">Borrador</span>':'<span class="pill ok">Oficial</span>'}</td>
+      <td>${o.estado==="anulada" ? '<span class="hint">—</span>' : '<button class="btn ghost mini" data-edit="1">'+(o.estado==="borrador"?"Editar":"Corregir")+'</button>'}</td>
+    </tr>`).join("") : `<tr><td colspan="7" style="color:var(--ink-3);padding:16px 12px">Sin órdenes. Mercancía en puerto sin extraer.</td></tr>`;
+
+  return `<div class="panel">
+    <div class="panel-h"><h3>DM ${esc(d.dm)}</h3><span class="muted">${esc(d.cliente)} · ${esc(d.marca)}</span>
+      <span class="spacer"></span>
+      <div class="barwrap"><span class="bar" style="min-width:130px"><i class="${cls}" style="width:${s.pct}%"></i></span><span class="barpct">${s.pct}%</span></div></div>
+
+    <div class="scroll"><table>
+      <thead><tr><th>Buque</th><th>Manifiesto</th><th>B/L</th><th>Puerto</th><th>Producto</th><th>Comprador interno</th></tr></thead>
+      <tbody><tr>
+        <td><b>${esc(BUQUE.nombre)}</b></td><td class="code">${esc(BUQUE.mfto)}</td><td class="code">${esc(BUQUE.bl)}</td>
+        <td>${esc(BUQUE.puerto)}</td><td>Harina de trigo · bigbags</td><td>${esc(BUQUE.comprador)}</td>
+      </tr></tbody>
+    </table></div>
+
+    <div class="saldo">
+      <div><div class="k">Total contratado</div><div class="v ${s.tonTot===null?'bad':''}">${s.tonTot===null?"falta":fmt(s.tonTot)+" t"}</div></div>
+      <div><div class="k">Extraído</div><div class="v">${fmt(s.tonCar)} t</div></div>
+      <div><div class="k">Pendiente</div><div class="v ${s.tonPend===null?'bad':(s.tonPend<=0?'ok':'warn')}">${s.tonPend===null?"no calculable":fmt(s.tonPend)+" t"}</div></div>
+      <div><div class="k">Bigbags pend.</div><div class="v ${s.bbPend===null?'bad':''}">${s.bbPend===null?"—":ent(s.bbPend)}</div></div>
+      <div><div class="k">Órdenes</div><div class="v">${of}</div><div class="k" style="margin-top:2px">${bo} borrador · ${an} anuladas</div></div>
+      <div><div class="k">Plazo de extracción</div><div class="v ${dias>25?'bad':(dias>20?'warn':'ok')}">${dias} / 30</div><div class="k" style="margin-top:2px">días desde la DM</div></div>
+    </div>
+
+    <div style="padding:13px 15px 4px">${stepsHTML(s.pct, s.faltaTotal)}</div>
+    ${s.faltaTotal?`<div class="msg bad"><span>⛔</span><span><b>Embarque sin total declarado</b>No se puede calcular pendiente ni frenar sobregiros hasta registrar el total contratado de este DM.</span></div>`:""}
+
+    <div class="scroll" style="border-top:1px solid var(--line-2)"><table>
+      <thead><tr><th>Orden</th><th>Fecha</th><th>Chofer</th><th style="text-align:right">Bigbags</th><th style="text-align:right">Peso patio</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div>
+
+    <div style="padding:13px 15px;border-top:1px solid var(--line-2)" class="btnrow">
+      <button class="btn" onclick="ir('nueva')">Nueva orden para este DM</button>
+      <button class="btn ghost">Exportar a Excel</button>
+      <button class="btn ghost">Imprimir seguimiento</button>
+    </div>
+  </div>`;
+}
+/* ============ EDITAR ORDEN ============ */
+let editSel = "595";
+VIEWS.editar = () => NOTA + `
+  <div class="panel">
+    <div class="panel-h"><h3>Elija la orden a editar</h3><span class="muted">El estado decide qué se puede cambiar</span></div>
+    <div style="padding:14px 16px" class="btnrow">
+      <button data-esel="595" class="btn ${editSel==="595"?"":"ghost"}" onclick="setEdit('595')">Orden 595 · Borrador</button>
+      <button data-esel="594" class="btn ${editSel==="594"?"":"ghost"}" onclick="setEdit('594')">Orden 594 · Oficial</button>
+      <span class="spacer hint" id="e-quien"></span>
+    </div>
+  </div>
+  <div id="e-body"></div>`;
+
+function setEdit(n){
+  editSel=n;
+  document.querySelectorAll("[data-esel]").forEach(x=>x.className = x.dataset.esel===n ? "btn" : "btn ghost");
+  initEditar();
+}
+
+function initEditar(){
+  const borrador = editSel==="595";
+  const puede = usuario.rol!=="Solo lectura";
+  const puedeCorregir = usuario.rol==="Apoderada";
+  const dis = (!borrador || !puede) ? "disabled" : "";
+  const b=document.getElementById("e-body");
+  document.getElementById("e-quien").textContent = "Conectado: "+usuario.nom+" ("+usuario.rol+")";
+
+  const aviso = borrador
+    ? (puede
+        ? `<div class="msg ok"><span>✓</span><span><b>Orden en borrador: se edita libre</b>El camión todavía no ha salido. Puede cambiar cualquier dato y guardar las veces que haga falta. Cada cambio queda en el historial de abajo.</span></div>`
+        : `<div class="msg bad"><span>⛔</span><span><b>Su usuario es de solo lectura</b>Puede ver la orden pero no modificarla.</span></div>`)
+    : `<div class="msg bad"><span>🔒</span><span><b>Orden oficial: no se edita</b>El camión ya salió y este documento fue entregado en el puerto con firma y cuño. Cambiarlo en silencio dejaría el papel del puerto distinto al del sistema. Para corregirla se anula con motivo y el sistema crea la versión 2 con el mismo número — exactamente lo que ocurrió con la orden 187.</span></div>`;
+
+  b.innerHTML = `
+  <div class="panel">
+    <div class="panel-h"><h3>Orden de carga No. <span class="code" style="font-size:14px">${editSel}</span></h3>
+      <span class="muted">${borrador?"Creada el 08/09/2026 por Operador de patio":"Cerrada el 09/09/2026 07:41 por Yahisa García Acosta"}</span>
+      <span class="spacer ${borrador?'pill warn':'pill ok'}">${borrador?"Borrador":"Oficial"}</span></div>
+
+    ${aviso}
+
+    <div class="form">
+      <div class="field"><label>Declaración de mercancías</label><input class="auto" readonly value="DM 00431 — NUEVOS TIEMPOS S.R.L."><span class="hint auto-h">El DM no se cambia: se anula y se crea otra</span></div>
+      <div class="field"><label>Cliente / destinatario</label><input class="auto" readonly value="NUEVOS TIEMPOS S.R.L."><span class="hint auto-h">Viene del DM</span></div>
+      <div class="field"><label>Buque y manifiesto</label><input class="auto" readonly value="Eagle 1 · Mfto 0080/2026"><span class="hint auto-h">Viene del DM</span></div>
+      <div class="field"><label for="e-bb">Cantidad de bigbags</label><input id="e-bb" type="number" value="24" ${dis}><span class="hint">${borrador?"Se revalida contra el saldo al guardar":"Bloqueado"}</span></div>
+      <div class="field"><label for="e-ton">Peso bruto (t)</label><input id="e-ton" type="number" step="0.01" value="17.28" ${dis}><span class="hint">${borrador?"Editable":"Bloqueado"}</span></div>
+      <div class="field"><label for="e-ch">Chofer</label>
+        <select id="e-ch" ${dis}><option>LUIS JAVIER MARIN DIAZ</option><option>ANTONIO PAU ESCALONA</option><option>PEDRO GONZÁLEZ CÁRDENAS</option></select>
+        <span class="hint">${borrador?"Cambiarlo actualiza carné y licencia":"Bloqueado"}</span></div>
+      <div class="field"><label for="e-porte">Carta de porte</label><input id="e-porte" value="22417" ${dis}><span class="hint">${borrador?"Editable":"Bloqueado"}</span></div>
+      <div class="field"><label for="e-cont">Contenedor</label><input id="e-cont" placeholder="Sin contenedor" ${dis}><span class="hint">${borrador?"Editable":"Bloqueado"}</span></div>
+    </div>
+
+    <div id="e-alert"></div>
+
+    <div style="padding:14px 16px;border-top:1px solid var(--line-2)" class="btnrow">
+      ${borrador
+        ? `<button class="btn" id="e-save" ${puede?"":"disabled"}>Guardar cambios</button>
+           <button class="btn ghost" ${puede?"":"disabled"}>Cerrar y oficializar</button>
+           <button class="btn ghost" ${puede?"":"disabled"}>Descartar borrador</button>`
+        : `<button class="btn danger" ${puedeCorregir?"":"disabled"} onclick="ir('anular')">Anular y crear versión 2</button>
+           <button class="btn ghost" onclick="ir('orden')">Ver documento</button>
+           ${puedeCorregir?"":'<span class="hint">Solo la Apoderada puede anular</span>'}`}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Historial de cambios</h3><span class="muted">Cada modificación queda registrada con nombre, hora y valor anterior</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Campo</th><th>Antes</th><th>Después</th></tr></thead>
+      <tbody>
+        ${borrador ? `
+        <tr><td class="nowrap code">08/09 16:44</td><td>Operador de patio</td><td>Peso bruto</td><td class="num">16,90</td><td class="num">17,28</td></tr>
+        <tr><td class="nowrap code">08/09 16:41</td><td>Operador de patio</td><td>Chofer</td><td>Asney Marcilla Morales</td><td>Luis Javier Marín Díaz</td></tr>
+        <tr><td class="nowrap code">08/09 16:20</td><td>Operador de patio</td><td>—</td><td colspan="2">Creó el borrador</td></tr>`
+        : `
+        <tr><td class="nowrap code">09/09 07:41</td><td>Yahisa García Acosta</td><td>Estado</td><td>Borrador</td><td>Oficial · bloqueada</td></tr>
+        <tr><td class="nowrap code">09/09 07:38</td><td>Yahisa García Acosta</td><td>Carta de porte</td><td class="num">22416</td><td class="num">22417</td></tr>
+        <tr><td class="nowrap code">09/09 07:12</td><td>Operador de patio</td><td>—</td><td colspan="2">Creó el borrador</td></tr>`}
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Regla de edición según el estado</h3><span class="muted">Esta es la decisión que necesita su visto bueno</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Estado</th><th>Qué se puede hacer</th><th>Quién</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill warn">Borrador</span></td><td>Editar cualquier dato, guardar cuantas veces haga falta, descartar</td><td>Operador y Apoderada</td></tr>
+        <tr><td><span class="pill ok">Oficial</span></td><td>No se edita. Se anula con motivo y nace la versión 2 con el mismo número</td><td>Solo Apoderada</td></tr>
+        <tr><td><span class="pill bad">Anulada</span></td><td>Nada. Queda como registro permanente</td><td>Nadie</td></tr>
+      </tbody>
+    </table></div>
+    <div class="msg ok" style="margin-top:14px"><span>i</span><span><b>Por qué se propone así</b>La orden oficial sale del sistema firmada y con cuño hacia el puerto. Si después se pudiera editar sin dejar rastro, el papel que tiene la terminal y el que guarda la oficina dejarían de coincidir, y ante una revisión de la Aduana no habría forma de demostrar cuál es el bueno. Con versiones, ambos existen y se sabe cuál reemplazó a cuál.</span></div>
+  </div>`;
+
+  if(borrador && puede){
+    const bb=document.getElementById("e-bb"), tn=document.getElementById("e-ton"), al=document.getElementById("e-alert");
+    const d=DMS.find(x=>x.dm==="00431"), s=d.s;
+    const chk=()=>{
+      const nbb=+bb.value||0, nton=+tn.value||0;
+      const rb=s.bbPend-nbb, rt=+(s.tonPend-nton).toFixed(2);
+      al.innerHTML = (rb<0||rt<0)
+        ? `<div class="msg bad"><span>⛔</span><span><b>No se puede guardar</b>Excede el saldo del DM 00431. Quedan ${ent(s.bbPend)} bigbags y ${fmt(s.tonPend)} t.</span></div>`
+        : `<div class="msg ok"><span>✓</span><span><b>Dentro del saldo</b>Después de esta orden quedarían ${ent(rb)} bigbags y ${fmt(rt)} t en el DM 00431.</span></div>`;
+      document.getElementById("e-save").disabled = rb<0||rt<0;
+    };
+    [bb,tn].forEach(e=>e.addEventListener("input",chk)); chk();
+  }
+}
+/* ============ CUÑO Y FIRMA (adjuntar sin pasos) ============ */
+const SELLOS = {cuno:null, firma:null};
+
+function conectarAdjuntos(refresca){
+  const wire=(id,k)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener("change",e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ SELLOS[k]=ev.target.result; refresca(); };
+      r.readAsDataURL(f);
+    });
+  };
+  wire("up-firma","firma"); wire("up-cuno","cuno");
+  wire("n-up-firma","firma"); wire("n-up-cuno","cuno");
+  const q=document.getElementById("up-quitar");
+  if(q) q.addEventListener("click",()=>{ SELLOS.firma=null; SELLOS.cuno=null; refresca(); });
+  pintaEstado();
+}
+function pintaEstado(){
+  const t = (SELLOS.firma||SELLOS.cuno)
+    ? "Adjuntado: "+[SELLOS.firma?"firma":null, SELLOS.cuno?"cuño":null].filter(Boolean).join(" y ")
+    : "Sin firma ni cuño · el documento se imprime en blanco para firmar a mano";
+  ["up-est","n-up-est"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=t; });
+}
+/* ============ ERRORES DETECTADOS ============ */
+VIEWS.errores = () => NOTA + `
+  <div class="strip">
+    <div class="stat alert"><div class="k">Pendientes imposibles</div><div class="v">54</div><div class="n">de 70 filas · 77%</div></div>
+    <div class="stat alert"><div class="k">Filas sin total</div><div class="v">59</div><div class="n">no se puede calcular saldo</div></div>
+    <div class="stat alert"><div class="k">Fórmulas en el resumen</div><div class="v">0</div><div class="n">todo tecleado a mano</div></div>
+    <div class="stat alert"><div class="k">Números con problema</div><div class="v">5</div><div class="n">1 duplicado · 4 perdidos</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Lo que encontramos al leer el archivo</h3>
+      <span class="muted">Archivo «Orden De Carga puerto habana ULTIMO2» · 4 al 8 de septiembre</span></div>
+    <div class="errlist">
+      <div class="err-i"><div class="err-n">77%</div><div class="err-b"><b>Pendientes en negativo</b>
+        <p>54 de 70 filas de carga arrojan toneladas y bigbags negativos. No se puede deber −43 toneladas: el total del embarque solo está en la primera fila de cada DM y las demás restan contra cero.</p>
+        <span class="ev">Hoja CLIENTES · columnas «PENDIENTE KG» y «ependiente bilbat»</span></div></div>
+      <div class="err-i"><div class="err-n">7</div><div class="err-b"><b>Saldos del resumen mal calculados</b>
+        <p>Nuevos Tiempos aparece con 34,81 t pendientes cuando 900,25 − 480,44 = 419,81. Siete de las doce filas no cuadran, porque el resumen no tiene ni una fórmula: está escrito a mano.</p>
+        <span class="ev">Hoja RESUMEN DE CARGA · fila 8 y otras seis</span></div></div>
+      <div class="err-i"><div class="err-n">516</div><div class="err-b"><b>Una orden con número repetido</b>
+        <p>Dos órdenes distintas comparten el número 516, con dos choferes diferentes: Héctor Cruz Rondón y Lisban Chávez Figueroa. Ninguna de las dos es inválida; el número sí.</p>
+        <span class="ev">Hoja REPORTE POR ORDEN DE CARGA · filas 18 y 19</span></div></div>
+      <div class="err-i"><div class="err-n">4</div><div class="err-b"><b>Números perdidos</b>
+        <p>La secuencia salta del 516 al 521. Los números 517, 518, 519 y 520 no existen en ninguna hoja. Si alguien pregunta por ellos, hoy no hay respuesta.</p>
+        <span class="ev">Detectado al revisar la secuencia completa 500–594</span></div></div>
+      <div class="err-i"><div class="err-n">4</div><div class="err-b"><b>El mismo chofer con varios nombres</b>
+        <p>«Juan Carlos Miranda Glez» y «Juan Carlos Miranda González» son la misma persona. Igual «Pedro Gonzales Cárdenas» y «Pedro González Cárdenas». Y 16 nombres arrastran espacios de más, que para el Excel los vuelve personas distintas.</p>
+        <span class="ev">64 nombres de chofer escritos libremente</span></div></div>
+      <div class="err-i"><div class="err-n">3</div><div class="err-b"><b>Un cliente con tres marcas</b>
+        <p>Jorge Luis Vázquez Herrera aparece como ARMALIN ALMIRAL, DELICIA DYD y YIN DYD según la hoja que se mire. Solo una puede ser la correcta.</p>
+        <span class="ev">Contradicción entre RESUMEN y REPORTE POR ORDEN</span></div></div>
+      <div class="err-i"><div class="err-n">5</div><div class="err-b"><b>Cancelaciones sin control</b>
+        <p>Marcadas a mano como «CANCELADA», «CANCELADAS» y «OJO», en dos columnas distintas. No queda quién anuló, cuándo ni por qué, y la mercancía anulada no vuelve al saldo.</p>
+        <span class="ev">Columnas I y K, sin criterio fijo</span></div></div>
+      <div class="err-i"><div class="err-n">!</div><div class="err-b"><b>«NO TOCAR»</b>
+        <p>Está escrito en la primera celda de la hoja de clientes. Alguien del equipo ya sabe que el archivo es frágil y prefiere que nadie lo abra.</p>
+        <span class="ev">Hoja CLIENTES · celda B1</span></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Cómo queda cada uno con el sistema</h3></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Problema de hoy</th><th>Qué lo evita</th></tr></thead>
+      <tbody>
+        <tr><td>Pendientes negativos</td><td>El saldo es un cálculo del sistema, no una celda que alguien escribe</td></tr>
+        <tr><td>Total del embarque a medias</td><td>El total vive en el DM, una sola vez, y toda orden descuenta de ahí</td></tr>
+        <tr><td>Números repetidos o perdidos</td><td>La secuencia la lleva el sistema</td></tr>
+        <tr><td>Nombres duplicados</td><td>El chofer se elige de una lista, con su carné y su licencia</td></tr>
+        <tr><td>Cliente con varias marcas</td><td>Marca y cliente quedan fijados en el DM</td></tr>
+        <tr><td>Cancelaciones sueltas</td><td>Anular pide motivo, guarda quién y cuándo, y repone el saldo</td></tr>
+        <tr><td>Archivo frágil que nadie quiere tocar</td><td>Cada quien entra con su usuario y solo hace lo que le toca</td></tr>
+      </tbody>
+    </table></div>
+  </div>`;
+
+/* ============ ACCESO ============ */
+VIEWS.acceso = () => NOTA + `
+  <div class="login">
+    <div class="login-h"><b>Órdenes de Carga</b><span>Agencia Importadora Caribe SURL</span></div>
+    <div class="users">
+      ${USUARIOS.map((u,i)=>`<button onclick="setUsuario(${i})">
+        <span class="avatar">${esc(u.ini)}</span>
+        <span><span class="nm">${esc(u.nom)}</span><br><span class="rl">${esc(u.rol)}</span></span>
+      </button>`).join("")}
+    </div>
+    <div style="padding:13px 18px;font-size:11.5px;color:var(--ink-3);border-top:1px solid var(--line-2)">
+      En el sistema real cada uno entra con su contraseña. Aquí puede cambiar de usuario para ver cómo cambian los permisos.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Quién puede hacer qué</h3></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Acción</th><th>Apoderada</th><th>Operador</th><th>Solo lectura</th></tr></thead>
+      <tbody>
+        <tr><td>Ver el tablero y los reportes</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td></tr>
+        <tr><td>Crear y editar borradores</td><td><span class="pill ok">Sí</span></td><td><span class="pill ok">Sí</span></td><td><span class="pill mute">No</span></td></tr>
+        <tr><td>Cerrar una orden (oficializar)</td><td><span class="pill ok">Sí</span></td><td><span class="pill mute">No</span></td><td><span class="pill mute">No</span></td></tr>
+        <tr><td>Anular y reiniciar</td><td><span class="pill ok">Sí</span></td><td><span class="pill mute">No</span></td><td><span class="pill mute">No</span></td></tr>
+        <tr><td>Registrar embarques y totales</td><td><span class="pill ok">Sí</span></td><td><span class="pill mute">No</span></td><td><span class="pill mute">No</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3>Bitácora</h3><span class="muted">Toda acción queda registrada con nombre y hora</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th></tr></thead>
+      <tbody>
+        <tr><td class="nowrap code">09/09 07:41</td><td>Yahisa García Acosta</td><td>Cerró la orden 594 · DM 00431</td></tr>
+        <tr><td class="nowrap code">08/09 16:20</td><td>Operador de patio</td><td>Creó el borrador de la orden 595</td></tr>
+        <tr><td class="nowrap code">08/09 15:02</td><td>Yahisa García Acosta</td><td>Anuló la orden 589 — motivo: «chofer cambiado a última hora»</td></tr>
+        <tr><td class="nowrap code">08/09 11:35</td><td>Operador de patio</td><td>Intentó cargar 30 bigbags en el DM 00435 · bloqueado por saldo</td></tr>
+        <tr><td class="nowrap code">08/09 09:12</td><td>Yahisa García Acosta</td><td>Registró el embarque del DM 00443 · 24,50 t</td></tr>
+      </tbody>
+    </table></div>
+  </div>`;
+
+function setUsuario(i){
+  usuario=USUARIOS[i];
+  document.getElementById("un").textContent=usuario.nom;
+  document.getElementById("ur").textContent=usuario.rol;
+  document.getElementById("ua").textContent=usuario.ini;
+  ir("nueva");
+}
+ir("tablero");
+</script>
+</body>
+</html>
