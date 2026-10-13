@@ -135,3 +135,18 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 8. El responsable revisa cuando la tarea lo exige (maquetas, referencias visuales, escenario Excel). Solo se integra en `main` con la integración continua en verde.
 
 **Secretos:** solo se sube `.env.example`. El `.env`, el código de instalación, las contraseñas y las claves nunca entran al repositorio.
+
+## 4. Integración continua (plan §13.4)
+
+`.github/workflows/ci.yml` se ejecuta en cada envío a cualquier rama, en cada solicitud de integración hacia `main`, cada noche y a mano:
+
+| Trabajo | Sistema | Qué ejecuta hoy |
+|---|---|---|
+| Verificación | Linux con PostgreSQL 16 | `pnpm db:reset` sobre la base de pruebas y `pnpm verify` |
+| Escritorio | Windows | `pnpm build` (los instaladores llegan con T117) |
+| Android | Linux con JDK 21 y Android SDK | APK de depuración, publicado como artefacto `apk-debug` |
+| Nocturno | — | Hoy repite los anteriores; la mutación completa, el extremo a extremo y la regresión visual se añaden con sus tareas (T007, T026) |
+
+**Bloqueo de `main`.** En GitHub, *Settings → Branches → Branch protection rules* para `main`: exigir solicitud de integración y los tres trabajos (`Verificación`, `Escritorio`, `APK de depuración`) en verde antes de integrar.
+
+**Hook previo al envío.** `pnpm install` configura Git para usar `.githooks/` (script `prepare`), y `.githooks/pre-push` ejecuta `pnpm verify`: si falla, el envío se cancela. Es obligatorio mientras no haya un servicio de CI, y se mantiene después como primera barrera.

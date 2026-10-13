@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "doctor": "node scripts/doctor.ts",
     "dev": "pnpm --parallel --filter @impocaribe/server --filter @impocaribe/web dev",
     "build": "pnpm -r --filter !@impocaribe/android build",
