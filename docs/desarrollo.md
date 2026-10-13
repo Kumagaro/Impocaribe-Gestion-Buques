@@ -73,7 +73,9 @@ avdmanager create avd -n impocaribe-api34 -k "system-images;android-34;google_ap
 emulator -avd impocaribe-api24
 ```
 
-La aceleración por hardware necesita la Plataforma de máquina virtual de Windows (Hyper-V) activada.
+La aceleración por hardware necesita la Plataforma de máquina virtual de Windows (WHPX); `emulator -accel-check` dice si está disponible.
+
+**WebView del emulador de Android 7:** la imagen trae Chromium 53, por debajo del mínimo 87 (DT-15), y la interfaz queda en blanco (`SyntaxError: Unexpected token ?`). Para ver la app en Android 7 hay que instalar en el emulador Chrome o Android System WebView ≥ 87 compatible con Android 7 (`adb install <apk>`); es el mismo caso que resuelve el instalador del WebView de T125. El emulador de Android 14 ya trae un WebView moderno.
 
 ### 1.7 Máquinas virtuales Windows
 
