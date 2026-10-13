@@ -1,0 +1,33 @@
+# Dependencias y compilados
+node_modules/
+dist/
+out/
+build-output/
+*.tsbuildinfo
+
+# Secretos: solo se sube .env.example (plan §13.2)
+.env
+.env.*
+!.env.example
+
+# Pruebas y reportes
+coverage/
+reports/
+test-results/
+playwright-report/
+.stryker-tmp/
+
+# Android (Capacitor)
+packages/android/android/.gradle/
+packages/android/android/build/
+packages/android/android/app/build/
+packages/android/android/local.properties
+packages/android/android/app/src/main/assets/public/
+*.apk
+*.aab
+
+# Sistema y editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
