@@ -8,6 +8,7 @@ import { join } from 'node:path';
 const JDK_MAJOR = 21; // Capacitor 8 exige JDK 21
 const PG_MAJOR = 16;
 const ANDROID_APIS = [24, 34]; // Android 7 y Android 14 (plan §13.1)
+const ANDROID_COMPILE_SDK = 36; // compileSdkVersion de packages/android/android/variables.gradle
 
 type Check = { name: string; ok: boolean; detail: string; fix?: string };
 const checks: Check[] = [];
@@ -66,7 +67,9 @@ const pgReady = run('pg_isready -h localhost');
 checks.push({
   name: `PostgreSQL ${PG_MAJOR}`,
   ok: major(psql?.replace(/^\D+/, '') ?? null) === PG_MAJOR && pgReady !== null,
-  detail: psql ? `${psql}; servicio ${pgReady ? 'aceptando conexiones' : 'sin respuesta en localhost:5432'}` : 'psql no encontrado en el PATH',
+  detail: psql
+    ? `${psql}; servicio ${pgReady ? 'aceptando conexiones' : 'sin respuesta en localhost:5432'}`
+    : 'psql no encontrado en el PATH',
   fix: `winget install PostgreSQL.PostgreSQL.${PG_MAJOR}  y añada "C:\\Program Files\\PostgreSQL\\${PG_MAJOR}\\bin" al PATH. Si ya está instalado, arranque el servicio postgresql-x64-${PG_MAJOR}`,
 });
 
@@ -81,12 +84,14 @@ checks.push({
 });
 
 // Android SDK y emuladores
-const sdk = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? join(process.env.LOCALAPPDATA ?? '', 'Android', 'Sdk');
-const sdkOk = existsSync(join(sdk, 'platform-tools'));
+const sdk =
+  process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? join(process.env.LOCALAPPDATA ?? '', 'Android', 'Sdk');
+const sdkOk =
+  existsSync(join(sdk, 'platform-tools')) && existsSync(join(sdk, 'platforms', `android-${ANDROID_COMPILE_SDK}`));
 checks.push({
   name: 'Android SDK',
   ok: sdkOk && !!(process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT),
-  detail: sdkOk ? `${sdk}` : 'no encontrado',
+  detail: sdkOk ? sdk : `no encontrado (o sin la plataforma android-${ANDROID_COMPILE_SDK})`,
   fix: 'winget install Google.AndroidStudio, abra Android Studio una vez para descargar el SDK y defina ANDROID_HOME (ver docs/desarrollo.md)',
 });
 

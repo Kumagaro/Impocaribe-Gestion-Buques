@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+*.md
+docs/referencia/
+packages/android/android/
+.claude/
+.mcp.json
