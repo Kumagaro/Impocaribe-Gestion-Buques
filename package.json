@@ -14,7 +14,11 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test"
+    "verify": "pnpm typecheck && pnpm lint && pnpm test",
+    "db:create": "pnpm --filter @impocaribe/server db:create",
+    "db:migrate": "pnpm --filter @impocaribe/server db:migrate",
+    "db:reset": "pnpm --filter @impocaribe/server db:reset",
+    "db:seed": "pnpm --filter @impocaribe/server db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
