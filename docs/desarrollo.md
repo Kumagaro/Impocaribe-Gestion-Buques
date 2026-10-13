@@ -12,7 +12,7 @@ Cómo preparar el equipo, qué comandos existen y cómo se trabaja cada tarea. F
 | Git | Reciente, con `core.autocrlf=false` | Control de versiones |
 | PostgreSQL | 16, como servicio local | Desarrollo y pruebas de integración contra base real |
 | JDK | 21 (lo exige Capacitor 8) | App Android |
-| Android SDK | Plataformas y emuladores de API 24 (Android 7) y API 34 (Android 14) | App Android y pruebas de humo |
+| Android SDK | Plataforma de compilación API 36 y emuladores de API 24 (Android 7) y API 34 (Android 14) | App Android y pruebas de humo |
 | Máquinas virtuales | Windows 10 y Windows 11 limpias, una con 4 GB de RAM | Pruebas de instalación y de consumo |
 | Editor | VS Code con las extensiones recomendadas (`.vscode/extensions.json`) | Uniformidad |
 
@@ -63,7 +63,7 @@ winget install Google.AndroidStudio
 3. Instale las plataformas y las imágenes de los emuladores:
 
 ```powershell
-sdkmanager "platform-tools" "emulator" "platforms;android-24" "platforms;android-34" "system-images;android-24;google_apis;x86_64" "system-images;android-34;google_apis;x86_64"
+sdkmanager "platform-tools" "emulator" "build-tools;36.0.0" "platforms;android-36" "system-images;android-24;google_apis;x86_64" "system-images;android-34;google_apis;x86_64"
 ```
 
 ### 1.6 Emuladores
@@ -96,6 +96,18 @@ Al abrir el repositorio, VS Code ofrece instalar las extensiones recomendadas.
 | Comando | Qué hace |
 |---|---|
 | `pnpm run doctor` | Comprueba el equipo de desarrollo |
+| `pnpm dev` | Servidor (`http://localhost:8443/api/v1/health`) y web (Vite) en modo desarrollo |
+| `pnpm build` | Compila shared, server, web y desktop |
+| `pnpm test` | Pruebas de todos los paquetes |
+| `pnpm lint` | ESLint y Prettier (`pnpm format` corrige el formato) |
+| `pnpm typecheck` | Tipos en modo `strict` |
+| `pnpm verify` | Tipos, lint y pruebas: obligatorio antes de integrar |
+| `pnpm --filter @impocaribe/desktop start` | Abre la app de escritorio con el build de web (`pnpm build` antes) |
+| `pnpm --filter @impocaribe/android apk` | Copia el build de web al proyecto nativo y genera el APK de depuración en `packages/android/android/app/build/outputs/apk/debug/` |
+
+**Paquetes** (`packages/`): `shared` (lógica y esquemas comunes), `server` (NestJS), `web` (React + Vite), `desktop` (Electron) y `android` (Capacitor). Todos son ESM. Los imports relativos llevan extensión `.ts` (TypeScript los reescribe a `.js` al compilar), y `shared` se consume desde su código fuente en pruebas, tipos y Vite gracias a la condición de exportación `source`.
+
+**Puertos:** Windows reserva rangos de puertos para Hyper-V (`netsh int ipv4 show excludedportrange protocol=tcp`). El servidor usa 8443 (plan §6); si está reservado en su equipo, defina `PORT`.
 
 ## 3. Flujo de trabajo por tarea (plan §13.3)
 

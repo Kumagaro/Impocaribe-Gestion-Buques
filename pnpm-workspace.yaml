@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+
+# Dependencias autorizadas a ejecutar scripts de instalación (pnpm las bloquea por defecto)
+allowBuilds:
+  electron: true
+  esbuild: true
