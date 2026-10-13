@@ -1083,7 +1083,7 @@ El servidor debe funcionar en una PC de 4 GB de RAM que además ejecuta la app d
 |---|---|---|
 | PostgreSQL | 400 MB | `shared_buffers` 128 MB, `work_mem` 4 MB, `maintenance_work_mem` 64 MB, `max_connections` 20, `effective_cache_size` 512 MB. Pool de conexiones de la aplicación limitado a 10 |
 | Servidor Node | 300 MB | `--max-old-space-size=256`; sin cachés en memoria de datos de negocio (la base de datos ya cachea); registros rotados en disco |
-| Chromium (PDF) | 300 MB mientras está abierto | Una sola instancia y una sola página a la vez (cola); se abre con la primera emisión y se cierra tras 10 minutos sin emisiones; opciones de bajo consumo (sin GPU, sin extensiones, caché mínima) |
+| Chromium (PDF) | 300 MB mientras está abierto | Una sola instancia y una sola página a la vez (cola); se abre con la primera emisión y se cierra tras 10 minutos sin emisiones; variante `chrome-headless-shell` (Puppeteer `headless: 'shell'`), no el Chrome completo, que en la prueba de concepto (T006) ocupó 481 MB frente a 180 MB; opciones de bajo consumo (sin GPU, sin extensiones, caché mínima, un solo proceso de renderizado) |
 | Respaldos | Puntual | `pg_dump` con prioridad baja; nunca dos respaldos a la vez |
 | App de escritorio (Electron) | 350 MB | Un solo proceso de renderizado; la copia local en SQLite, no en memoria; listas virtualizadas; sin Storybook ni herramientas de desarrollo en el instalador |
 | **Total del servidor en reposo** | **600 MB** | Chromium cerrado |
