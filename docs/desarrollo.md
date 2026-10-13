@@ -107,6 +107,20 @@ Al abrir el repositorio, VS Code ofrece instalar las extensiones recomendadas.
 
 **Paquetes** (`packages/`): `shared` (lógica y esquemas comunes), `server` (NestJS), `web` (React + Vite), `desktop` (Electron) y `android` (Capacitor). Todos son ESM. Los imports relativos llevan extensión `.ts` (TypeScript los reescribe a `.js` al compilar), y `shared` se consume desde su código fuente en pruebas, tipos y Vite gracias a la condición de exportación `source`.
 
+### 2.1 Configuración y base de datos
+
+La configuración sale de las variables de entorno y del `.env` de la raíz (copia de `.env.example`); una variable ya definida en el entorno tiene prioridad sobre el `.env`. `NODE_ENV` elige el entorno: `development` (por defecto), `test` o `production`.
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm db:create` | Crea la base del entorno actual si no existe y la carpeta de datos |
+| `pnpm db:migrate` | Aplica las migraciones de Drizzle (`packages/server/drizzle/`) |
+| `pnpm db:reset` | Borra la base, la vuelve a crear y migra (prohibido en `production`) |
+| `pnpm db:seed` | Carga datos sintéticos de desarrollo (solo en `development`) |
+
+- **Base de pruebas aparte.** En `test` se usa `TEST_DATABASE_URL`, nunca `DATABASE_URL`, y su nombre debe terminar en `_test`; fuera de `test`, una base `_test` se rechaza. Para prepararla: `$env:NODE_ENV='test'; pnpm db:reset`.
+- **Carpeta de datos fuera del repositorio:** por defecto `%LOCALAPPDATA%\Impocaribe\dev-data` (se cambia con `IMPOCARIBE_DATA_DIR`).
+
 **Puertos:** Windows reserva rangos de puertos para Hyper-V (`netsh int ipv4 show excludedportrange protocol=tcp`). El servidor usa 8443 (plan §6); si está reservado en su equipo, defina `PORT`.
 
 ## 3. Flujo de trabajo por tarea (plan §13.3)

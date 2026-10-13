@@ -8,16 +8,23 @@
     "dev": "nest start --watch",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:create": "node src/db/cli.ts create",
+    "db:migrate": "node src/db/cli.ts migrate",
+    "db:reset": "node src/db/cli.ts reset",
+    "db:seed": "node src/db/cli.ts seed"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@nestjs/cli": "^12.0.8"
+    "@nestjs/cli": "^12.0.8",
+    "@types/pg": "^8.23.1"
   }
 }

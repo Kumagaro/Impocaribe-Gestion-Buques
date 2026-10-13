@@ -1,6 +1,8 @@
 import { createApp } from './app.ts';
+import { config } from './config.ts';
 
-// Puerto del plan §6 (8443); HTTPS llega con la identidad del servidor (T033).
+// HTTPS llega con la identidad del servidor (T033).
+const { port } = config();
 const app = await createApp();
-await app.listen(Number(process.env.PORT ?? 8443));
+await app.listen(port);
 console.log(`Servidor en ${await app.getUrl()}/api/v1/health`);

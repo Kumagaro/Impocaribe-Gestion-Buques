@@ -9,11 +9,12 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 
-await app.whenReady();
-protocol.handle('app', (request) => {
-  const file = resolveAppFile(request.url, webDist);
-  return file ? net.fetch(pathToFileURL(file).toString()) : new Response('No encontrado', { status: 404 });
+// Sin await de nivel superior: en un main ESM, "ready" no llega hasta que el módulo termina de evaluarse.
+void app.whenReady().then(() => {
+  protocol.handle('app', (request) => {
+    const file = resolveAppFile(request.url, webDist);
+    return file ? net.fetch(pathToFileURL(file).toString()) : new Response('No encontrado', { status: 404 });
+  });
+  return new BrowserWindow({ width: 1280, height: 800 }).loadURL(`${APP_ORIGIN}/index.html`);
 });
-const win = new BrowserWindow({ width: 1280, height: 800 });
-await win.loadURL(`${APP_ORIGIN}/index.html`);
 app.on('window-all-closed', () => app.quit());
