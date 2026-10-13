@@ -121,10 +121,10 @@ Además del criterio propio de la tarea:
 
 El código empieza desde cero. Esta fase deja el proyecto creado, el entorno listo, la integración continua funcionando y los riesgos técnicos despejados antes de escribir la primera regla de negocio.
 
-- [ ] **T001. Entorno de desarrollo.** Instalar y documentar en `docs/desarrollo.md` todo lo del plan §13.1, y crear el script `pnpm doctor`, que comprueba versiones de Node, pnpm, Git, PostgreSQL, JDK, Android SDK y emuladores, y explica cómo corregir lo que falte.
+- [ ] **T001. Entorno de desarrollo.** Instalar y documentar en `docs/desarrollo.md` todo lo del plan §13.1, y crear el script `pnpm run doctor`, que comprueba versiones de Node, pnpm, Git, PostgreSQL, JDK, Android SDK y emuladores, y explica cómo corregir lo que falte.
   - *Cubre:* plan §13.1
   - *Depende:* —
-  - *Terminado:* `pnpm doctor` en verde en el equipo de desarrollo; los emuladores Android 7 y 14 arrancan; las máquinas virtuales Windows existen.
+  - *Terminado:* `pnpm run doctor` en verde en el equipo de desarrollo; los emuladores Android 7 y 14 arrancan; las máquinas virtuales Windows existen.
 
 - [ ] **T002. Repositorio.** Inicializar Git con la estructura del plan §13.2: `README.md`, `Constitution.md` y `specs/` en su sitio, el prototipo aprobado en `docs/referencia/`, `.gitignore`, `.gitattributes`, `.editorconfig`, `.nvmrc`, `.env.example`, plantilla de solicitud de integración con la definición de terminado y convención de ramas y commits (plan §13.3).
   - *Cubre:* plan §13.2, §13.3
