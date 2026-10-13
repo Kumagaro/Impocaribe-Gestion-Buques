@@ -1193,7 +1193,7 @@ El código empieza desde cero. Esta sección fija cómo se crea el proyecto y c�
 | Máquinas virtuales | Windows 10 y Windows 11 limpias, una con 4 GB de RAM | Pruebas de instalación y de consumo |
 | Editor | VS Code con las extensiones recomendadas del repositorio | Uniformidad |
 
-El script `pnpm doctor` comprueba todo lo anterior y explica qué falta.
+El script `pnpm run doctor` comprueba todo lo anterior y explica qué falta.
 
 ### 13.2 Repositorio
 
