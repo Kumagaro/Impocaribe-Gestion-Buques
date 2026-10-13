@@ -125,8 +125,9 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* plan §13.1
   - *Depende:* —
   - *Terminado:* `pnpm run doctor` en verde en el equipo de desarrollo; los emuladores Android 7 y 14 arrancan; las máquinas virtuales Windows existen.
+  - *Estado (2026-10-13):* guía, `pnpm run doctor`, Node, pnpm, Git y PostgreSQL 16 listos. Faltan JDK 21, Android SDK, emuladores y máquinas virtuales.
 
-- [ ] **T002. Repositorio.** Inicializar Git con la estructura del plan §13.2: `README.md`, `Constitution.md` y `specs/` en su sitio, el prototipo aprobado en `docs/referencia/`, `.gitignore`, `.gitattributes`, `.editorconfig`, `.nvmrc`, `.env.example`, plantilla de solicitud de integración con la definición de terminado y convención de ramas y commits (plan §13.3).
+- [x] **T002. Repositorio.** Inicializar Git con la estructura del plan §13.2: `README.md`, `Constitution.md` y `specs/` en su sitio, el prototipo aprobado en `docs/referencia/`, `.gitignore`, `.gitattributes`, `.editorconfig`, `.nvmrc`, `.env.example`, plantilla de solicitud de integración con la definición de terminado y convención de ramas y commits (plan §13.3).
   - *Cubre:* plan §13.2, §13.3
   - *Depende:* T001
   - *Terminado:* el primer commit `T002: …` contiene la estructura; un archivo `.env` creado a propósito queda ignorado por Git.
@@ -142,13 +143,14 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* Const. §5, plan §3.1
   - *Depende:* T002
   - *Terminado:* `pnpm verify` en limpio; el servidor responde; la web, la app de escritorio y el APK en el emulador Android 7 muestran la pantalla de prueba.
+  - *Estado (2026-10-13):* `pnpm verify` en verde; el servidor responde; la web y la app de escritorio muestran la pantalla. Falta compilar el APK y verlo en el emulador Android 7 (necesita el Android SDK).
 
-- [ ] **T004. Configuración y base de datos de desarrollo.** Carga de configuración por entorno (`development`, `test`, `production`) a partir de variables y de `.env`; scripts `db:create`, `db:migrate`, `db:reset` y `db:seed` (datos sintéticos de desarrollo); carpeta de datos de desarrollo fuera del repositorio.
+- [x] **T004. Configuración y base de datos de desarrollo.** Carga de configuración por entorno (`development`, `test`, `production`) a partir de variables y de `.env`; scripts `db:create`, `db:migrate`, `db:reset` y `db:seed` (datos sintéticos de desarrollo); carpeta de datos de desarrollo fuera del repositorio.
   - *Cubre:* plan §13.2
   - *Depende:* T003
   - *Terminado:* `pnpm db:reset && pnpm db:seed` deja una base lista; las pruebas usan una base aparte que nunca toca la de desarrollo.
 
-- [ ] **T005. Integración continua.** Trabajos del plan §13.4 (verificación en Linux con PostgreSQL 16, compilación en Windows, APK en Linux y trabajo nocturno), con caché de dependencias; integración en `main` bloqueada si algo falla. Hasta tener un servicio de CI, hook previo al envío que ejecuta `pnpm verify`.
+- [x] **T005. Integración continua.** Trabajos del plan §13.4 (verificación en Linux con PostgreSQL 16, compilación en Windows, APK en Linux y trabajo nocturno), con caché de dependencias; integración en `main` bloqueada si algo falla. Hasta tener un servicio de CI, hook previo al envío que ejecuta `pnpm verify`.
   - *Cubre:* plan §13.4
   - *Depende:* T004
   - *Terminado:* un commit que rompe una prueba se marca en rojo y no puede integrarse.
@@ -163,6 +165,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* R-01, R-10, R-13, R-14, RNF-21
   - *Depende:* T003
   - *Terminado:* informe con el resultado de cada punto. Si alguno falla, se corrige primero el plan (y, si hace falta, la spec) antes de seguir con la fase F0.
+  - *Estado (2026-10-13):* informe parcial en `docs/poc/T006-informe.md`. Superados los puntos 3 (Electron) y 5; el punto 6 está medido en la PC de desarrollo. Pendientes de hardware: los puntos 1, 2 y 4, el punto 3 en Android y el punto 6 en la VM de 4 GB.
 
 ## F0. Fundaciones, calidad y base de interfaz
 
