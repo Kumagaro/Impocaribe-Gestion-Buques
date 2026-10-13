@@ -92,7 +92,7 @@ checks.push({
   name: 'Android SDK',
   ok: sdkOk && !!(process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT),
   detail: sdkOk ? sdk : `no encontrado (o sin la plataforma android-${ANDROID_COMPILE_SDK})`,
-  fix: 'winget install Google.AndroidStudio, abra Android Studio una vez para descargar el SDK y defina ANDROID_HOME (ver docs/desarrollo.md)',
+  fix: 'Instale las herramientas de línea de comandos del SDK, defina ANDROID_HOME e instale la plataforma con sdkmanager (docs/desarrollo.md §1.5)',
 });
 
 const avdDir = process.env.ANDROID_AVD_HOME ?? join(homedir(), '.android', 'avd');

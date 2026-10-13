@@ -54,15 +54,14 @@ Defina `JAVA_HOME` con la carpeta de instalación (por ejemplo `C:\Program Files
 
 ### 1.5 Android SDK
 
-```powershell
-winget install Google.AndroidStudio
-```
+Basta con las herramientas de línea de comandos del SDK (unos 150 MB); Android Studio (1,4 GB) es opcional. Si el disco C: va justo de espacio, ponga el SDK y los emuladores en otra unidad (en el equipo de desarrollo actual, `D:\Android`).
 
-1. Abra Android Studio una vez y deje que descargue el SDK (por defecto en `%LOCALAPPDATA%\Android\Sdk`).
-2. Defina `ANDROID_HOME` con esa carpeta y añada al `PATH` `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator` y `%ANDROID_HOME%\cmdline-tools\latest\bin`.
-3. Instale las plataformas y las imágenes de los emuladores:
+1. Descargue `commandlinetools-win-*_latest.zip` de https://developer.android.com/studio#command-line-tools-only y descomprímalo para que quede `<SDK>\cmdline-tools\latest\bin\sdkmanager.bat`.
+2. Defina en las variables de usuario `ANDROID_HOME=<SDK>` y, si quiere los emuladores fuera de C:, `ANDROID_AVD_HOME`. Añada al `PATH` `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator` y `%ANDROID_HOME%\cmdline-tools\latest\bin`.
+3. Acepte las licencias e instale la plataforma de compilación y las imágenes de los emuladores:
 
 ```powershell
+sdkmanager --licenses
 sdkmanager "platform-tools" "emulator" "build-tools;36.0.0" "platforms;android-36" "system-images;android-24;google_apis;x86_64" "system-images;android-34;google_apis;x86_64"
 ```
 
