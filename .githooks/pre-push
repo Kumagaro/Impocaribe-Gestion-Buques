@@ -1,0 +1,7 @@
+#!/bin/sh
+# T005 · plan §13.4: no se envía nada sin `pnpm verify` en verde.
+echo "pre-push: pnpm verify"
+pnpm verify || {
+  echo "pre-push: pnpm verify falló; el envío se cancela. Corrija y vuelva a intentarlo." >&2
+  exit 1
+}
