@@ -96,3 +96,16 @@ Al abrir el repositorio, VS Code ofrece instalar las extensiones recomendadas.
 | Comando | Qué hace |
 |---|---|
 | `pnpm run doctor` | Comprueba el equipo de desarrollo |
+
+## 3. Flujo de trabajo por tarea (plan §13.3)
+
+1. Crear una rama desde `main` con el nombre `tNNN-descripcion-corta` (por ejemplo `t042-endpoints-sincronizacion`).
+2. Leer la tarea y las secciones de su fase en el mapa de lectura de `specs/MVP/tasks.md`.
+3. Escribir las pruebas desde la spec y verlas fallar (Constitución, art. XIII).
+4. Implementar.
+5. `pnpm verify` en verde.
+6. Cada commit empieza por el ID de la tarea: `T042: endpoints de sincronización`. Si modifica o borra una prueba existente, el mensaje explica qué requisito cambió o por qué la prueba estaba mal.
+7. Abrir la solicitud de integración con la plantilla (`.github/pull_request_template.md`), que repite la definición de terminado.
+8. El responsable revisa cuando la tarea lo exige (maquetas, referencias visuales, escenario Excel). Solo se integra en `main` con la integración continua en verde.
+
+**Secretos:** solo se sube `.env.example`. El `.env`, el código de instalación, las contraseñas y las claves nunca entran al repositorio.

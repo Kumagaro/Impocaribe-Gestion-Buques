@@ -98,8 +98,8 @@ flowchart LR
 
 ```
 impocaribe-ordenes/
-├─ Constitution.md
-├─ specs/001-mvp/{spec.md, plan.md, tasks.md}
+├─ docs/Constitution.md
+├─ specs/MVP/{spec.md, ui-spec.md, plan.md, tasks.md}
 ├─ packages/
 │  ├─ shared/        # Esquemas Zod, tipos, DTO de sincronización, códigos de error, permisos y dominio puro
 │  ├─ server/        # NestJS: módulos por dominio, Drizzle, change_log, plantillas PDF, tareas
@@ -1199,12 +1199,12 @@ El script `pnpm run doctor` comprueba todo lo anterior y explica qué falta.
 
 ```
 impocaribe-ordenes/
-├─ Constitution.md
 ├─ README.md                 # Qué es, cómo arrancar, enlaces a specs y a docs/
 ├─ docs/
+│  ├─ Constitution.md
 │  ├─ desarrollo.md          # Entorno, comandos y flujo de trabajo
 │  └─ referencia/            # Prototipo HTML aprobado (solo lectura)
-├─ specs/001-mvp/            # spec, ui-spec, plan, tasks
+├─ specs/MVP/                # spec, ui-spec, plan, tasks
 ├─ packages/                 # shared, server, web, desktop, android
 ├─ setup/  build/            # Ayudante de instalación y generación de instaladores
 ├─ fixtures/                 # Escenario del Excel (T de la fase F0)
