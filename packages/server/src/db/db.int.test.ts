@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { config } from '../config.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
@@ -73,11 +74,14 @@ describe('plan §4: identificadores uuid v7', () => {
 });
 
 describe('migraciones y base limpia por suite', () => {
-  it('la migración inicial queda registrada en Drizzle', async () => {
-    const { rows } = await suite.admin.query<{ n: string }>(
-      'SELECT count(*)::text AS n FROM drizzle.__drizzle_migrations',
+  it('todas las migraciones versionadas del repositorio quedan aplicadas y registradas en Drizzle', async () => {
+    const journal = JSON.parse(readFileSync(new URL('../../drizzle/meta/_journal.json', import.meta.url), 'utf8')) as {
+      entries: unknown[];
+    };
+    const { rows } = await suite.admin.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations',
     );
-    expect(rows[0]!.n).toBe('1');
+    expect(rows[0]!.n).toBe(journal.entries.length);
   });
 
   it('cada suite tiene su propia base terminada en _test, distinta de la plantilla y de la de desarrollo', async () => {
