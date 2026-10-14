@@ -1,5 +1,8 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
 import '../src/ui/base.css';
+import '../src/ui/ui.css';
+import { MotionProvider } from '../src/motion/MotionProvider';
+import { DeviceClassProvider } from '../src/ui/device';
 import { installTokens } from '../src/ui/theme';
 import { applyTheme, type ThemePreference } from '../src/ui/tokens';
 
@@ -15,7 +18,11 @@ const withThemeAndDevice: Decorator = (Story, context) => {
   applyTheme(document.documentElement, theme);
   return (
     <div data-device-class={device} style={{ width: DEVICE_WIDTH[device], maxWidth: '100%', margin: '0 auto' }}>
-      <Story />
+      <DeviceClassProvider value={device}>
+        <MotionProvider reduceMotion={context.globals.reduceMotion === 'on'}>
+          <Story />
+        </MotionProvider>
+      </DeviceClassProvider>
     </div>
   );
 };
@@ -49,8 +56,20 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    reduceMotion: {
+      description: 'Reducir animaciones (RF-UI-06)',
+      toolbar: {
+        title: 'Movimiento',
+        icon: 'lightning',
+        items: [
+          { value: 'off', title: 'Con animaciones' },
+          { value: 'on', title: 'Reducir animaciones' },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
-  initialGlobals: { theme: 'light', deviceClass: 'desktop' },
+  initialGlobals: { theme: 'light', deviceClass: 'desktop', reduceMotion: 'off' },
   parameters: { layout: 'padded' },
 };
 export default preview;
