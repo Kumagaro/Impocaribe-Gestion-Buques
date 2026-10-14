@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, type INestApplication } from '@nestjs/comm
 import { Test } from '@nestjs/testing';
 import { ManualClock, signRequest } from '@impocaribe/shared';
 import { afterEach, describe, expect, it } from 'vitest';
+import { listenForTests } from '../../test/listen.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
 import { CLOCK, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY } from '../tokens.ts';
@@ -49,8 +50,7 @@ async function start(enabled: boolean) {
     .useValue(registry)
     .compile();
   app = configureApp(moduleRef.createNestApplication({ logger: false, rawBody: true }));
-  await app.listen(0, '127.0.0.1');
-  base = await app.getUrl();
+  base = await listenForTests(app);
 }
 
 async function signed(
