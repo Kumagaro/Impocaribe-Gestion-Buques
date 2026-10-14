@@ -54,17 +54,19 @@ Defina `JAVA_HOME` con la carpeta de instalación (por ejemplo `C:\Program Files
 
 ### 1.5 Android SDK
 
-```powershell
-winget install Google.AndroidStudio
-```
+Basta con las herramientas de línea de comandos del SDK (unos 150 MB); Android Studio (1,4 GB) es opcional. Si el disco C: va justo de espacio, ponga el SDK y los emuladores en otra unidad (en el equipo de desarrollo actual, `D:\Android`).
 
-1. Abra Android Studio una vez y deje que descargue el SDK (por defecto en `%LOCALAPPDATA%\Android\Sdk`).
-2. Defina `ANDROID_HOME` con esa carpeta y añada al `PATH` `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator` y `%ANDROID_HOME%\cmdline-tools\latest\bin`.
-3. Instale las plataformas y las imágenes de los emuladores:
+1. Descargue `commandlinetools-win-*_latest.zip` de https://developer.android.com/studio#command-line-tools-only y descomprímalo para que quede `<SDK>\cmdline-tools\latest\bin\android.exe`.
+2. Defina en las variables de usuario `ANDROID_HOME=<SDK>` y, si quiere los emuladores fuera de C:, `ANDROID_AVD_HOME`. Añada al `PATH` `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator` y `%ANDROID_HOME%\cmdline-tools\latest\bin`.
+3. Acepte las licencias e instale la plataforma de compilación y las imágenes de los emuladores. Las herramientas actuales usan `android sdk install` con nombres separados por `/`; `sdkmanager` está obsoleto y no acepta los nombres con `;`:
 
 ```powershell
-sdkmanager "platform-tools" "emulator" "build-tools;36.0.0" "platforms;android-36" "system-images;android-24;google_apis;x86_64" "system-images;android-34;google_apis;x86_64"
+sdkmanager --licenses
+android sdk install platform-tools emulator build-tools/36.0.0 platforms/android-36
+android sdk install system-images/android-24/google_apis/x86_64 system-images/android-34/google_apis/x86_64
 ```
+
+Cada imagen pesa 1–1,5 GB. Si la red se corta, `android sdk install` vuelve a empezar desde cero; con una conexión inestable conviene descargar el ZIP con `curl -C -` (la URL y el SHA-1 están en `https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml`) y descomprimirlo en `<SDK>\system-images\android-NN\google_apis\`.
 
 ### 1.6 Emuladores
 
@@ -74,7 +76,9 @@ avdmanager create avd -n impocaribe-api34 -k "system-images;android-34;google_ap
 emulator -avd impocaribe-api24
 ```
 
-La aceleración por hardware necesita la Plataforma de máquina virtual de Windows (Hyper-V) activada.
+La aceleración por hardware necesita la Plataforma de máquina virtual de Windows (WHPX); `emulator -accel-check` dice si está disponible.
+
+**WebView del emulador de Android 7:** la imagen trae Chromium 53, por debajo del mínimo 87 (DT-15), y la interfaz queda en blanco (`SyntaxError: Unexpected token ?`). Para ver la app en Android 7 hay que instalar en el emulador Chrome o Android System WebView ≥ 87 compatible con Android 7 (`adb install <apk>`); es el mismo caso que resuelve el instalador del WebView de T125. El emulador de Android 14 ya trae un WebView moderno.
 
 ### 1.7 Máquinas virtuales Windows
 

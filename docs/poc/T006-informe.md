@@ -6,7 +6,7 @@
 | Cubre | R-01, R-10, R-13, R-14, RNF-21 |
 | Equipo | PC de desarrollo con Windows 11 Home 10.0.26200, Node 24.21, Electron 44.7, PostgreSQL 16.15 |
 | Código | Desechable: quedó en una carpeta temporal y no se sube al repositorio |
-| Estado | **Parcial:** 2 puntos superados, 1 a medias y 3 pendientes de hardware |
+| Estado | **Parcial:** 2 puntos superados, 2 a medias y 2 pendientes de hardware |
 
 ## Resumen
 
@@ -15,7 +15,7 @@
 | 1 | Servidor como servicio de Windows (WinSW) en una VM con Defender, con la app de escritorio conectándose | ⏳ Pendiente: falta la VM Windows (T001) |
 | 2 | Descubrimiento DNS-SD y por difusión en el hotspot de un celular real y con router, incluido el reinicio del hotspot | ⏳ Pendiente: necesita el celular y el router reales |
 | 3 | Verificación de identidad del servidor (DT-18) en el transporte nativo de Electron y de Android | ✅ Electron · ⏳ Android (falta el Android SDK) |
-| 4 | App en Android 7 con el WebView actualizado sin Play Store, y servicio en primer plano con la app cerrada | ⏳ Pendiente: falta el Android SDK/emulador y un dispositivo Android 7 |
+| 4 | App en Android 7 con el WebView actualizado sin Play Store, y servicio en primer plano con la app cerrada | ◐ Parcial: el APK arranca en Android 7, pero el WebView de fábrica (Chromium 53) no ejecuta la interfaz; falta instalar el WebView ≥ 87 y probar el servicio |
 | 5 | PDF A4 con Chromium | ✅ Superado, con un cambio en el plan (ver abajo) |
 | 6 | Consumo de memoria base en la VM de 4 GB | ◐ Medido en la PC de desarrollo; falta repetirlo en la VM de 4 GB |
 
@@ -72,6 +72,18 @@ Se generó con Puppeteer una orden de prueba en HTML (A4, márgenes de 15 mm) ci
 - **Riesgo:** Electron ya roza su presupuesto con una sola pantalla. Hay que vigilarlo desde F0 (un solo proceso de renderizado, plan §10.7).
 
 **Pendiente:** repetirlo en la VM de Windows 10 con 4 GB (tarea de rendimiento de F12, plan §10.7), con PostgreSQL configurado según el plan.
+
+## 4. Android 7 (avance parcial)
+
+En el emulador con Android 7.0 (imagen `google_apis` x86_64, API 24):
+- El APK de depuración se instala y la actividad arranca.
+- El WebView de fábrica es **Chromium 53.0.2785**, que no entiende el JavaScript compilado para Chromium 87 (`SyntaxError: Unexpected token ?`), así que la pantalla queda en blanco.
+
+Esto confirma el riesgo R-10 y la necesidad de DT-15:
+- comprobar la versión del WebView al iniciar y mostrar P-27 (T118);
+- incluir el WebView actualizado en el paquete de instalación (T125).
+
+**Pendiente:** instalar un WebView o Chrome ≥ 87 sin Play Store (la última versión compatible con Android 7 es la 119) y probar el servicio en primer plano con la app cerrada.
 
 ## Hallazgos de la fase FP que afectan a tareas futuras
 
