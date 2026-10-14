@@ -1,6 +1,6 @@
 import { ESLint } from 'eslint';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 // T007 · plan §11.3: cada barrera de lint rechaza su ejemplo prohibido y deja pasar el uso correcto.
 const eslint = new ESLint({ cwd: fileURLToPath(new URL('../..', import.meta.url)) });
@@ -12,6 +12,9 @@ async function ruleIds(code: string, filePath: string): Promise<string[]> {
 
 const TEST_FILE = 'packages/shared/src/domain/example.test.ts';
 const PROD_FILE = 'packages/server/src/example.service.ts';
+
+// La primera pasada carga la configuración y typescript-eslint: puede tardar más que el límite de una prueba.
+beforeAll(() => eslint.lintText('', { filePath: TEST_FILE }), 60_000);
 
 describe('lint de pruebas (Const. art. XIII.4)', () => {
   it.each([
