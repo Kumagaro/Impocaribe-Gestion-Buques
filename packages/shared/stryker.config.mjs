@@ -12,6 +12,8 @@ export default {
   testRunner: 'command',
   commandRunner: { command: `node "${vitest}" run src/domain` },
   coverageAnalysis: 'off',
+  // Arrancar Vitest por mutante tarda segundos: con poco margen, mutantes que las pruebas matan acaban como "timeout".
+  timeoutMS: 30_000,
   mutate: ['src/domain/**/*.ts', '!src/domain/**/*.test.ts'],
   thresholds: { high: 95, low: 90, break: 90 },
   // Sin archivos de dominio no hay nada que mutar: no es un fallo. Un archivo sin pruebas lo frena la cobertura.
