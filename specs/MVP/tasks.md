@@ -222,11 +222,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Terminado:* aprobado por el responsable.
   - *Estado (2026-10-14):* `fixtures/impocaribe-2026-09.json` (anonimizado, a partir del prototipo, porque no hay Excel aparte) y `fixtures/impocaribe-2026-09.md` con las reglas, los supuestos añadidos y el resultado esperado fila por fila. **Pendiente de aprobación del responsable.**
 
-- [ ] **T017. Maquetas base.** Sistema de diseño renovado sobre el prototipo (paleta, tipografía, componentes, tema oscuro), `AppShell` de teléfono, tablet y escritorio, los siete estados EST, los patrones MOV y los **estados de un campo** (ayuda, error, advertencia, aviso legal, correcto) y el resumen de errores, ilustrados.
+- [x] **T017. Maquetas base.** Sistema de diseño renovado sobre el prototipo (paleta, tipografía, componentes, tema oscuro), `AppShell` de teléfono, tablet y escritorio, los siete estados EST, los patrones MOV y los **estados de un campo** (ayuda, error, advertencia, aviso legal, correcto) y el resumen de errores, ilustrados.
   - *Cubre:* RF-UI-02, 03, 04, 05, 09, `ui-spec.md` §1 a §3
   - *Depende:* —
   - *Terminado:* aprobadas por el responsable.
-  - *Estado (2026-10-14):* `docs/maquetas/T017-base.html`. **Pendiente de aprobación del responsable;** bloquea T018 a T026.
+  - *Estado (2026-10-14):* `docs/maquetas/T017-base.html`, aprobadas por el responsable.
 
 - [ ] **T018. Tokens, tema y Storybook.** Tokens del plan §7.2 como variables CSS y constantes, tema claro y oscuro, Storybook con selector de clase de dispositivo y de tema.
   - *Cubre:* RF-UI-03, RNF-06
