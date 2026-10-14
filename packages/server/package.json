@@ -13,7 +13,8 @@
     "db:migrate": "node src/db/cli.ts migrate",
     "db:reset": "node src/db/cli.ts reset",
     "db:seed": "node src/db/cli.ts seed",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "mutation": "stryker run"
   },
   "dependencies": {
     "@impocaribe/shared": "workspace:*",
@@ -30,6 +31,8 @@
   "devDependencies": {
     "@nestjs/cli": "^12.0.8",
     "@nestjs/testing": "^12.1.3",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.11"
