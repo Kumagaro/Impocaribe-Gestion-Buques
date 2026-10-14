@@ -105,7 +105,11 @@ Al abrir el repositorio, VS Code ofrece instalar las extensiones recomendadas.
 | `pnpm test` | Pruebas de todos los paquetes |
 | `pnpm lint` | ESLint y Prettier (`pnpm format` corrige el formato) |
 | `pnpm typecheck` | Tipos en modo `strict` |
-| `pnpm verify` | Tipos, lint y pruebas: obligatorio antes de integrar |
+| `pnpm verify` | Tipos, lint, pruebas, mutación, extremo a extremo y visual: obligatorio antes de integrar |
+| `pnpm verify:core` | Lo mismo sin extremo a extremo ni visual (lo que corre la CI antes de `pnpm e2e`) |
+| `pnpm e2e` | Playwright contra el servidor y una base propia (`impocaribe_e2e_test`, se recrea), en teléfono, tablet y escritorio |
+| `pnpm visual` | Capturas de cada historia de Storybook por tema y clase, comparadas píxel a píxel con `packages/web/e2e/visual/references/` |
+| `pnpm --filter @impocaribe/web visual:update` | Regenera las referencias visuales; cada cambio de referencia lo aprueba el responsable |
 | `pnpm --filter @impocaribe/desktop start` | Abre la app de escritorio con el build de web (`pnpm build` antes) |
 | `pnpm --filter @impocaribe/android apk` | Copia el build de web al proyecto nativo y genera el APK de depuración en `packages/android/android/app/build/outputs/apk/debug/` |
 
@@ -149,10 +153,10 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 
 | Trabajo | Sistema | Qué ejecuta hoy |
 |---|---|---|
-| Verificación | Linux con PostgreSQL 16 | `pnpm db:reset` sobre la base de pruebas y `pnpm verify` |
+| Verificación | Linux con PostgreSQL 16 | `pnpm db:reset` sobre la base de pruebas, `pnpm verify:core` y `pnpm e2e` (la regresión visual corre en el equipo de desarrollo: sus referencias son de Windows) |
 | Escritorio | Windows | `pnpm build` (los instaladores llegan con T117) |
 | Android | Linux con JDK 21 y Android SDK | APK de depuración, publicado como artefacto `apk-debug` |
-| Nocturno | — | Hoy repite los anteriores; la mutación completa, el extremo a extremo y la regresión visual se añaden con sus tareas (T007, T026) |
+| Nocturno | Linux con PostgreSQL 16 | Repite los anteriores y añade la mutación completa (`pnpm mutation:full`) |
 
 **Bloqueo de `main`.** En GitHub, *Settings → Branches → Branch protection rules* para `main`: exigir solicitud de integración y los tres trabajos (`Verificación`, `Escritorio`, `APK de depuración`) en verde antes de integrar.
 
@@ -160,7 +164,7 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 
 ## 5. Barreras de calidad (plan §11.3, Const. art. XIII)
 
-`pnpm verify` ejecuta, en orden, tipos, lint, pruebas con cobertura y mutación. Falla si cualquiera de estas barreras no se cumple:
+`pnpm verify` ejecuta, en orden, tipos, lint, pruebas con cobertura, mutación, extremo a extremo y regresión visual. Falla si cualquiera de estas barreras no se cumple:
 
 | Barrera | Dónde | Regla |
 |---|---|---|
@@ -177,3 +181,14 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 Las pruebas de `scripts/quality/` demuestran que cada regla de lint rechaza su ejemplo prohibido.
 
 **Convención:** las pruebas de integración contra PostgreSQL real se nombran `*.int.test.ts`.
+
+### 5.1 Pruebas de interfaz (T026, plan §7.6 y §11.2)
+
+| Nivel | Dónde | Cómo |
+|---|---|---|
+| Contrato | `scripts/quality/contract.test.ts` | Cada llamada declarada con `defineEndpoint` (registro en `web/src/api/endpoints/index.ts`) debe existir en el servidor con el mismo método, ruta, esquemas (comparados como JSON Schema), errores y roles. Cada ruta declara los suyos con `@Contract` |
+| Componente | `packages/web/test/` | `renderUi` (clase de dispositivo y movimiento), `createTestPlatform` (copia local en `sql.js`) y `createFakeServer`: responde solo llamadas del registro, con datos generados desde su esquema de salida (`sampleOf`), y valida la entrada como el servidor |
+| Extremo a extremo | `packages/web/e2e/*.e2e.ts` | Fixtures `openApp` (con `?device=`), `otherUser` (segundo usuario en su contexto) y `sql` (consulta directa a la base) |
+| Visual | `packages/web/e2e/visual/` | Una referencia por historia, tema y clase, sin tolerancia: un píxel distinto falla |
+
+Playwright usa Chrome for Testing 155.0.8059.39 (`chrome-headless-shell`), la versión fija que ya trae la caché de Puppeteer (`~/.cache/puppeteer`); otra ruta se indica en `E2E_CHROME`. Con la misma versión, las capturas no cambian entre ejecuciones.

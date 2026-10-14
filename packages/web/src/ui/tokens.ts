@@ -59,6 +59,35 @@ export const fontSizes = { xs: 11, sm: 12.5, md: 14, lg: 16, xl: 23 } as const;
 /** Espaciado en múltiplos de 4 px. */
 export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32 } as const;
 export const radii = { sm: 6, md: 9, lg: 14 } as const;
+/**
+ * Duraciones en ms de los patrones de movimiento (ui-spec §3). Son los máximos de la tabla; donde no fija uno, rige el
+ * general de 300 ms (Const. art. XIV.3). Los presets de motion/ y las transiciones CSS las toman de aquí.
+ */
+export const durations = {
+  pagePhone: 250, // MOV-01
+  pageTablet: 220,
+  pageDesktop: 180,
+  listItem: 250, // MOV-02
+  rowHighlightHold: 1500,
+  number: 400, // MOV-03
+  progress: 300,
+  sheet: 240, // MOV-04
+  dialog: 200,
+  message: 150, // MOV-05
+  press: 100, // MOV-06
+  success: 300, // MOV-07
+  iconRing: 300, // MOV-08
+  iconLock: 200,
+  iconDraw: 200,
+  iconSpin: 1000, // bucle mientras se sincroniza
+  iconPulse: 1600, // bucle mientras no hay conexión
+  shimmer: 1400, // MOV-09 (bucle)
+  step: 250, // MOV-10
+  shake: 200, // MOV-11
+  check: 200, // MOV-12
+  summary: 220, // MOV-13
+  reducedFade: 100, // RF-UI-06
+} as const;
 /** Objetivo táctil mínimo en teléfono y tablet (RNF-16). */
 export const touchTarget = 48;
 export const shadows = {
@@ -90,6 +119,12 @@ export function tokensCss(): string {
       .join('') +
     Object.entries(radii)
       .map(([k, v]) => `--r-${k}:${v}px;`)
+      .join('') +
+    Object.entries(space)
+      .map(([k, v]) => `--s-${k}:${v}px;`)
+      .join('') +
+    Object.entries(durations)
+      .map(([k, v]) => `--dur-${kebab(k)}:${v}ms;`)
       .join('') +
     `--touch:${touchTarget}px;`;
   const darkVars = `${vars(dark, 'dark')}color-scheme:dark;`;

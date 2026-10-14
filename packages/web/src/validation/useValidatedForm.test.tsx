@@ -292,3 +292,16 @@ describe('RF-VAL-10: cambios sin guardar', () => {
     expect([screen.queryByRole('dialog'), router.state.location.pathname]).toEqual([null, '/otra']);
   });
 });
+
+describe('MOV-05: el mensaje de error se despliega', () => {
+  it('con movimiento se despliega; con movimiento reducido aparece sin más', async () => {
+    const { unmount } = renderUi(<DriverForm />);
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    const unfold = () => screen.getByText('El carné debe tener 11 dígitos (tiene 0).').getAttribute('data-motion');
+    expect(unfold()).toBe('unfold');
+    unmount();
+    renderUi(<DriverForm />, { reduceMotion: true });
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    expect(unfold()).toBe('static');
+  });
+});

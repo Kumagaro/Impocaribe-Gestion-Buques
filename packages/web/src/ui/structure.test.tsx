@@ -218,3 +218,17 @@ describe('Navegación', () => {
     ]);
   });
 });
+
+describe('RNF-16: el riel de tablet tiene objetivos táctiles', () => {
+  it('cada entrada del riel está marcada como táctil', () => {
+    renderUi(<NavRail items={NAV} current="inicio" onNavigate={() => undefined} />, { device: 'tablet' });
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('data-touch'))).toEqual(['true', 'true', 'true']);
+  });
+
+  it('las pestañas en tablet también', () => {
+    renderUi(<Tabs label="t" value="a" onChange={() => undefined} tabs={[{ id: 'a', label: 'A', content: 'x' }]} />, {
+      device: 'tablet',
+    });
+    expect(screen.getByRole('tab').getAttribute('data-touch')).toBe('true');
+  });
+});

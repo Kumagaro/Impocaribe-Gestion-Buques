@@ -228,35 +228,38 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Terminado:* aprobadas por el responsable.
   - *Estado (2026-10-14):* `docs/maquetas/T017-base.html`, aprobadas por el responsable.
 
-- [ ] **T018. Tokens, tema y Storybook.** Tokens del plan §7.2 como variables CSS y constantes, tema claro y oscuro, Storybook con selector de clase de dispositivo y de tema.
+- [x] **T018. Tokens, tema y Storybook.** Tokens del plan §7.2 como variables CSS y constantes, tema claro y oscuro, Storybook con selector de clase de dispositivo y de tema.
   - *Cubre:* RF-UI-03, RNF-06
   - *Depende:* T017, T008
   - *Pruebas:* contraste AA de todos los pares de color de texto y fondo, en ambos temas (prueba automática).
+  - *Estado (2026-10-14):* colores, tipografía, espaciado (`--s-*`), radios, sombras y duraciones de movimiento (`--dur-*`, que usan los presets de `motion/`) como constantes y variables CSS; contraste AA comprobado en 22 pares por tema, incluidos los de los componentes de T023.
 
-- [ ] **T019. Adaptador de plataforma.** `platform.ts` con `deviceInfo` e implementación de prueba (`sql.js`).
+- [x] **T019. Adaptador de plataforma.** `platform.ts` con `deviceInfo` e implementación de prueba (`sql.js`).
   - *Cubre:* DT-03
   - *Depende:* T018
 
-- [ ] **T020. Cliente de API.** Bearer, `X-App-Version`, `X-Device-Time`, errores, 401, 426 y 410. Genera el **registro de llamadas** usado por la prueba de contrato.
+- [x] **T020. Cliente de API.** Bearer, `X-App-Version`, `X-Device-Time`, errores, 401, 426 y 410. Genera el **registro de llamadas** usado por la prueba de contrato.
   - *Cubre:* DT-05, DT-11
   - *Depende:* T011, T019
 
-- [ ] **T021. Transporte seguro e identidad (cliente).** Contrato de `platform.http` y `platform.ws`, lógica pura de verificación (cadena hasta la CA aprendida y nombre alternativo igual a la identidad guardada, sin comparar la IP), e implementación de pruebas en Node con la misma verificación.
+- [x] **T021. Transporte seguro e identidad (cliente).** Contrato de `platform.http` y `platform.ws`, lógica pura de verificación (cadena hasta la CA aprendida y nombre alternativo igual a la identidad guardada, sin comparar la IP), e implementación de pruebas en Node con la misma verificación.
   - *Cubre:* DT-18, DT-19, RF-RED-03
   - *Depende:* T020
   - *Pruebas:* un certificado de otra CA se rechaza; uno de la CA correcta con otra identidad se rechaza; la identidad correcta en una IP distinta se acepta.
+  - *Estado (2026-10-14):* la verificación y el transporte HTTP de Node están en `@impocaribe/shared/node`. El equivalente de Node de `platform.ws` se hace en T043, con el servidor WebSocket contra el que probarlo.
 
-- [ ] **T022. Movimiento.** `MotionProvider` (`LazyMotion`, `MotionConfig`, preferencia "Reducir animaciones"), presets MOV-01 a MOV-10 con su variante reducida y `AnimatedIcon` (Lucide) con los estados de MOV-08.
+- [x] **T022. Movimiento.** `MotionProvider` (`LazyMotion`, `MotionConfig`, preferencia "Reducir animaciones"), presets MOV-01 a MOV-10 con su variante reducida y `AnimatedIcon` (Lucide) con los estados de MOV-08.
   - *Cubre:* RF-UI-05, 06, DT-13, DT-14
   - *Depende:* T018
   - *Pruebas:* con movimiento reducido (del sistema o del usuario), cada preset produce la variante reducida; ninguna duración supera la máxima de `ui-spec.md` §3; el lint de movimiento rechaza un preset que anima `height`.
+  - *Estado (2026-10-14):* presets MOV-01 a MOV-13 (MOV-05 incluido, aplicado en `Field`) y `AnimatedIcon` con historia propia; la variante reducida se prueba con la preferencia del sistema y con la del usuario.
 
-- [ ] **T023. Componentes base.** La lista del plan §7.2, cada uno con historias de todos sus estados y pruebas de componente: estados, teclado y foco, objetivos táctiles de 48 dp en teléfono y tablet, y movimiento.
+- [x] **T023. Componentes base.** La lista del plan §7.2, cada uno con historias de todos sus estados y pruebas de componente: estados, teclado y foco, objetivos táctiles de 48 dp en teléfono y tablet, y movimiento.
   - *Cubre:* RF-UI-03 a 08, RNF-16
   - *Depende:* T022
   - *Pruebas:* `Sheet` se cierra al arrastrar hacia abajo más del umbral y no por debajo; `DataTable` virtualiza por encima de 100 filas y no anima reordenamientos ahí; `OverrideDialog` no permite confirmar con menos de 10 caracteres de motivo.
   - *Terminado:* referencias visuales de los componentes aprobadas.
-  - *Estado (2026-10-14):* componentes en `packages/web/src/ui/` (`controls`, `presentation`, `overlays` y `structure`, con `ui.css`), 78 pruebas de componente en verde e historias de todos los estados, con selectores de tema, clase de dispositivo y movimiento en Storybook. Las reglas de F-15 están en `@impocaribe/shared/validation`. `PdfViewer` se hace con su pantalla, en T088. Falta: las capturas de referencia (infraestructura visual de T026) y su aprobación.
+  - *Estado (2026-10-14):* componentes en `packages/web/src/ui/` (`controls`, `presentation`, `overlays` y `structure`, con `ui.css`), 78 pruebas de componente en verde e historias de todos los estados, con selectores de tema, clase de dispositivo y movimiento en Storybook. Las reglas de F-15 están en `@impocaribe/shared/validation`. `PdfViewer` se hace con su pantalla, en T088. Referencias visuales (`packages/web/e2e/visual/references/`) aprobadas por el responsable el 2026-10-14; `Card` y los objetivos táctiles en tablet tienen prueba propia.
 
 - [x] **T024. Sistema de validación de formularios.** `Field` (mensaje único con prioridad error → advertencia → ayuda, marca de correcto), `ErrorSummary`, `LegalNotice`, máscaras de entrada (dígitos, mayúsculas, teléfono, toneladas), `useValidatedForm` y `UnsavedChangesGuard`, con los movimientos MOV-11 a MOV-13 y su variante reducida.
   - *Cubre:* RF-VAL-01 a 03, 07, 09 a 11, Const. art. XIV.9, plan §7.7, HU-18
@@ -268,7 +271,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T023
   - *Pruebas:* 599 dp da teléfono y 600 dp da tablet; Electron siempre escritorio; los atajos de escritorio navegan; Solo lectura no ve "Nueva orden" en ninguna clase.
 
-- [ ] **T026. Infraestructura de pruebas de interfaz.**
+- [x] **T026. Infraestructura de pruebas de interfaz.**
   - **Contrato:** registro de llamadas de `web` contra las rutas y esquemas del servidor.
   - **Componente:** utilidades con la copia local en `sql.js` y respuestas generadas desde los esquemas Zod.
   - **Extremo a extremo:** Playwright contra el servidor y PostgreSQL reales, con dos usuarios, consultas directas a la base y perfiles de teléfono, tablet y escritorio.
@@ -276,6 +279,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* plan §7.6, §11.2
   - *Depende:* T020, T025, T014
   - *Pruebas:* una pantalla de ejemplo con una llamada inexistente en el servidor hace fallar el contrato; un cambio de un píxel en una referencia visual se detecta.
+  - *Estado (2026-10-14):* contrato en `scripts/quality/contract.test.ts` (rutas con `@Contract`, llamadas con `defineEndpoint`); `createFakeServer` y `sampleOf` en `packages/web/test/`; `pnpm e2e` (Playwright, base `impocaribe_e2e_test`, tres clases) y `pnpm visual` (Storybook, sin tolerancia), con Chrome for Testing 155 fijo. La CI de Linux ejecuta el extremo a extremo; la regresión visual corre en `pnpm verify` en Windows, porque sus referencias son de Windows. Detalle en `docs/desarrollo.md` §5.1.
 
 ## F1. Autenticación y usuarios
 
@@ -355,7 +359,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-CON-02, 03, 09, 10
   - *Depende:* T014, T032
 
-- [ ] **T043. WebSocket.**
+- [ ] **T043. WebSocket.** Incluye el equivalente de Node de `platform.ws`, con la misma verificación de identidad que el transporte HTTP de T021.
   - *Cubre:* RNF-04
   - *Depende:* T042
 

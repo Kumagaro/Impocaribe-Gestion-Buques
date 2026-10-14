@@ -1,6 +1,6 @@
 // T020 · Cliente de la API del servidor (plan §6): cabeceras de sesión, versión, hora e idempotencia; errores del §6.1;
 // y el registro de llamadas que la prueba de contrato (T026) compara con las rutas del servidor.
-import type { ErrorCode } from '@impocaribe/shared';
+import type { ErrorCode, Role } from '@impocaribe/shared';
 import type { z, ZodType } from 'zod';
 import type { HttpTransport } from '../platform/platform';
 
@@ -28,6 +28,10 @@ export interface Endpoint<In extends ZodType = ZodType, Out extends ZodType = Zo
   path: string;
   input?: In;
   output?: Out;
+  /** Códigos de negocio que la pantalla sabe tratar; deben coincidir con los que declara la ruta. */
+  errors?: readonly ErrorCode[];
+  /** Roles que pueden llamarla, o 'public'; deben coincidir con los de la ruta. */
+  roles?: readonly Role[] | 'public';
 }
 
 /** Todas las llamadas que usa la interfaz: la prueba de contrato las compara con el servidor (plan §7.6). */

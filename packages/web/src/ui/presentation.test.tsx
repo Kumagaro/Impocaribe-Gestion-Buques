@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderUi } from '../../test/render';
 import {
   Badge,
+  Card,
   EmptyState,
   ErrorState,
   ListCard,
@@ -195,5 +196,45 @@ describe('Toast (RF-UI-07)', () => {
     expect(screen.getByRole('alert').textContent).toContain('Las toneladas superan el saldo de la DM');
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('Card', () => {
+  it('es una sección con su título como encabezado', () => {
+    renderUi(<Card title="Resumen del buque">Contenido</Card>);
+    const heading = screen.getByRole('heading', { level: 2, name: 'Resumen del buque' });
+    expect(heading.closest('section')?.textContent).toBe('Resumen del buqueContenido');
+  });
+
+  it('sin título no pinta encabezado', () => {
+    renderUi(<Card>Solo contenido</Card>);
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+});
+
+describe('RNF-16: objetivo táctil de 48 dp también en tablet', () => {
+  it.each([
+    ['tablet', 'true'],
+    ['desktop', null],
+  ] as const)('ListCard en %s → data-touch %s', (device, touch) => {
+    renderUi(<ListCard title="DM 00431" onOpen={() => undefined} />, { device });
+    expect(screen.getByRole('button').getAttribute('data-touch')).toBe(touch);
+  });
+});
+
+describe('MOV-09 con la preferencia del sistema', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('con prefers-reduced-motion del sistema, un componente recibe la variante reducida', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    renderUi(<Skeleton lines={2} />);
+    expect(screen.getByRole('status').getAttribute('data-motion')).toBe('static');
   });
 });

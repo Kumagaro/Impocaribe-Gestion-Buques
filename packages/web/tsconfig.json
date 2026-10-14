@@ -8,5 +8,13 @@
     "types": ["node", "vite/client"],
     "noEmit": true
   },
-  "include": ["src", "test", ".storybook", "vite.config.ts"]
+  "include": [
+    "src",
+    "test",
+    "e2e",
+    ".storybook",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "playwright.visual.config.ts"
+  ]
 }

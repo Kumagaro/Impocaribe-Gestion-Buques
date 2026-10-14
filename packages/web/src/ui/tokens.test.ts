@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyTheme, palettes, tokensCss, type PaletteKey } from './tokens';
+import { applyTheme, durations, palettes, space, tokensCss, type PaletteKey } from './tokens';
 
 // T018 · RF-UI-03, RNF-06 (tema claro y oscuro) y RNF-16 (contraste AA). Oráculo: la fórmula de contraste de WCAG 2.x,
 // escrita aquí, independiente del código probado.
@@ -36,6 +36,9 @@ const PAIRS: [PaletteKey, PaletteKey][] = [
   ['bad', 'badSoft'],
   ['bad', 'surface'],
   ['surface', 'ink'],
+  // T023: botón secundario, y botón de peligro, aviso de error e insignia de alertas.
+  ['accentInk', 'surface'],
+  ['onAccent', 'bad'],
 ];
 
 describe('RNF-16: contraste AA (4,5 : 1) de todos los pares de texto y fondo', () => {
@@ -75,5 +78,22 @@ describe('RNF-06: tema claro y oscuro', () => {
     root.setAttribute('data-theme', 'dark');
     applyTheme(root, pref);
     expect(root.getAttribute('data-theme')).toBe(attr);
+  });
+});
+
+describe('plan §7.2: espaciado y duraciones como variables CSS y constantes', () => {
+  it('cada paso de espaciado y cada duración tiene su variable CSS', () => {
+    const css = tokensCss();
+    const missing = [
+      ...Object.entries(space).map(([k, v]) => `--s-${k}:${v}px;`),
+      ...Object.entries(durations).map(([k, v]) => `--dur-${k.replace(/([A-Z])/g, '-$1').toLowerCase()}:${v}ms;`),
+    ].filter((v) => !css.includes(v));
+    expect(missing).toEqual([]);
+  });
+
+  it('ui-spec §3: las duraciones de transición no pasan de 300 ms (salvo el número vivo, el resaltado y los bucles)', () => {
+    const LONGER = ['number', 'rowHighlightHold', 'shimmer', 'iconSpin', 'iconPulse'];
+    const over = Object.entries(durations).filter(([k, v]) => !LONGER.includes(k) && v > 300);
+    expect([over, durations.number, durations.message, durations.reducedFade]).toEqual([[], 400, 150, 100]);
   });
 });
