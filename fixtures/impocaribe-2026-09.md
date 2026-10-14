@@ -5,7 +5,7 @@
 | Fuente | Excel "Orden De Carga puerto habana ULTIMO2", tal como está en el prototipo aprobado (`docs/referencia/`) |
 | Datos | `fixtures/impocaribe-2026-09.json` |
 | Anonimización | Personas físicas como PARTICULAR A a D, choferes como CHOFER 01 a 65. Empresas, marcas, DM, pesos y fechas, sin cambios |
-| Estado | **Pendiente de aprobación del responsable** |
+| Estado | Aprobado por el responsable (2026-10-14) |
 
 Uso: T091 ejecuta estas 92 órdenes contra el sistema y compara con el resultado esperado de este documento (Const. art. XIII.8).
 
@@ -23,6 +23,8 @@ Uso: T091 ejecuta estas 92 órdenes contra el sistema y compara con el resultado
 - El Excel no trae camiones: cada orden usa un camión sintético distinto con 34,000 t de capacidad, para que la capacidad (D4) y el camión repetido (D5) no intervengan.
 
 ## Buque
+
+**Supuesto de prueba:** el Excel no trae el total real del buque (manifiesto o B/L), así que se toma la suma de los totales de las DM. Por eso el buque queda sin toneladas libres y este escenario no ejercita la asignación parcial ni el sobrante al cierre; esas reglas se prueban en F5.
 
 | Buque | Arribo real | Viaje | Total (suma de las DM con total) |
 |---|---|---|---|
