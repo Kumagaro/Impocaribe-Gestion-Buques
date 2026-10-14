@@ -1,9 +1,42 @@
 import 'reflect-metadata';
+import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { AppError, isBelowMinVersion } from '@impocaribe/shared';
+import type { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
+import { HttpErrorFilter } from './http/http-error.filter.ts';
+import { MIN_APP_VERSION } from './tokens.ts';
+
+// Orígenes de las apps: Electron (app://), y el WebView de Capacitor (plan §6).
+const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://localhost'];
+// Rutas que una app desactualizada debe poder usar: estado, descubrimiento y descarga de la actualización (DT-11).
+const VERSION_EXEMPT = /^\/api\/v1\/(health|discovery|updates)(\/|$)/;
+const API = /^\/api\/v1(\/|$)/;
+
+export function configureApp(app: INestApplication): INestApplication {
+  app.setGlobalPrefix('api/v1');
+  app.use(
+    helmet({
+      contentSecurityPolicy: { useDefaults: false, directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+    }),
+  );
+  app.enableCors({ origin: APP_ORIGINS });
+  const minVersion = app.get<string>(MIN_APP_VERSION);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === 'OPTIONS' || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();
+    const version = req.header('x-app-version') ?? '';
+    if (!isBelowMinVersion(version, minVersion)) return next();
+    const message = version
+      ? `Esta versión de la app (${version}) ya no es compatible. Actualícela a la ${minVersion} o superior.`
+      : `La app no indicó su versión. Actualícela a la ${minVersion} o superior.`;
+    const error = new AppError('UPGRADE_REQUIRED', message, { appVersion: version, minVersion });
+    res.status(error.status).json(error.toBody());
+  });
+  app.useGlobalFilters(new HttpErrorFilter());
+  return app;
+}
 
 export async function createApp() {
-  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
-  app.setGlobalPrefix('api/v1');
-  return app;
+  return configureApp(await NestFactory.create(AppModule, { logger: ['error', 'warn'] }));
 }

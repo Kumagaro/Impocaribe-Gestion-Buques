@@ -63,3 +63,13 @@ describe('loadConfig', () => {
     expect(c.port).toBe(9443);
   });
 });
+
+describe('DT-11: versión mínima de la app', () => {
+  it('por defecto no exige versión mínima (0.0.0) hasta que se publique una', () => {
+    expect(loadConfig({ DATABASE_URL: DEV_URL }).minAppVersion).toBe('0.0.0');
+  });
+
+  it('MIN_APP_VERSION fija la versión mínima', () => {
+    expect(loadConfig({ DATABASE_URL: DEV_URL, MIN_APP_VERSION: '1.2.0' }).minAppVersion).toBe('1.2.0');
+  });
+});

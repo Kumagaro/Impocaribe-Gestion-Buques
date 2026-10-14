@@ -54,6 +54,8 @@ const PLAN_CODES = [
   'RESTORE_IN_PROGRESS',
   'UPGRADE_REQUIRED',
   'RESYNC_REQUIRED',
+  'NOT_FOUND',
+  'INTERNAL_ERROR',
 ];
 
 describe('plan §6.3: catálogo de códigos', () => {
@@ -72,6 +74,8 @@ describe('plan §6.3: catálogo de códigos', () => {
     ['DRAFT_LOCKED', 409],
     ['DUPLICATE_DM_NUMBER', 409],
     ['RESYNC_REQUIRED', 410], // plan §5.9: "responde 410 RESYNC_REQUIRED"
+    ['NOT_FOUND', 404],
+    ['INTERNAL_ERROR', 500],
     ['ACCOUNT_LOCKED', 423],
     ['UPGRADE_REQUIRED', 426], // DT-11: "426 UPGRADE_REQUIRED"
     ['PDF_RENDER_FAILED', 503], // reintentable

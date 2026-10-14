@@ -9,6 +9,7 @@ export interface Config {
   port: number;
   databaseUrl: string;
   dataDir: string;
+  minAppVersion: string;
 }
 
 type Env = Record<string, string | undefined>;
@@ -37,6 +38,8 @@ export function loadConfig(env: Env): Config {
     port: Number(env.PORT ?? 8443),
     databaseUrl,
     dataDir: env.IMPOCARIBE_DATA_DIR ?? defaultDataDir(envName, env),
+    // shortcut: hasta T113 la mínima sale de la configuración; luego, de app_releases.is_min_supported (plan §4.4).
+    minAppVersion: env.MIN_APP_VERSION ?? '0.0.0',
   };
 }
 
