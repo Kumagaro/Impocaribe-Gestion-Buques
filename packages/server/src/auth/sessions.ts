@@ -1,9 +1,10 @@
 // T029 · plan §9: token aleatorio de 256 bits guardado como hash; duración absoluta de 24 h o 30 días (RF-AUT-02).
 import type { Clock } from '@impocaribe/shared';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, gt, isNull, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Tx } from '../audit/audit-log.ts';
-import { sessions } from '../db/schema/users.ts';
+import { sessions, users } from '../db/schema/users.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const sessionDuration = (keepSignedIn: boolean) => (keepSignedIn ? 30 : 1) * DAY_MS;
@@ -19,10 +20,10 @@ export interface NewSession {
 }
 
 /** Abre una sesión y devuelve el token en claro: es la única vez que existe fuera del dispositivo. */
-export async function createSession(tx: Tx, clock: Clock, input: NewSession) {
+export async function createSession(tx: Tx, clock: Clock, input: NewSession, expiresAt?: Date) {
   const now = clock.now();
   const token = randomBytes(32).toString('base64url');
-  const expiresAt = new Date(now.getTime() + sessionDuration(input.keepSignedIn));
+  expiresAt ??= new Date(now.getTime() + sessionDuration(input.keepSignedIn));
   const [row] = await tx
     .insert(sessions)
     .values({ ...input, tokenHash: hashToken(token), createdAt: now, expiresAt, lastSeenAt: now })
@@ -48,4 +49,25 @@ export async function revokeUserSessions(tx: Tx, clock: Clock, userId: string, e
       ),
     )
     .returning({ id: sessions.id });
+}
+
+/**
+ * DT-05: el servicio de alertas (WebSocket, T043) acepta un token de dispositivo vigente, no revocado y de un usuario
+ * activo. Devuelve a quién pertenece, o null.
+ */
+export async function findDeviceTokenSession(db: NodePgDatabase | Tx, clock: Clock, token: string) {
+  const [row] = await db
+    .select({ userId: sessions.userId, deviceId: sessions.deviceId })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(
+      and(
+        eq(sessions.tokenHash, hashToken(token)),
+        eq(sessions.kind, 'device'),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, clock.now()),
+        eq(users.active, true),
+      ),
+    );
+  return row ?? null;
 }

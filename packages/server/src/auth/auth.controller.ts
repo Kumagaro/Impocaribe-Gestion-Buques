@@ -3,6 +3,7 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseUUIDPipe, 
 import { ACTIONS, AppError, can, type Clock } from '@impocaribe/shared';
 import {
   changePasswordSchema,
+  deviceTokenResponseSchema,
   loginRequestSchema,
   loginResponseSchema,
   meResponseSchema,
@@ -235,6 +236,47 @@ export class AuthController {
           { entityType: 'user', entityId: userId, op: 'upsert', audience: 'apoderada', payload: dto },
         ]);
         return { value: undefined, after: { closedSessions: closed.length } };
+      },
+    );
+  }
+
+  /** DT-05: token de alertas para el servicio nativo de Android; vence con esta sesión y reemplaza al anterior. */
+  @Post('device-token')
+  @HttpCode(201)
+  @Contract({ output: deviceTokenResponseSchema, roles: ALL_ROLES })
+  async deviceToken(@Req() req: AuthedRequest): Promise<z.infer<typeof deviceTokenResponseSchema>> {
+    const { sessionId, userId, deviceId } = req.auth;
+    return auditedTransaction(
+      this.db,
+      this.clock,
+      this.entry(req, 'auth.device_token', 'session', sessionId),
+      async (tx) => {
+        const [app] = await tx.select().from(sessions).where(eq(sessions.id, sessionId));
+        await tx
+          .update(sessions)
+          .set({ revokedAt: this.clock.now() })
+          .where(
+            and(
+              eq(sessions.userId, userId),
+              eq(sessions.deviceId, deviceId),
+              eq(sessions.kind, 'device'),
+              isNull(sessions.revokedAt),
+            ),
+          );
+        const issued = await createSession(
+          tx,
+          this.clock,
+          {
+            userId,
+            kind: 'device',
+            deviceId,
+            deviceLabel: app!.deviceLabel,
+            platform: app!.platform,
+            keepSignedIn: app!.keepSignedIn,
+          },
+          app!.expiresAt,
+        );
+        return { value: { token: issued.token, expiresAt: issued.expiresAt.toISOString() }, entityId: issued.id };
       },
     );
   }

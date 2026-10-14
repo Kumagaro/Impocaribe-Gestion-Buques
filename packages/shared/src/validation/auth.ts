@@ -36,3 +36,6 @@ export const sessionDtoSchema = z.object({
   current: z.boolean(),
 });
 export const sessionsResponseSchema = z.array(sessionDtoSchema);
+
+/** DT-05: token de alertas del servicio nativo de Android. */
+export const deviceTokenResponseSchema = z.object({ token: z.string(), expiresAt: z.iso.datetime() });
