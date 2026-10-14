@@ -5,3 +5,4 @@ export function appTitle(): string {
 export * from './domain/tons.ts';
 export * from './domain/permissions.ts';
 export * from './errors.ts';
+export * from './domain/clock.ts';
