@@ -103,3 +103,6 @@ export const editUserSchema = z.object({
   role: roleSchema,
   expectedVersion: z.number().int().nonnegative(),
 });
+
+/** RF-REC-06: contraseña temporal que una Apoderada asigna a otro usuario (F-16, restablecimiento). */
+export const resetPasswordSchema = passwordPairSchema.transform(dropConfirm);
