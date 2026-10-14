@@ -169,7 +169,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
 
 ## F0. Fundaciones, calidad y base de interfaz
 
-- [ ] **T007. Barreras de calidad.**
+- [x] **T007. Barreras de calidad.**
   - Vitest con cobertura, fast-check y Stryker (90 % en los módulos críticos del plan §11.2).
   - Lint de pruebas y lint de producción (plan §11.3), incluidos el de **presentaciones sin lógica** y el de **movimiento barato**.
   - Hook de commit que exige el motivo al cambiar una prueba existente.
@@ -178,40 +178,40 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T003
   - *Pruebas:* cada barrera se demuestra fallando con un ejemplo prohibido. Los ejemplos se borran después.
 
-- [ ] **T008. Aritmética de toneladas.**
+- [x] **T008. Aritmética de toneladas.**
   - *Cubre:* Const. art. V, RNF-05
   - *Depende:* T007
   - *Pruebas:* `0,1 + 0,2 = 0,300`; rechazo de 4 decimales; `1 234,500`; propiedad `(a + b) − b = a`.
   - *Terminado:* mutación ≥ 90 %.
 
-- [ ] **T009. Errores y permisos.**
+- [x] **T009. Errores y permisos.**
   - *Cubre:* Spec §2, plan §6.3
   - *Depende:* T007
   - *Pruebas:* matriz rol × acción celda por celda; Solo lectura no ve borradores.
 
-- [ ] **T010. Reloj inyectable.**
+- [x] **T010. Reloj inyectable.**
   - *Cubre:* RF-CON-10, plan §11.4
   - *Depende:* T007
 
-- [ ] **T011. Servidor base.** NestJS, `health` con `serverTime`, errores 6.1, Zod, `helmet`, CORS y control 426.
+- [x] **T011. Servidor base.** NestJS, `health` con `serverTime`, errores 6.1, Zod, `helmet`, CORS y control 426.
   - *Cubre:* plan §6, DT-11
   - *Depende:* T009, T010
 
-- [ ] **T012. Base de datos.** Drizzle, roles, migración inicial, `assert_append_only()` y base limpia por suite.
+- [x] **T012. Base de datos.** Drizzle, roles, migración inicial, `assert_append_only()` y base limpia por suite.
   - *Cubre:* plan §4, Const. art. IV
   - *Depende:* T011
 
-- [ ] **T013. Bitácora.**
+- [x] **T013. Bitácora.**
   - *Cubre:* RF-BIT-01, 02, D10
   - *Depende:* T012
   - *Pruebas:* `UPDATE` y `DELETE` fallan; un intento rechazado queda con `ok = false`.
 
-- [ ] **T014. Registro de cambios.**
+- [x] **T014. Registro de cambios.**
   - *Cubre:* DT-04
   - *Depende:* T012
   - *Pruebas:* 50 transacciones concurrentes sin huecos visibles; una transacción revertida no deja cambios.
 
-- [ ] **T015. Idempotencia, concurrencia optimista y dispositivo obligatorio.** Tabla `idempotency_keys` con el resultado guardado en la misma transacción, header `Idempotency-Key` obligatorio en escrituras, `row_version` y `expectedVersion` en ediciones (`STALE_RECORD`), y guarda de dispositivo (DT-24) preparada para activarse con el emparejamiento.
+- [x] **T015. Idempotencia, concurrencia optimista y dispositivo obligatorio.** Tabla `idempotency_keys` con el resultado guardado en la misma transacción, header `Idempotency-Key` obligatorio en escrituras, `row_version` y `expectedVersion` en ediciones (`STALE_RECORD`), y guarda de dispositivo (DT-24) preparada para activarse con el emparejamiento.
   - *Cubre:* RF-ORD-23, RF-DM-12, D15, DT-22, DT-23, DT-24
   - *Depende:* T014
   - *Pruebas:* la misma petición 5 veces en paralelo produce un solo efecto y la misma respuesta; la misma clave con otro contenido da `IDEMPOTENCY_MISMATCH`; dos ediciones con la misma versión: una gana y la otra recibe `STALE_RECORD`.
@@ -220,11 +220,13 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* Const. art. XIII.8
   - *Depende:* T008
   - *Terminado:* aprobado por el responsable.
+  - *Estado (2026-10-14):* `fixtures/impocaribe-2026-09.json` (anonimizado, a partir del prototipo, porque no hay Excel aparte) y `fixtures/impocaribe-2026-09.md` con las reglas, los supuestos añadidos y el resultado esperado fila por fila. **Pendiente de aprobación del responsable.**
 
 - [ ] **T017. Maquetas base.** Sistema de diseño renovado sobre el prototipo (paleta, tipografía, componentes, tema oscuro), `AppShell` de teléfono, tablet y escritorio, los siete estados EST, los patrones MOV y los **estados de un campo** (ayuda, error, advertencia, aviso legal, correcto) y el resumen de errores, ilustrados.
   - *Cubre:* RF-UI-02, 03, 04, 05, 09, `ui-spec.md` §1 a §3
   - *Depende:* —
   - *Terminado:* aprobadas por el responsable.
+  - *Estado (2026-10-14):* `docs/maquetas/T017-base.html`. **Pendiente de aprobación del responsable;** bloquea T018 a T026.
 
 - [ ] **T018. Tokens, tema y Storybook.** Tokens del plan §7.2 como variables CSS y constantes, tema claro y oscuro, Storybook con selector de clase de dispositivo y de tema.
   - *Cubre:* RF-UI-03, RNF-06
