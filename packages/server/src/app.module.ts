@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { config } from './config.ts';
 import { createAppPool } from './db/db.ts';
 import { AuthController } from './auth/auth.controller.ts';
+import { RecoveryController } from './auth/recovery.controller.ts';
 import { SessionGuard } from './auth/session.guard.ts';
 import { HealthController } from './health.controller.ts';
 import { SetupController } from './users/setup.controller.ts';
@@ -12,7 +13,7 @@ import { DeviceGuard } from './http/device.guard.ts';
 import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION } from './tokens.ts';
 
 @Module({
-  controllers: [HealthController, SetupController, AuthController],
+  controllers: [HealthController, SetupController, AuthController, RecoveryController],
   providers: [
     { provide: CLOCK, useValue: systemClock },
     { provide: MIN_APP_VERSION, useFactory: () => config().minAppVersion },

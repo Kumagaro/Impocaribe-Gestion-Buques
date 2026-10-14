@@ -20,3 +20,5 @@ export const setupStatusSchema = z.object({ configured: z.boolean() });
 /** Los códigos de recuperación viajan en claro una sola vez, en esta respuesta (RF-REC-01). */
 export const recoveryCodesSchema = z.array(z.string()).length(8);
 export const setupResponseSchema = z.object({ user: userDtoSchema, recoveryCodes: recoveryCodesSchema });
+
+export const recoveryCodesResponseSchema = z.object({ recoveryCodes: recoveryCodesSchema });
