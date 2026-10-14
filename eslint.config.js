@@ -75,12 +75,20 @@ export default tseslint.config(
       '**/coverage/**',
       '**/reports/**',
       '**/.stryker-tmp/**',
+      '**/storybook-static/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
       'packages/android/android/**',
       'docs/referencia/**',
     ],
   },
   js.configs.recommended,
   tseslint.configs.recommended,
+  {
+    // Playwright lee de qué dependen las fixtures en el patrón de su primer argumento: `async ({}, use)` es obligatorio.
+    files: ['packages/web/e2e/**/*.ts'],
+    rules: { 'no-empty-pattern': 'off' },
+  },
   {
     // Archivos de configuración que se ejecutan en Node
     files: ['**/*.config.{js,mjs}'],
