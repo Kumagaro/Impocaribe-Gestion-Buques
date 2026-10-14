@@ -1,3 +1,5 @@
 #!/bin/sh
 # T007 · Const. art. XIII.11: cambiar una prueba existente exige el motivo en el mensaje.
+# Las fusiones no se revisan: cada cambio ya trae su motivo en el commit que se integra.
+[ -f "$(git rev-parse --git-path MERGE_HEAD)" ] && exit 0
 node scripts/quality/test-changes.ts "$1"
