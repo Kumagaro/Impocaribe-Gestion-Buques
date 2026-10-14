@@ -829,6 +829,8 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 | `BACKUP_PASSWORD_INVALID` · `RESTORE_IN_PROGRESS` | Respaldo |
 | `UPGRADE_REQUIRED` | La app está por debajo de la versión mínima |
 | `RESYNC_REQUIRED` | La copia local debe reconstruirse |
+| `NOT_FOUND` | La ruta o el recurso no existe |
+| `INTERNAL_ERROR` | Fallo inesperado del servidor; el detalle técnico va al registro, nunca al usuario |
 
 **Estado HTTP de cada código** (`shared/src/errors.ts`):
 
@@ -837,10 +839,12 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 | 400 | `VALIDATION_ERROR` |
 | 401 | `SESSION_EXPIRED` |
 | 403 | `FORBIDDEN`, `DEVICE_NOT_PAIRED`, `DEVICE_REVOKED`, `PAIRING_REJECTED`, `INSTALL_CODE_INVALID` |
+| 404 | `NOT_FOUND` |
 | 409 | `STALE_RECORD`, `IDEMPOTENCY_MISMATCH`, `DRAFT_LOCKED`, `DUPLICATE_DM_NUMBER`, `DUPLICATE_PLATE`, `DUPLICATE_NATIONAL_ID`, `SERVER_ALREADY_EXISTS` |
 | 410 | `RESYNC_REQUIRED`, `PAIRING_EXPIRED` |
 | 423 | `ACCOUNT_LOCKED`, `RECOVERY_LOCKED` |
 | 426 | `UPGRADE_REQUIRED` |
+| 500 | `INTERNAL_ERROR` |
 | 503 | `PDF_RENDER_FAILED`, `SERVER_PROTECTED_MODE`, `RESTORE_IN_PROGRESS` |
 | 422 | Todos los demás: reglas de negocio |
 

@@ -51,6 +51,8 @@ const STATUS = {
   RESTORE_IN_PROGRESS: 503,
   UPGRADE_REQUIRED: 426,
   RESYNC_REQUIRED: 410,
+  NOT_FOUND: 404,
+  INTERNAL_ERROR: 500,
 } as const;
 
 export type ErrorCode = keyof typeof STATUS;

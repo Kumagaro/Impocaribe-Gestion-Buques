@@ -82,6 +82,11 @@ export default tseslint.config(
   js.configs.recommended,
   tseslint.configs.recommended,
   {
+    // Archivos de configuración que se ejecutan en Node
+    files: ['**/*.config.{js,mjs}'],
+    languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
+  },
+  {
     files: PRODUCTION,
     ignores: [...TESTS, 'packages/server/src/config.ts'],
     rules: {

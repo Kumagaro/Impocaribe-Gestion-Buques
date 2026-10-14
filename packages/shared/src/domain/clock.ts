@@ -26,17 +26,10 @@ export class ManualClock implements Clock {
   }
 }
 
-export const TIME_ZONE = 'America/Havana';
-const businessDate = new Intl.DateTimeFormat('en-CA', {
-  timeZone: TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
 /** Fecha de negocio `YYYY-MM-DD` de un instante, en America/Havana. */
 export function havanaDate(instant: Date): string {
-  return businessDate.format(instant);
+  const format = { timeZone: 'America/Havana', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
+  return new Intl.DateTimeFormat('en-CA', format).format(instant);
 }
 
 const MAX_SKEW_MS = 5 * 60_000;
