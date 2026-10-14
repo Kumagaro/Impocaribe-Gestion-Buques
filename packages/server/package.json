@@ -8,7 +8,7 @@
     "dev": "nest start --watch",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "db:create": "node src/db/cli.ts create",
     "db:migrate": "node src/db/cli.ts migrate",
     "db:reset": "node src/db/cli.ts reset",

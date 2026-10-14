@@ -11,23 +11,26 @@
     "doctor": "node scripts/doctor.ts",
     "dev": "pnpm --parallel --filter @impocaribe/server --filter @impocaribe/web dev",
     "build": "pnpm -r --filter !@impocaribe/android build",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && vitest run --dir scripts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm mutation",
     "db:create": "pnpm --filter @impocaribe/server db:create",
     "db:migrate": "pnpm --filter @impocaribe/server db:migrate",
     "db:reset": "pnpm --filter @impocaribe/server db:reset",
-    "db:seed": "pnpm --filter @impocaribe/server db:seed"
+    "db:seed": "pnpm --filter @impocaribe/server db:seed",
+    "mutation": "pnpm -r --if-present mutation"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
+    "@vitest/coverage-v8": "5.0.4",
     "eslint": "^10.12.0",
+    "fast-check": "^4.10.2",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
-    "vitest": "^5.0.3"
+    "vitest": "5.0.4"
   }
 }

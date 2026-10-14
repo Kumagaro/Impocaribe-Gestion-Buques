@@ -154,3 +154,23 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 **Bloqueo de `main`.** En GitHub, *Settings → Branches → Branch protection rules* para `main`: exigir solicitud de integración y los tres trabajos (`Verificación`, `Escritorio`, `APK de depuración`) en verde antes de integrar.
 
 **Hook previo al envío.** `pnpm install` configura Git para usar `.githooks/` (script `prepare`), y `.githooks/pre-push` ejecuta `pnpm verify`: si falla, el envío se cancela. Es obligatorio mientras no haya un servicio de CI, y se mantiene después como primera barrera.
+
+## 5. Barreras de calidad (plan §11.3, Const. art. XIII)
+
+`pnpm verify` ejecuta, en orden, tipos, lint, pruebas con cobertura y mutación. Falla si cualquiera de estas barreras no se cumple:
+
+| Barrera | Dónde | Regla |
+|---|---|---|
+| Lint de pruebas | `**/*.test.ts(x)` | Sin `skip`, `only`, `todo`, `skipIf`; sin `expect.anything()`, `toBeTruthy`, `toBeFalsy` ni `toBeDefined`; sin `try/catch` |
+| Lint de producción | `packages/*/src` | Sin `NODE_ENV` ni `VITEST` fuera de `server/src/config.ts`; sin importar `fixtures/` |
+| Dominio exacto | `shared/src/domain` | Sin `parseFloat` ni `Number()`: toneladas con `domain/tons.ts` |
+| Presentaciones sin lógica | `*.phone.tsx`, `*.tablet.tsx`, `*.desktop.tsx` | Sin importar API, repositorio local, validación ni permisos |
+| Movimiento barato | `web/src/motion` | Solo posición, escala y opacidad |
+| Integración sin simulaciones | `*.int.test.ts` | Sin `vi.mock`, `vi.doMock`, `vi.spyOn` ni `vi.stubGlobal` |
+| Cobertura | `shared` y `server` | ≥ 85 % de líneas |
+| Mutación | `shared/src/domain` (y los servicios críticos del servidor cuando existan) | ≥ 90 %, incremental (`reports/stryker-incremental.json`); el informe queda en `packages/*/reports/mutation/` |
+| Cambio de pruebas | hook `commit-msg` | Si el commit modifica o borra aserciones de pruebas existentes, el mensaje debe incluir `Motivo de cambio de prueba: …` |
+
+Las pruebas de `scripts/quality/` demuestran que cada regla de lint rechaza su ejemplo prohibido.
+
+**Convención:** las pruebas de integración contra PostgreSQL real se nombran `*.int.test.ts`.
