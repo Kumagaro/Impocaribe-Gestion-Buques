@@ -1,13 +1,20 @@
 // Mutación del dominio compartido: ≥ 90 % (Const. art. XIII.7, plan §11.3). Incremental por tarea; completa cada noche.
+import { fileURLToPath, URL } from 'node:url';
+
+// Ruta absoluta: dentro del sandbox de Stryker, npx no encuentra el binario con los enlaces de pnpm.
+const vitest = fileURLToPath(new URL('../vitest.mjs', import.meta.resolve('vitest')));
+
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
-  // Con pnpm, Stryker no ve los plugins hermanos: se declaran resueltos desde este paquete.
-  plugins: [import.meta.resolve('@stryker-mutator/vitest-runner')],
-  testRunner: 'vitest',
-  vitest: { configFile: 'vitest.config.ts' },
+  // shortcut: el runner de Vitest de Stryker 10 no ejecuta ninguna prueba por mutante con Vitest 5 (todos "sobreviven"),
+  // así que se usa el runner de comandos: una ejecución completa de las pruebas del dominio por mutante. Volver al
+  // runner 'vitest' cuando sea compatible, porque es mucho más rápido.
+  testRunner: 'command',
+  commandRunner: { command: `node "${vitest}" run src/domain` },
+  coverageAnalysis: 'off',
   mutate: ['src/domain/**/*.ts', '!src/domain/**/*.test.ts'],
   thresholds: { high: 95, low: 90, break: 90 },
-  // Sin archivos que mutar (aún no hay dominio) no hay pruebas relacionadas: no es un fallo. Un archivo sin pruebas lo frena la cobertura.
+  // Sin archivos de dominio no hay nada que mutar: no es un fallo. Un archivo sin pruebas lo frena la cobertura.
   allowEmpty: true,
   incremental: true,
   incrementalFile: 'reports/stryker-incremental.json',
