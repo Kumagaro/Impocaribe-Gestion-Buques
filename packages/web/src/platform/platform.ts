@@ -58,6 +58,11 @@ export function setPlatform(platform: Platform | null): void {
   current = platform;
 }
 
+/** La plataforma registrada, o null en el navegador de pruebas. */
+export function findPlatform(): Platform | null {
+  return current;
+}
+
 export function getPlatform(): Platform {
   if (!current)
     throw new Error('No hay plataforma registrada: el cascarón (Electron o Android) debe registrarla al arrancar.');
