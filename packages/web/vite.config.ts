@@ -8,5 +8,5 @@ export default defineConfig({
   resolve: { conditions: ['source'] },
   // WebView mínimo Chromium 87 (DT-15)
   build: { target: 'chrome87' },
-  test: { environment: 'jsdom' },
+  test: { environment: 'jsdom', setupFiles: ['test/setup.ts'] },
 });
