@@ -26,7 +26,20 @@ export interface SecureStorage {
   remove(key: string): Promise<void>;
 }
 
+/** Petición HTTP con la forma de fetch. En las apps verifica la identidad del servidor (DT-18, DT-19). */
+export type HttpTransport = (url: string, init: RequestInit) => Promise<Response>;
+
+/** Conexión WebSocket del transporte nativo (plan §6.4). */
+export interface PlatformSocket {
+  send(data: string): void;
+  close(): void;
+  on(event: 'open' | 'message' | 'close' | 'error', listener: (data?: string) => void): void;
+}
+
 export interface Platform {
+  /** Todas las peticiones al servidor pasan por aquí, nunca por el fetch del WebView (DT-19). */
+  http: HttpTransport;
+  ws(url: string): PlatformSocket;
   deviceInfo(): DeviceInfo;
   /** Keystore en Android, safeStorage en Electron (plan §9). */
   secureStorage: SecureStorage;
