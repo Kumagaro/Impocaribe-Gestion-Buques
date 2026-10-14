@@ -97,3 +97,28 @@ describe('registro de la plataforma activa', () => {
     setPlatform(null);
   });
 });
+
+describe('T021 · DT-19: transporte de la plataforma', () => {
+  it('http usa el transporte inyectado (por ejemplo, el transporte Node que verifica la identidad)', async () => {
+    const seen: string[] = [];
+    const http = async (url: string) => (seen.push(url), new Response('{"status":"ok"}', { status: 200 }));
+    const platform = await createTestPlatform({ http });
+    const res = await platform.http('https://192.168.1.10:8443/api/v1/health', { method: 'GET' });
+    expect([res.status, seen]).toEqual([200, ['https://192.168.1.10:8443/api/v1/health']]);
+  });
+
+  it('sin transporte inyectado, http falla con un mensaje claro', async () => {
+    const platform = await createTestPlatform();
+    await expect(platform.http('https://servidor/api/v1/health', { method: 'GET' })).rejects.toThrow(
+      'La plataforma de prueba no tiene transporte HTTP: pase uno en createTestPlatform({ http }).',
+    );
+  });
+
+  it('ws usa la fábrica de sockets inyectada', async () => {
+    const sockets: string[] = [];
+    const socket = { send: () => undefined, close: () => undefined, on: () => undefined };
+    const platform = await createTestPlatform({ ws: (url) => (sockets.push(url), socket) });
+    expect(platform.ws('wss://servidor:8443/ws')).toBe(socket);
+    expect(sockets).toEqual(['wss://servidor:8443/ws']);
+  });
+});

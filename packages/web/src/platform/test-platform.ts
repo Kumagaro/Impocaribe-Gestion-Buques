@@ -1,7 +1,15 @@
 // T019 · Implementación de prueba de `platform` (DT-03): SQLite real en memoria con sql.js, almacenamiento seguro en
 // memoria y registro de las llamadas al sistema para que las pruebas de componente las comprueben.
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
-import type { DeviceInfo, LocalDatabase, Platform, SqlExecutor, SqlValue } from './platform';
+import type {
+  DeviceInfo,
+  HttpTransport,
+  LocalDatabase,
+  Platform,
+  PlatformSocket,
+  SqlExecutor,
+  SqlValue,
+} from './platform';
 
 export type TestPlatform = Platform & { calls: { method: string; args: unknown[] }[] };
 
@@ -44,7 +52,9 @@ function localDatabase(db: Database): LocalDatabase {
   };
 }
 
-export async function createTestPlatform(options: { deviceInfo?: DeviceInfo } = {}): Promise<TestPlatform> {
+export async function createTestPlatform(
+  options: { deviceInfo?: DeviceInfo; http?: HttpTransport; ws?: (url: string) => PlatformSocket } = {},
+): Promise<TestPlatform> {
   sqlJs ??= initSqlJs();
   const SQL = await sqlJs;
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -58,6 +68,17 @@ export async function createTestPlatform(options: { deviceInfo?: DeviceInfo } = 
   return {
     calls,
     deviceInfo: () => info,
+    // Para probar contra un servidor real, se pasa el transporte Node de @impocaribe/shared/node, que verifica la identidad.
+    http:
+      options.http ??
+      (async () => {
+        throw new Error('La plataforma de prueba no tiene transporte HTTP: pase uno en createTestPlatform({ http }).');
+      }),
+    ws:
+      options.ws ??
+      (() => {
+        throw new Error('La plataforma de prueba no tiene WebSocket: pase uno en createTestPlatform({ ws }).');
+      }),
     secureStorage: {
       get: async (key) => secrets.get(key) ?? null,
       set: async (key, value) => {

@@ -2,9 +2,10 @@
 // y el registro de llamadas que la prueba de contrato (T026) compara con las rutas del servidor.
 import type { ErrorCode } from '@impocaribe/shared';
 import type { z, ZodType } from 'zod';
+import type { HttpTransport } from '../platform/platform';
 
-/** Transporte HTTP: en las apps será `platform.http`, que verifica la identidad del servidor (T021, DT-19). */
-export type Transport = (url: string, init: RequestInit) => Promise<Response>;
+/** Transporte HTTP: en las apps, `platform.http`, que verifica la identidad del servidor (T021, DT-19). */
+export type Transport = HttpTransport;
 
 export type ClientErrorCode = ErrorCode | 'OFFLINE';
 
