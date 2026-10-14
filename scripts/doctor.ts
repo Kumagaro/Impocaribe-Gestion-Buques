@@ -92,7 +92,7 @@ checks.push({
   name: 'Android SDK',
   ok: sdkOk && !!(process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT),
   detail: sdkOk ? sdk : `no encontrado (o sin la plataforma android-${ANDROID_COMPILE_SDK})`,
-  fix: 'Instale las herramientas de línea de comandos del SDK, defina ANDROID_HOME e instale la plataforma con sdkmanager (docs/desarrollo.md §1.5)',
+  fix: 'Instale las herramientas de línea de comandos del SDK, defina ANDROID_HOME e instale la plataforma con android sdk install (docs/desarrollo.md §1.5)',
 });
 
 const avdDir = process.env.ANDROID_AVD_HOME ?? join(homedir(), '.android', 'avd');
@@ -107,7 +107,7 @@ for (const api of ANDROID_APIS) {
     name: `Emulador Android API ${api}`,
     ok: avdApis.includes(api),
     detail: avdApis.includes(api) ? 'existe' : 'no hay ningún AVD con esa API',
-    fix: `Ver "Emuladores" en docs/desarrollo.md (sdkmanager "system-images;android-${api};google_apis;x86_64" y avdmanager create avd)`,
+    fix: `Ver "Emuladores" en docs/desarrollo.md (android sdk install system-images/android-${api}/google_apis/x86_64 y avdmanager create avd)`,
   });
 }
 

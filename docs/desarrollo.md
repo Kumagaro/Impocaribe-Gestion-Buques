@@ -56,14 +56,17 @@ Defina `JAVA_HOME` con la carpeta de instalación (por ejemplo `C:\Program Files
 
 Basta con las herramientas de línea de comandos del SDK (unos 150 MB); Android Studio (1,4 GB) es opcional. Si el disco C: va justo de espacio, ponga el SDK y los emuladores en otra unidad (en el equipo de desarrollo actual, `D:\Android`).
 
-1. Descargue `commandlinetools-win-*_latest.zip` de https://developer.android.com/studio#command-line-tools-only y descomprímalo para que quede `<SDK>\cmdline-tools\latest\bin\sdkmanager.bat`.
+1. Descargue `commandlinetools-win-*_latest.zip` de https://developer.android.com/studio#command-line-tools-only y descomprímalo para que quede `<SDK>\cmdline-tools\latest\bin\android.exe`.
 2. Defina en las variables de usuario `ANDROID_HOME=<SDK>` y, si quiere los emuladores fuera de C:, `ANDROID_AVD_HOME`. Añada al `PATH` `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator` y `%ANDROID_HOME%\cmdline-tools\latest\bin`.
-3. Acepte las licencias e instale la plataforma de compilación y las imágenes de los emuladores:
+3. Acepte las licencias e instale la plataforma de compilación y las imágenes de los emuladores. Las herramientas actuales usan `android sdk install` con nombres separados por `/`; `sdkmanager` está obsoleto y no acepta los nombres con `;`:
 
 ```powershell
 sdkmanager --licenses
-sdkmanager "platform-tools" "emulator" "build-tools;36.0.0" "platforms;android-36" "system-images;android-24;google_apis;x86_64" "system-images;android-34;google_apis;x86_64"
+android sdk install platform-tools emulator build-tools/36.0.0 platforms/android-36
+android sdk install system-images/android-24/google_apis/x86_64 system-images/android-34/google_apis/x86_64
 ```
+
+Cada imagen pesa 1–1,5 GB. Si la red se corta, `android sdk install` vuelve a empezar desde cero; con una conexión inestable conviene descargar el ZIP con `curl -C -` (la URL y el SHA-1 están en `https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml`) y descomprimirlo en `<SDK>\system-images\android-NN\google_apis\`.
 
 ### 1.6 Emuladores
 
