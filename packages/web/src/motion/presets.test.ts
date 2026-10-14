@@ -124,3 +124,17 @@ describe('T024 · movimientos de la validación (MOV-11 y MOV-13)', () => {
     expect(preset).toEqual({ transition: { duration: 0 } });
   });
 });
+
+describe('T022 · MOV-05: mensaje de validación', () => {
+  it('se despliega en 150 ms con fundido y desplazamiento corto', () => {
+    expect(P.fieldMessage(false)).toEqual({
+      initial: { opacity: 0, y: -4 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.15, ease: [0.2, 0, 0, 1] },
+    });
+  });
+
+  it('reducido: instantáneo', () => {
+    expect(P.fieldMessage(true)).toEqual({ transition: { duration: 0 } });
+  });
+});

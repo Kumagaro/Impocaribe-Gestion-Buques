@@ -31,6 +31,8 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixels: 0, threshold: 0, animations: 'disabled', caret: 'hide' },
   },
   snapshotPathTemplate: '{testDir}/references/{arg}{ext}',
+  // Una referencia nueva no se escribe sola: la crea visual:update y la aprueba el responsable.
+  updateSnapshots: 'none',
   projects: [{ name: 'visual' }],
   webServer: {
     // Compilado y servido como estático: carga mucho más rápido que el modo desarrollo.

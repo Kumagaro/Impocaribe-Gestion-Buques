@@ -6,7 +6,7 @@ import { useId, useState, type ReactNode } from 'react';
 import { useBlocker } from 'react-router';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { useReducedMotionPreference } from '../motion/MotionProvider';
-import { fieldShake, summaryDrop } from '../motion/presets';
+import { fieldMessage, fieldShake, summaryDrop } from '../motion/presets';
 import { Button } from './controls';
 import { Dialog } from './overlays';
 
@@ -58,7 +58,14 @@ export function Field({
       <div id={`${id}-msg`} className="ui-field__msg" aria-live="polite">
         {level === 'error' && <CircleAlert aria-hidden="true" />}
         {level === 'warning' && <TriangleAlert aria-hidden="true" />}
-        <span>{message}</span>
+        {/* MOV-05: cada error nuevo se despliega; la línea tiene alto fijo y no empuja el resto. */}
+        {level === 'error' ? (
+          <m.span key={message} data-motion={reduced ? 'static' : 'unfold'} {...fieldMessage(reduced)}>
+            {message}
+          </m.span>
+        ) : (
+          <span>{message}</span>
+        )}
       </div>
     </div>
   );
