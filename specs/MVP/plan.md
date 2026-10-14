@@ -830,6 +830,20 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 | `UPGRADE_REQUIRED` | La app está por debajo de la versión mínima |
 | `RESYNC_REQUIRED` | La copia local debe reconstruirse |
 
+**Estado HTTP de cada código** (`shared/src/errors.ts`):
+
+| Estado | Códigos |
+|---|---|
+| 400 | `VALIDATION_ERROR` |
+| 401 | `SESSION_EXPIRED` |
+| 403 | `FORBIDDEN`, `DEVICE_NOT_PAIRED`, `DEVICE_REVOKED`, `PAIRING_REJECTED`, `INSTALL_CODE_INVALID` |
+| 409 | `STALE_RECORD`, `IDEMPOTENCY_MISMATCH`, `DRAFT_LOCKED`, `DUPLICATE_DM_NUMBER`, `DUPLICATE_PLATE`, `DUPLICATE_NATIONAL_ID`, `SERVER_ALREADY_EXISTS` |
+| 410 | `RESYNC_REQUIRED`, `PAIRING_EXPIRED` |
+| 423 | `ACCOUNT_LOCKED`, `RECOVERY_LOCKED` |
+| 426 | `UPGRADE_REQUIRED` |
+| 503 | `PDF_RENDER_FAILED`, `SERVER_PROTECTED_MODE`, `RESTORE_IN_PROGRESS` |
+| 422 | Todos los demás: reglas de negocio |
+
 ### 6.4 WebSocket
 
 - **Ruta:** `wss://{servidor}:8443/ws`.
@@ -856,7 +870,7 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 
 | Tema | Decisión |
 |---|---|
-| Base | React 18 + Vite + TypeScript, React Router y TanStack Query. Compilación con objetivo `chrome87` (DT-15) |
+| Base | React 19 + Vite + TypeScript, React Router y TanStack Query. Compilación con objetivo `chrome87` (DT-15) |
 | Empaquetado | Se compila una vez (`web/dist`) y se copia dentro de cada app. No hay Service Worker ni carga remota |
 | Repositorio local | `web/src/local/`: esquema SQLite local con migraciones propias, tablas por entidad, `drafts_local` y `sync_meta` |
 | Lecturas | Hooks de TanStack Query que leen del repositorio local; el motor de sincronización invalida las consultas afectadas |
