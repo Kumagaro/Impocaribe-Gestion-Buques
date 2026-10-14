@@ -123,3 +123,19 @@ export function stepSlide(reduced: boolean): MotionPreset {
     transition: { duration: 0.25, ease: EASE_OUT },
   };
 }
+
+/** MOV-11: el campo con error tiembla en horizontal (3 oscilaciones, 200 ms); reducido, solo cambia el color. */
+export function fieldShake(reduced: boolean): MotionPreset {
+  if (reduced) return instant;
+  return { animate: { x: [0, -4, 4, -4, 4, -4, 4, 0] }, transition: { duration: 0.2, ease: 'easeInOut' } };
+}
+
+/** MOV-13: el resumen de errores baja desde arriba del formulario (220 ms); reducido, aparece sin más. */
+export function summaryDrop(reduced: boolean): MotionPreset {
+  if (reduced) return instant;
+  return {
+    initial: { opacity: 0, y: -10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.22, ease: EASE_OUT },
+  };
+}

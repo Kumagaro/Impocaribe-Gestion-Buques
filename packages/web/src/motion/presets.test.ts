@@ -95,3 +95,32 @@ describe('con movimiento', () => {
     expect(P.skeletonShimmer(false)).toMatchObject({ animate: { x: ['-100%', '100%'] } });
   });
 });
+
+describe('T024 · movimientos de la validación (MOV-11 y MOV-13)', () => {
+  it('MOV-11: tres oscilaciones horizontales en 200 ms', () => {
+    const shake = P.fieldShake(false);
+    const x = shake.animate?.x as number[];
+    // Cada oscilación es una ida a la izquierda y otra a la derecha; empieza y acaba en reposo.
+    const extremes = x.slice(1, -1);
+    const alternates = extremes.every((v, i) => i === 0 || Math.sign(v) === -Math.sign(extremes[i - 1] as number));
+    expect([shake.transition?.duration, extremes.length / 2, alternates, x[0], x[x.length - 1]]).toEqual([
+      0.2,
+      3,
+      true,
+      0,
+      0,
+    ]);
+  });
+
+  it('MOV-13: el resumen baja desde arriba en 220 ms como máximo', () => {
+    expect(P.summaryDrop(false)).toMatchObject({ initial: { opacity: 0, y: -10 }, animate: { opacity: 1, y: 0 } });
+    expect((P.summaryDrop(false).transition?.duration ?? 0) * 1000).toBeLessThanOrEqual(220);
+  });
+
+  it.each([
+    ['MOV-11', P.fieldShake(true)],
+    ['MOV-13', P.summaryDrop(true)],
+  ])('%s reducido: sin movimiento', (_name, preset) => {
+    expect(preset).toEqual({ transition: { duration: 0 } });
+  });
+});

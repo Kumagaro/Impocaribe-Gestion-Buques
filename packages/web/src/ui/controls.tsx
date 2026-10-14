@@ -12,6 +12,7 @@ import {
 import { press } from '../motion/presets';
 import { useReducedMotionPreference } from '../motion/MotionProvider';
 import { useTouch } from './device';
+import { maskDigits, maskTons, maskUpper } from './masks';
 
 // Motion redefine estos eventos y style con otra firma; los botones no los usan.
 type NativeButton = Omit<
@@ -162,6 +163,8 @@ export interface TextFieldProps extends NativeInput {
   uppercase?: boolean;
   /** Carné, licencia, DM y código de verificación. */
   digitsOnly?: boolean;
+  /** Otra ayuda de escritura de ./masks, como el teléfono. */
+  mask?: (raw: string) => string;
 }
 
 export function TextField({
@@ -170,12 +173,14 @@ export function TextField({
   invalid,
   uppercase,
   digitsOnly,
+  mask,
   className,
   ...rest
 }: TextFieldProps) {
   return (
     <input
       type="text"
+      inputMode={digitsOnly ? 'numeric' : undefined}
       {...rest}
       className={cx('ui-input', className)}
       data-touch={useTouch() || undefined}
@@ -183,29 +188,13 @@ export function TextField({
       value={value}
       onChange={(e) => {
         let next = e.target.value;
-        if (uppercase) next = next.toUpperCase();
-        if (digitsOnly) next = next.replace(/\D/g, '');
+        if (uppercase) next = maskUpper(next);
+        if (digitsOnly) next = maskDigits(next);
+        if (mask) next = mask(next);
         onValueChange?.(next);
       }}
     />
   );
-}
-
-/** RF-VAL-07: dígitos y un solo separador decimal (coma o punto, se muestra coma), con 3 decimales como máximo. */
-export function maskTons(raw: string): string {
-  let out = '';
-  let decimals = -1;
-  for (const c of raw) {
-    if (c >= '0' && c <= '9') {
-      if (decimals >= 3) continue;
-      out += c;
-      if (decimals >= 0) decimals++;
-    } else if ((c === ',' || c === '.') && decimals < 0) {
-      out += ',';
-      decimals = 0;
-    }
-  }
-  return out;
 }
 
 export function TonsInput({
@@ -214,7 +203,7 @@ export function TonsInput({
   invalid,
   className,
   ...rest
-}: Omit<TextFieldProps, 'uppercase' | 'digitsOnly'>) {
+}: Omit<TextFieldProps, 'uppercase' | 'digitsOnly' | 'mask'>) {
   return (
     <span className={cx('ui-tons', className)}>
       <input

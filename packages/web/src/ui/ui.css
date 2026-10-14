@@ -917,3 +917,96 @@
     animation-duration: 2.4s;
   }
 }
+
+/* ---------- validación de formularios (T024, ui-spec §2.1) ---------- */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.ui-field > label {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  font-weight: 650;
+}
+.ui-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ui-field__control .ui-input {
+  padding-right: 36px;
+}
+.ui-field__ok {
+  position: absolute;
+  right: 10px;
+  display: inline-flex;
+  color: var(--ok);
+  pointer-events: none;
+}
+.ui-field[data-level='warning'] .ui-input {
+  border-color: var(--warn);
+}
+.ui-field__msg {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.ui-field__msg svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 1px;
+}
+.ui-field[data-level='error'] .ui-field__msg {
+  color: var(--bad);
+}
+.ui-field[data-level='warning'] .ui-field__msg {
+  color: var(--warn);
+}
+.ui-error-summary {
+  padding: 11px 14px;
+  font-size: var(--t-sm);
+  color: var(--bad);
+  background: var(--bad-soft);
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+  border-radius: var(--r-sm);
+}
+.ui-error-summary b {
+  display: block;
+  margin-bottom: 4px;
+}
+.ui-error-summary ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.ui-error-summary a {
+  color: inherit;
+}
+.ui-legal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 9px 11px;
+  font-size: 12px;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: var(--r-sm);
+}
+.ui-legal button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
+}
