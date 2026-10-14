@@ -1,7 +1,14 @@
 // T023 · Controles base (plan §7.2): botones, campos y selección. Objetivos táctiles de 48 dp en teléfono y tablet
 // (RNF-16) y escala al pulsar con su variante reducida (MOV-06, MOV-07).
 import { m } from 'motion/react';
-import { useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import {
+  useId,
+  useState,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react';
 import { press } from '../motion/presets';
 import { useReducedMotionPreference } from '../motion/MotionProvider';
 import { useTouch } from './device';
@@ -157,7 +164,15 @@ export interface TextFieldProps extends NativeInput {
   digitsOnly?: boolean;
 }
 
-export function TextField({ value, onValueChange, invalid, uppercase, digitsOnly, className, ...rest }: TextFieldProps) {
+export function TextField({
+  value,
+  onValueChange,
+  invalid,
+  uppercase,
+  digitsOnly,
+  className,
+  ...rest
+}: TextFieldProps) {
   return (
     <input
       type="text"
@@ -193,7 +208,13 @@ export function maskTons(raw: string): string {
   return out;
 }
 
-export function TonsInput({ value, onValueChange, invalid, className, ...rest }: Omit<TextFieldProps, 'uppercase' | 'digitsOnly'>) {
+export function TonsInput({
+  value,
+  onValueChange,
+  invalid,
+  className,
+  ...rest
+}: Omit<TextFieldProps, 'uppercase' | 'digitsOnly'>) {
   return (
     <span className={cx('ui-tons', className)}>
       <input
@@ -250,11 +271,7 @@ export function Select({
   );
 }
 
-const fold = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
+const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /** Lista con búsqueda (patrón combobox de ARIA): filtra sin distinguir mayúsculas ni tildes. */
 export function Combobox({

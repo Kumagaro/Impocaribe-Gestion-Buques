@@ -246,7 +246,15 @@ describe('Combobox (con búsqueda)', () => {
 
 describe('DateField', () => {
   it('limita el rango de fechas admitidas', () => {
-    renderUi(<DateField aria-label="Fecha de carga" value="2026-10-14" min="2026-10-14" max="2026-10-21" onValueChange={() => undefined} />);
+    renderUi(
+      <DateField
+        aria-label="Fecha de carga"
+        value="2026-10-14"
+        min="2026-10-14"
+        max="2026-10-21"
+        onValueChange={() => undefined}
+      />,
+    );
     const input = screen.getByLabelText('Fecha de carga');
     expect([input.getAttribute('type'), input.getAttribute('min'), input.getAttribute('max')]).toEqual([
       'date',

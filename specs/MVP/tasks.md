@@ -256,6 +256,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T022
   - *Pruebas:* `Sheet` se cierra al arrastrar hacia abajo más del umbral y no por debajo; `DataTable` virtualiza por encima de 100 filas y no anima reordenamientos ahí; `OverrideDialog` no permite confirmar con menos de 10 caracteres de motivo.
   - *Terminado:* referencias visuales de los componentes aprobadas.
+  - *Estado (2026-10-14):* componentes en `packages/web/src/ui/` (`controls`, `presentation`, `overlays` y `structure`, con `ui.css`), 78 pruebas de componente en verde e historias de todos los estados, con selectores de tema, clase de dispositivo y movimiento en Storybook. Las reglas de F-15 están en `@impocaribe/shared/validation`. `PdfViewer` se hace con su pantalla, en T088. Falta: las capturas de referencia (infraestructura visual de T026) y su aprobación.
 
 - [ ] **T024. Sistema de validación de formularios.** `Field` (mensaje único con prioridad error → advertencia → ayuda, marca de correcto), `ErrorSummary`, `LegalNotice`, máscaras de entrada (dígitos, mayúsculas, teléfono, toneladas), `useValidatedForm` y `UnsavedChangesGuard`, con los movimientos MOV-11 a MOV-13 y su variante reducida.
   - *Cubre:* RF-VAL-01 a 03, 07, 09 a 11, Const. art. XIV.9, plan §7.7, HU-18
