@@ -41,6 +41,8 @@ function insert(db: Executor, clock: Clock, entry: AuditEntry, ok: boolean) {
 
 export interface AuditedResult<T> {
   value: T;
+  /** Quién actuó, si solo se conoce dentro de la operación (el primer arranque crea a quien lo hace). */
+  userId?: string;
   entityId?: string;
   before?: unknown;
   after?: unknown;
@@ -61,6 +63,7 @@ export async function auditedTransaction<T>(
       const result = await fn(tx);
       await recordAudit(tx, clock, {
         ...entry,
+        userId: result.userId ?? entry.userId,
         entityId: result.entityId ?? entry.entityId,
         before: result.before ?? entry.before,
         after: result.after ?? entry.after,
