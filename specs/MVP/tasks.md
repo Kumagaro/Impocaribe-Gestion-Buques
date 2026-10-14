@@ -263,7 +263,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T023
   - *Pruebas:* un campo no muestra error mientras se escribe por primera vez y sí al salir; tras marcarse, el error desaparece al corregir sin salir; al enviar, el foco va al primer error y el resumen enlaza a cada campo; un error del servidor con `details.fields` aparece en su campo; salir con cambios pregunta y sin cambios no; con movimiento reducido no hay temblor.
 
-- [ ] **T025. Clases de dispositivo y AppShell.** `useDeviceClass` y los tres `AppShell` de `ui-spec.md` §1.1 (barra inferior y hoja "Más"; riel y vista dividida; menú lateral, cabecera y atajos), con los elementos globales de §1.2.
+- [x] **T025. Clases de dispositivo y AppShell.** `useDeviceClass` y los tres `AppShell` de `ui-spec.md` §1.1 (barra inferior y hoja "Más"; riel y vista dividida; menú lateral, cabecera y atajos), con los elementos globales de §1.2.
   - *Cubre:* RF-UI-02, `ui-spec.md` §1
   - *Depende:* T023
   - *Pruebas:* 599 dp da teléfono y 600 dp da tablet; Electron siempre escritorio; los atajos de escritorio navegan; Solo lectura no ve "Nueva orden" en ninguna clase.

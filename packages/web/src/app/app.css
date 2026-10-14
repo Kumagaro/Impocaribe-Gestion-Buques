@@ -1,0 +1,117 @@
+/* T025 · Estructura de pantalla de cada clase (ui-spec §1.1), según las maquetas aprobadas (docs/maquetas/T017-base.html). */
+.app-shell {
+  height: 100%;
+  display: flex;
+  background: var(--ground);
+}
+.app-shell--phone {
+  flex-direction: column;
+}
+.app-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.app-header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-shell--tablet .app-header {
+  padding-inline: 18px;
+}
+.app-shell--desktop .app-header {
+  gap: 12px;
+  padding: 12px 22px;
+}
+.app-header__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.app-header__title h1 {
+  flex: none;
+}
+.app-header__title span {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+}
+.app-shell--desktop .app-main {
+  padding: 18px 22px;
+}
+.app-shell--phone .ui-navbar {
+  flex: none;
+}
+.app-alerts {
+  position: relative;
+  display: inline-flex;
+}
+.app-alerts .ui-nav__badge {
+  top: 2px;
+  right: 2px;
+  pointer-events: none;
+}
+.app-user {
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.app-brand {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 8px 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line-2);
+}
+.app-brand b {
+  font-size: 15px;
+}
+.app-brand span {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+.app-more {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.app-more__item {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font-size: 14.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.app-more__item[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 650;
+}

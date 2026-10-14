@@ -308,7 +308,12 @@ function NavButton({
       className="ui-nav__item"
       aria-current={item.id === current ? 'page' : undefined}
       aria-label={navName(item)}
-      aria-keyshortcuts={showShortcut && item.shortcut ? item.shortcut.replace('Ctrl', 'Control') : undefined}
+      // aria-keyshortcuts no admite secuencias como "G T": esas solo se muestran.
+      aria-keyshortcuts={
+        showShortcut && item.shortcut && !item.shortcut.includes(' ')
+          ? item.shortcut.replace('Ctrl', 'Control')
+          : undefined
+      }
       data-touch={useTouch() || undefined}
       onClick={() => onNavigate(item.id)}
     >
