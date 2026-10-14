@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Request, Response } from 'express';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { Contract } from './contract.ts';
 import { listenForTests } from '../../test/listen.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
 import { AppModule } from '../app.module.ts';
@@ -26,6 +27,7 @@ class EffectController {
   constructor(@Inject(DB) private readonly database: NodePgDatabase) {}
 
   @Post('efecto')
+  @Contract({ roles: 'public' })
   async effect(@Req() req: Request, @Res() res: Response, @Body() body: { valor: string }) {
     const result = await withIdempotency(this.database, clock, idempotencyRequest(req), async (tx) => {
       const { rows } = await tx.execute<{ id: number }>(
@@ -37,6 +39,7 @@ class EffectController {
   }
 
   @Post('sin-cuerpo')
+  @Contract({ roles: 'public' })
   async withoutBody(@Req() req: Request, @Res() res: Response) {
     const result = await withIdempotency(this.database, clock, idempotencyRequest(req), async (tx) => {
       await tx.execute(sql`INSERT INTO efectos (valor) VALUES ('sin-cuerpo')`);

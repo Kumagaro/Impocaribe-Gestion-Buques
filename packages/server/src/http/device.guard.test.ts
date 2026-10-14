@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, type INestApplication } from '@nestjs/comm
 import { Test } from '@nestjs/testing';
 import { ManualClock, signRequest } from '@impocaribe/shared';
 import { afterEach, describe, expect, it } from 'vitest';
+import { Contract } from './contract.ts';
 import { listenForTests } from '../../test/listen.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
@@ -17,11 +18,13 @@ const SECRET = 'secreto-de-la-tablet-1';
 @Controller('ejemplo')
 class ProtectedController {
   @Get('protegido')
+  @Contract({ roles: 'public' })
   get() {
     return { ok: true };
   }
 
   @Post('protegido')
+  @Contract({ roles: 'public' })
   post(@Body() body: unknown) {
     return { recibido: body };
   }

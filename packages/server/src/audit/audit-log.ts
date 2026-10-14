@@ -23,6 +23,11 @@ export function recordAudit(db: Executor, clock: Clock, entry: AuditEntry): Prom
   return insert(db, clock, entry, true);
 }
 
+/** Registra un intento rechazado (ok = false) fuera de la transacción del cambio, que no llegó a hacerse. */
+export function recordRejected(db: Executor, clock: Clock, entry: AuditEntry, err: AppError): Promise<unknown> {
+  return insert(db, clock, { ...entry, after: { code: err.code, message: err.message } }, false);
+}
+
 function insert(db: Executor, clock: Clock, entry: AuditEntry, ok: boolean) {
   return db.insert(auditLog).values({
     at: clock.now(),

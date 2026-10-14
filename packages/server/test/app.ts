@@ -1,6 +1,6 @@
 // Arranca la app Nest completa contra la base de una suite (T028 en adelante): las pruebas de endpoints usan los mismos
 // módulos, guardas y filtros que producción; solo cambian el reloj, la versión mínima y la base.
-import type { INestApplication } from '@nestjs/common';
+import type { INestApplication, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { type Clock } from '@impocaribe/shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -29,8 +29,8 @@ export function lanAddress(): string | null {
   return null;
 }
 
-export async function createTestApp(suite: SuiteDb, clock: Clock): Promise<TestApp> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: Type[] = []): Promise<TestApp> {
+  const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers })
     .overrideProvider(CLOCK)
     .useValue(clock)
     .overrideProvider(MIN_APP_VERSION)

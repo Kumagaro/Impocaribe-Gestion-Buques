@@ -13,6 +13,8 @@ export interface RouteContract {
   errors?: readonly ErrorCode[];
   /** Roles que pueden llamarla; 'public' si no pide sesión. */
   roles: readonly Role[] | 'public';
+  /** Se permite aunque el usuario deba cambiar su contraseña (RF-REC-06): perfil, cambio de contraseña y salir. */
+  whileMustChangePassword?: true;
 }
 
 export const Contract = (contract: RouteContract) => SetMetadata(CONTRACT, contract);

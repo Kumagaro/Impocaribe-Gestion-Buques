@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AppError, ManualClock } from '@impocaribe/shared';
 import { z } from 'zod';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { Contract } from './http/contract.ts';
 import { listenForTests } from '../test/listen.ts';
 import { AppModule } from './app.module.ts';
 import { configureApp } from './app.ts';
@@ -20,6 +21,7 @@ const echoSchema = z.object({
 @Controller('ejemplo')
 class ExampleController {
   @Get('negocio')
+  @Contract({ roles: 'public' })
   business(): never {
     throw new AppError(
       'OVERDRAFT_ALLOCATION',
@@ -29,11 +31,13 @@ class ExampleController {
   }
 
   @Get('falla')
+  @Contract({ roles: 'public' })
   failure(): never {
     throw new Error('detalle técnico interno');
   }
 
   @Post('eco')
+  @Contract({ roles: 'public' })
   echo(@Body(new ZodValidationPipe(echoSchema)) body: z.infer<typeof echoSchema>) {
     return body;
   }
