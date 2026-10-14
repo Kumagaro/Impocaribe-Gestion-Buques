@@ -13,6 +13,8 @@ const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://local
 // Rutas que una app desactualizada debe poder usar: estado, descubrimiento y descarga de la actualización (DT-11).
 const VERSION_EXEMPT = /^\/api\/v1\/(health|discovery|updates)(\/|$)/;
 const API = /^\/api\/v1(\/|$)/;
+const WRITES = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function configureApp(app: INestApplication): INestApplication {
   app.setGlobalPrefix('api/v1');
@@ -33,10 +35,20 @@ export function configureApp(app: INestApplication): INestApplication {
     const error = new AppError('UPGRADE_REQUIRED', message, { appVersion: version, minVersion });
     res.status(error.status).json(error.toBody());
   });
+  // DT-22: toda escritura lleva Idempotency-Key, un UUID por cada intento del usuario.
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!WRITES.has(req.method) || !API.test(req.path) || UUID.test(req.header('idempotency-key') ?? '')) return next();
+    const error = new AppError(
+      'VALIDATION_ERROR',
+      'Falta la cabecera Idempotency-Key: cada intento del usuario debe llevar un UUID propio.',
+    );
+    res.status(error.status).json(error.toBody());
+  });
   app.useGlobalFilters(new HttpErrorFilter());
   return app;
 }
 
 export async function createApp() {
-  return configureApp(await NestFactory.create(AppModule, { logger: ['error', 'warn'] }));
+  // rawBody: la firma del dispositivo (DT-24) y la idempotencia (DT-22) usan el cuerpo tal como llegó.
+  return configureApp(await NestFactory.create(AppModule, { logger: ['error', 'warn'], rawBody: true }));
 }

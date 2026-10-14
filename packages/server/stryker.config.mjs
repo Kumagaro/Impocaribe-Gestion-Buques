@@ -15,7 +15,7 @@ export default {
   plugins: [import.meta.resolve('@stryker-mutator/vitest-runner')],
   testRunner: 'vitest',
   vitest: { configFile: 'vitest.config.ts' },
-  mutate: ['src/sync/**/*.ts', '!src/**/*.test.ts'],
+  mutate: ['src/sync/**/*.ts', 'src/http/idempotency.ts', '!src/**/*.test.ts'],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.
   concurrency: 2,
   timeoutMS: 30_000,

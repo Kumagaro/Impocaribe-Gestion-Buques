@@ -40,7 +40,8 @@ class ExampleController {
 
 let app: INestApplication;
 let base: string;
-const APP = { 'X-App-Version': '1.2.0' };
+// DT-11 y DT-22: versión de la app y clave de idempotencia (obligatoria en las escrituras)
+const APP = { 'X-App-Version': '1.2.0', 'Idempotency-Key': '0192a3b4-0000-7000-8000-0000000000c1' };
 
 beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers: [ExampleController] })
