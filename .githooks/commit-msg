@@ -1,0 +1,3 @@
+#!/bin/sh
+# T007 · Const. art. XIII.11: cambiar una prueba existente exige el motivo en el mensaje.
+node scripts/quality/test-changes.ts "$1"
