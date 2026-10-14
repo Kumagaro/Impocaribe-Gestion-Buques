@@ -5,6 +5,9 @@ export default defineConfig({
   ssr: { resolve: { conditions: ['source'], externalConditions: ['source'] } },
   test: {
     exclude: [...configDefaults.exclude, '.stryker-tmp/**'],
+    // Plantilla de PostgreSQL migrada una vez; cada suite de integración clona la suya (test/suite-db.ts).
+    globalSetup: ['test/global-setup.ts'],
+    hookTimeout: 60_000,
     // Las pruebas no dependen de la zona horaria del equipo: el dominio fija America/Havana explícitamente.
     env: { TZ: 'UTC' },
     // Const. art. XIII.9 y §7.6: 85 % de líneas en el servidor

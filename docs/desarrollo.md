@@ -121,8 +121,11 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 | `pnpm db:migrate` | Aplica las migraciones de Drizzle (`packages/server/drizzle/`) |
 | `pnpm db:reset` | Borra la base, la vuelve a crear y migra (prohibido en `production`) |
 | `pnpm db:seed` | Carga datos sintéticos de desarrollo (solo en `development`) |
+| `pnpm db:generate` | Genera una migración nueva en `packages/server/drizzle/` a partir del esquema (`src/db/schema/`) |
 
 - **Base de pruebas aparte.** En `test` se usa `TEST_DATABASE_URL`, nunca `DATABASE_URL`, y su nombre debe terminar en `_test`; fuera de `test`, una base `_test` se rechaza. Para prepararla: `$env:NODE_ENV='test'; pnpm db:reset`.
+- **Rol de la aplicación:** el servidor se conecta con el rol `impocaribe_app` (sin permiso para cambiar el esquema ni para modificar tablas de solo inserción); las migraciones las aplica el dueño de la base.
+- **Pruebas de integración:** `pnpm test` prepara una vez la plantilla `TEST_DATABASE_URL` (la borra, la crea y la migra) y cada archivo `*.int.test.ts` trabaja en su propia copia, que se borra al terminar.
 - **Carpeta de datos fuera del repositorio:** por defecto `%LOCALAPPDATA%\Impocaribe\dev-data` (se cambia con `IMPOCARIBE_DATA_DIR`).
 
 **Puertos:** Windows reserva rangos de puertos para Hyper-V (`netsh int ipv4 show excludedportrange protocol=tcp`). El servidor usa 8443 (plan §6); si está reservado en su equipo, defina `PORT`.

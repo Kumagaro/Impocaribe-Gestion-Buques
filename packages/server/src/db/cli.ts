@@ -1,14 +1,11 @@
 // T004: pnpm db:create | db:migrate | db:reset | db:seed sobre la base del entorno actual (NODE_ENV).
 import { mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { config } from '../config.ts';
+import { runMigrations as migrateDb } from './migrate.ts';
 
 const cfg = config();
 const dbName = new URL(cfg.databaseUrl).pathname.slice(1);
-const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url));
 
 /** Ejecuta `fn` conectado a la base de mantenimiento `postgres` del mismo servidor. */
 async function withAdmin(fn: (c: pg.Client) => Promise<unknown>) {
@@ -33,12 +30,7 @@ async function create() {
 }
 
 async function runMigrations() {
-  const pool = new pg.Pool({ connectionString: cfg.databaseUrl });
-  try {
-    await migrate(drizzle(pool), { migrationsFolder });
-  } finally {
-    await pool.end();
-  }
+  await migrateDb(cfg.databaseUrl);
   console.log(`Migraciones aplicadas en ${dbName}`);
 }
 
