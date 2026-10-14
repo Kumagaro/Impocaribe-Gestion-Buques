@@ -7,6 +7,8 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, '.stryker-tmp/**'],
     // Plantilla de PostgreSQL migrada una vez; cada suite de integración clona la suya (test/suite-db.ts).
     globalSetup: ['test/global-setup.ts'],
+    // Muchas pruebas arrancan la app Nest completa: con el equipo cargado, 5 s no alcanzan.
+    testTimeout: 30_000,
     hookTimeout: 60_000,
     // Las pruebas no dependen de la zona horaria del equipo: el dominio fija America/Havana explícitamente.
     env: { TZ: 'UTC' },

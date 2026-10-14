@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Request, Response } from 'express';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { listenForTests } from '../../test/listen.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
@@ -74,8 +75,7 @@ beforeAll(async () => {
     .useValue(db)
     .compile();
   app = configureApp(moduleRef.createNestApplication({ logger: false, rawBody: true }));
-  await app.listen(0, '127.0.0.1');
-  base = `${await app.getUrl()}/api/v1`;
+  base = `${await listenForTests(app)}/api/v1`;
 }, 60_000);
 
 afterAll(async () => {
