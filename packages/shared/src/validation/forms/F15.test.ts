@@ -17,7 +17,9 @@ describe('F-15 Motivo', () => {
   });
 
   it('cuenta los caracteres sin los espacios de los extremos', () => {
-    expect(issues(reasonSchema.safeParse('   corto    '))).toEqual(['El motivo debe tener al menos 10 caracteres (tiene 5).']);
+    expect(issues(reasonSchema.safeParse('   corto    '))).toEqual([
+      'El motivo debe tener al menos 10 caracteres (tiene 5).',
+    ]);
     expect(reasonSchema.parse('  Cancelada en el Excel  ')).toBe('Cancelada en el Excel');
   });
 });
@@ -28,6 +30,8 @@ describe('F-15 Palabra de confirmación', () => {
   });
 
   it.each(['restaurar', 'RESTAURA', ' RESTAURAR', ''])('rechaza «%s»', (value) => {
-    expect(issues(confirmWordSchema('RESTAURAR').safeParse(value))).toEqual(['Escriba exactamente RESTAURAR, en mayúsculas.']);
+    expect(issues(confirmWordSchema('RESTAURAR').safeParse(value))).toEqual([
+      'Escriba exactamente RESTAURAR, en mayúsculas.',
+    ]);
   });
 });

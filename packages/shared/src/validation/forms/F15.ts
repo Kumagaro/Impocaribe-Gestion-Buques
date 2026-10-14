@@ -11,8 +11,10 @@ export const reasonSchema = z
   .superRefine((value, ctx) => {
     const n = value.length;
     if (n === 0) ctx.addIssue({ code: 'custom', message: 'Escriba el motivo: es obligatorio y queda en la bitácora.' });
-    else if (n < REASON_MIN) ctx.addIssue({ code: 'custom', message: `El motivo debe tener al menos ${REASON_MIN} caracteres (tiene ${n}).` });
-    else if (n > REASON_MAX) ctx.addIssue({ code: 'custom', message: `El motivo admite como máximo ${REASON_MAX} caracteres (tiene ${n}).` });
+    else if (n < REASON_MIN)
+      ctx.addIssue({ code: 'custom', message: `El motivo debe tener al menos ${REASON_MIN} caracteres (tiene ${n}).` });
+    else if (n > REASON_MAX)
+      ctx.addIssue({ code: 'custom', message: `El motivo admite como máximo ${REASON_MAX} caracteres (tiene ${n}).` });
   });
 
 /** Palabra que confirma una acción destructiva ("RESTAURAR", "DESINSTALAR"): exacta y en mayúsculas. */

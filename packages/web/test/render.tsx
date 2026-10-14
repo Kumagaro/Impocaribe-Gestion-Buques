@@ -6,7 +6,11 @@ import { DeviceClassProvider, type DeviceClass } from '../src/ui/device';
 
 export function renderUi(
   ui: ReactElement,
-  { device = 'desktop', reduceMotion = false, ...options }: { device?: DeviceClass; reduceMotion?: boolean } & RenderOptions = {},
+  {
+    device = 'desktop',
+    reduceMotion = false,
+    ...options
+  }: { device?: DeviceClass; reduceMotion?: boolean } & RenderOptions = {},
 ): RenderResult {
   return render(
     <DeviceClassProvider value={device}>
