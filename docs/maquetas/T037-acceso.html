@@ -1,0 +1,3013 @@
+<title>Maquetas de acceso</title>
+<style>
+  /* Layout: hoja de revisión en una columna; cada sección muestra la pieza tal como se verá, con su nota de diseño al lado. */
+  :root {
+    /* Paleta del prototipo aprobado (RF-UI-03), renovada en contraste y estados */
+    --ink: #14202b;
+    --ink-2: #4a5c6b;
+    --ink-3: #5e7081;
+    --ground: #eff3f6;
+    --surface: #ffffff;
+    --surface-2: #f7f9fb;
+    --line: #d3dde5;
+    --line-2: #e6ecf1;
+    --accent: #1a3e96;
+    --accent-soft: #e4eaf7;
+    --accent-ink: #15327a;
+    --on-accent: #ffffff;
+    --ok: #1b7a4b;
+    --ok-soft: #e2f2e9;
+    --warn: #8a5102;
+    --warn-soft: #fbefd9;
+    --bad: #ae241c;
+    --bad-soft: #fbe6e4;
+    --shadow: 0 1px 2px rgba(20, 32, 43, 0.08), 0 4px 12px rgba(20, 32, 43, 0.05);
+    --sheet-shadow: 0 -6px 24px rgba(20, 32, 43, 0.18);
+    /* Tipografía del prototipo: Segoe UI en Windows, Roboto en Android; mono para cifras y números de orden */
+    --ui: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono: Consolas, 'SF Mono', Menlo, 'DejaVu Sans Mono', monospace;
+    --doc: 'Times New Roman', Times, serif;
+    /* Escala tipográfica (px) y espaciado en múltiplos de 4 */
+    --t-xs: 11px;
+    --t-sm: 12.5px;
+    --t-md: 14px;
+    --t-lg: 16px;
+    --t-xl: 23px;
+    --r-sm: 6px;
+    --r-md: 9px;
+    --r-lg: 14px;
+    --touch: 48px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ink: #e3ebf2;
+      --ink-2: #a6b8c7;
+      --ink-3: #8397a8;
+      --ground: #0d141c;
+      --surface: #151f2a;
+      --surface-2: #1b2733;
+      --line: #2b3a48;
+      --line-2: #233140;
+      --accent: #7b9de8;
+      --accent-soft: #16203a;
+      --accent-ink: #a8c1f2;
+      --on-accent: #0d141c;
+      --ok: #4fbb84;
+      --ok-soft: #122a20;
+      --warn: #d89b3c;
+      --warn-soft: #2e2312;
+      --bad: #e4746a;
+      --bad-soft: #331716;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+      --sheet-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ink: #e3ebf2;
+    --ink-2: #a6b8c7;
+    --ink-3: #8397a8;
+    --ground: #0d141c;
+    --surface: #151f2a;
+    --surface-2: #1b2733;
+    --line: #2b3a48;
+    --line-2: #233140;
+    --accent: #7b9de8;
+    --accent-soft: #16203a;
+    --accent-ink: #a8c1f2;
+    --on-accent: #0d141c;
+    --ok: #4fbb84;
+    --ok-soft: #122a20;
+    --warn: #d89b3c;
+    --warn-soft: #2e2312;
+    --bad: #e4746a;
+    --bad-soft: #331716;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --sheet-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: var(--t-md);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button,
+  input,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ---------- cabecera de la hoja ---------- */
+  .sheet-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px 24px;
+    align-items: start;
+  }
+  .sheet-head h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .sheet-head p {
+    margin: 6px 0 0;
+    color: var(--ink-2);
+    max-width: 68ch;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .seg button {
+    border: 0;
+    background: none;
+    padding: 7px 12px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .approve {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    grid-column: 1 / -1;
+  }
+  .approve h2 {
+    margin: 0 0 6px;
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+  .approve ul {
+    margin: 0;
+    padding-left: 18px;
+    columns: 2 280px;
+    column-gap: 32px;
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+  }
+
+  /* ---------- secciones ---------- */
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+  .sec-h {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+  .sec-h h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .sec-h .ref {
+    font-family: var(--mono);
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .note {
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    max-width: 70ch;
+    margin: 0;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 16px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card h3 {
+    margin: 0;
+    font-size: var(--t-md);
+    font-weight: 650;
+  }
+  .card .cap {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .label {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+    font-weight: 650;
+  }
+
+  /* ---------- tokens ---------- */
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .sw {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .sw i {
+    display: block;
+    height: 44px;
+  }
+  .sw div {
+    padding: 6px 9px;
+    font-size: var(--t-xs);
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .sw code {
+    font-family: var(--mono);
+    color: var(--ink-3);
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .type-row:last-child {
+    border-bottom: 0;
+  }
+  .type-row .label {
+    font-size: 10.5px;
+  }
+
+  /* ---------- componentes base ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform 120ms ease-out,
+      opacity 120ms;
+  }
+  .btn.touch {
+    min-height: var(--touch);
+    padding-inline: 18px;
+    font-size: 14.5px;
+  }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink-2);
+    border-color: var(--line);
+  }
+  .btn.danger {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: var(--on-accent);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn .spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 11px;
+    font-size: var(--t-xs);
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  .pill.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .pill.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .pill.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .pill.info {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .pill.mute {
+    background: var(--surface-2);
+    color: var(--ink-3);
+    border: 1px solid var(--line-2);
+  }
+  .stat {
+    background: var(--surface);
+    padding: 12px 14px;
+    min-width: 0;
+  }
+  .stat .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+  }
+  .stat .v {
+    font-size: var(--t-xl);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .n {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .bar {
+    position: relative;
+    height: 7px;
+    border-radius: 4px;
+    background: var(--line-2);
+    overflow: hidden;
+    min-width: 80px;
+    flex: 1;
+  }
+  .bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--accent);
+    border-radius: 4px;
+    transform-origin: left;
+  }
+  .bar i.ok {
+    background: var(--ok);
+  }
+  .bar i.warn {
+    background: var(--warn);
+  }
+  .num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+
+  /* ---------- marcos de dispositivo ---------- */
+  .devices {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .device {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .device-h {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .device-h b {
+    font-size: var(--t-md);
+  }
+  .device-h span {
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+  }
+  .frame-scroll {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .frame {
+    border: 8px solid #1d2733;
+    border-radius: 26px;
+    background: var(--ground);
+    overflow: hidden;
+    position: relative;
+    flex: none;
+  }
+  .frame.phone {
+    width: 376px;
+    height: 720px;
+  }
+  .frame.tablet {
+    width: 1040px;
+    height: 680px;
+    border-radius: 22px;
+  }
+  .frame.desktop {
+    width: 1200px;
+    height: 720px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--line);
+  }
+  .frame-wrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  /* teléfono */
+  .ph {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .ph-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ph-top h4 {
+    margin: 0;
+    font-size: var(--t-lg);
+    font-weight: 650;
+    flex: 1;
+  }
+  .icon-btn {
+    width: var(--touch);
+    height: var(--touch);
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    flex: none;
+  }
+  .icon-btn svg,
+  .ic {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .conn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--t-xs);
+    color: var(--ok);
+    font-weight: 600;
+  }
+  .conn::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .ph-body {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .carousel {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+  }
+  .carousel .tile {
+    scroll-snap-align: start;
+    flex: 0 0 148px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px;
+  }
+  .tile .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+  }
+  .tile .v {
+    font-size: 20px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  .dm-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: var(--touch);
+  }
+  .dm-card .t {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+  }
+  .dm-card b {
+    font-family: var(--mono);
+    font-size: 13.5px;
+  }
+  .dm-card .who {
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .dm-card .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .navbar {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    padding: 4px 4px 10px;
+  }
+  .navbar button {
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-height: var(--touch);
+    font-size: 10.5px;
+    color: var(--ink-3);
+    cursor: pointer;
+    position: relative;
+  }
+  .navbar button[aria-current='page'] {
+    color: var(--accent);
+    font-weight: 650;
+  }
+  .navbar .fab {
+    width: 54px;
+    height: 54px;
+    margin: -22px auto 0;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+  }
+  .badge {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 4px);
+    background: var(--bad);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 9px;
+    padding: 0 5px;
+    line-height: 16px;
+  }
+  .sheet-veil {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 20, 28, 0.38);
+  }
+  .sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface);
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--sheet-shadow);
+    padding: 8px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .grabber {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+    margin: 4px auto 10px;
+  }
+  .sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--touch);
+    padding: 0 6px;
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font-size: 14.5px;
+  }
+  .sheet-item:hover {
+    background: var(--surface-2);
+  }
+  .sheet-group {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    padding: 8px 6px 2px;
+  }
+
+  /* tablet */
+  .tb {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    height: 100%;
+  }
+  .rail {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 0;
+    overflow: hidden;
+  }
+  .rail .logo {
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .rail button {
+    width: 72px;
+    min-height: 56px;
+    border: 0;
+    background: none;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 10.5px;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+  .rail button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .rail .new {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .tb-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tb-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tb-top h4 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 650;
+    flex: 1;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    border-radius: 22px;
+    padding: 0 12px;
+    height: 40px;
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+    min-width: 200px;
+  }
+  .search .ic {
+    width: 16px;
+    height: 16px;
+  }
+  .split {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+  .split .list {
+    border-right: 1px solid var(--line);
+    overflow: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .split .detail {
+    overflow: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dm-card.sel {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1px;
+    background: var(--line-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+  .kv div {
+    background: var(--surface-2);
+    padding: 10px 12px;
+  }
+  .kv .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+  .kv .v {
+    font-size: 16px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  .stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .stages span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stages i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+  }
+  .stages .done {
+    color: var(--ink-2);
+  }
+  .stages .done i {
+    background: var(--ok);
+    border-color: var(--ok);
+  }
+  .stages .now {
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .stages .now i {
+    border-color: var(--accent);
+  }
+
+  /* escritorio */
+  .dk {
+    display: grid;
+    grid-template-columns: 228px 1fr;
+    height: 100%;
+  }
+  .side {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .side .brand {
+    padding: 2px 8px 12px;
+    border-bottom: 1px solid var(--line-2);
+    margin-bottom: 6px;
+  }
+  .side .brand b {
+    display: block;
+    font-size: 15px;
+  }
+  .side .brand span {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+  .side .grp {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--ink-3);
+    padding: 10px 10px 3px;
+    font-weight: 650;
+  }
+  .side button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    background: none;
+    text-align: left;
+    border-radius: var(--r-sm);
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .side button:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .side button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .side button .ic {
+    width: 16px;
+    height: 16px;
+  }
+  .side kbd {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+  .side .foot {
+    margin-top: auto;
+    border-top: 1px solid var(--line-2);
+    padding: 10px 10px 0;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dk-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .dk-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .dk-top h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+  }
+  .dk-top .sub {
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .dk-top .right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .bell {
+    position: relative;
+  }
+  .bell .badge {
+    left: auto;
+    right: 2px;
+    top: 4px;
+  }
+  .dk-body {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 18px;
+    padding: 18px 22px;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line-2);
+    white-space: nowrap;
+  }
+  td.r,
+  th.r {
+    text-align: right;
+  }
+  tbody tr:hover {
+    background: var(--surface-2);
+  }
+  tr.hl td {
+    background: var(--accent-soft);
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .panel-h {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-h h5 {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 650;
+  }
+  .alert-row {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .alert-row:last-child {
+    border-bottom: 0;
+  }
+  .alert-row .sev {
+    width: 4px;
+    border-radius: 2px;
+    flex: none;
+  }
+  .alert-row small {
+    display: block;
+    color: var(--ink-3);
+    font-size: var(--t-xs);
+  }
+
+  /* bandas globales */
+  .band {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    font-size: var(--t-sm);
+    font-weight: 600;
+  }
+  .band.off {
+    background: var(--surface-2);
+    color: var(--ink-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .band.batt {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .band.prot {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .toast {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-size: var(--t-sm);
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .ph .toast {
+    left: 14px;
+    right: 14px;
+    bottom: 84px;
+  }
+
+  /* ---------- estados EST ---------- */
+  .est {
+    min-height: 220px;
+  }
+  .est-box {
+    flex: 1;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    background: var(--surface-2);
+  }
+  .skel {
+    background: var(--line-2);
+    border-radius: 6px;
+    height: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.4s infinite;
+  }
+  .empty {
+    text-align: center;
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .empty .ic {
+    width: 34px;
+    height: 34px;
+    color: var(--ink-3);
+    stroke-width: 1.4;
+  }
+  .lock {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .update {
+    text-align: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--r-sm);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .update .btn {
+    background: var(--surface);
+    color: var(--accent-ink);
+    border-color: var(--surface);
+  }
+
+  /* ---------- campos ---------- */
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .field label {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+  }
+  .control {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .control input {
+    width: 100%;
+    height: 40px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: 0 36px 0 11px;
+    font-size: 14px;
+    transition: border-color 150ms;
+  }
+  .control input:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .control .end {
+    position: absolute;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  .field.error input {
+    border-color: var(--bad);
+  }
+  .field.warn input {
+    border-color: var(--warn);
+  }
+  .field.locked input {
+    color: var(--ink-2);
+    background: var(--surface);
+    border-style: dashed;
+  }
+  .field.auto input {
+    background: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .msgline {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    font-size: 12px;
+    min-height: 18px;
+    color: var(--ink-3);
+  }
+  .msgline .ic {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    margin-top: 1px;
+  }
+  .field.error .msgline {
+    color: var(--bad);
+  }
+  .field.warn .msgline {
+    color: var(--warn);
+  }
+  .legal {
+    background: var(--warn-soft);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    color: var(--warn);
+    border-radius: var(--r-sm);
+    padding: 9px 11px;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .legal a {
+    color: inherit;
+    font-weight: 650;
+  }
+  .check-ok {
+    color: var(--ok);
+  }
+  .check-ok path {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 0;
+  }
+  .summary {
+    background: var(--bad-soft);
+    border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+    color: var(--bad);
+    border-radius: var(--r-sm);
+    padding: 11px 14px;
+    font-size: var(--t-sm);
+  }
+  .summary b {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .summary ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .summary a {
+    color: inherit;
+  }
+
+  /* ---------- movimiento ---------- */
+  .mov-table {
+    overflow-x: auto;
+  }
+  .mov-table table {
+    font-size: var(--t-sm);
+  }
+  .mov-table td {
+    white-space: normal;
+    vertical-align: top;
+  }
+  .mov-table td:first-child {
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .demo-stage {
+    height: 120px;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  /* animaciones (solo posición, escala y opacidad) */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-4px);
+    }
+    40%,
+    80% {
+      transform: translateX(4px);
+    }
+  }
+  @keyframes ring {
+    0%,
+    100% {
+      transform: rotate(0);
+    }
+    25% {
+      transform: rotate(14deg);
+    }
+    50% {
+      transform: rotate(-12deg);
+    }
+    75% {
+      transform: rotate(6deg);
+    }
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @keyframes rowIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheetUp {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  .shake {
+    animation: shake 200ms ease-in-out;
+  }
+  .ringing {
+    animation: ring 600ms ease-in-out;
+    transform-origin: 50% 10%;
+  }
+  .pulsing {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+  .row-in {
+    animation: rowIn 250ms ease-out;
+  }
+  .slide-in {
+    animation: slideIn 250ms ease-out;
+  }
+  .sheet-up {
+    animation: sheetUp 220ms ease-out;
+  }
+  .pop-in {
+    animation: pop 200ms ease-out;
+  }
+  .drop-in {
+    animation: drop 220ms ease-out;
+  }
+  .draw path {
+    animation: draw 200ms ease-out;
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 24;
+    }
+  }
+
+  /* "Reducir animaciones": de la preferencia del sistema o del interruptor de esta hoja (RF-UI-06) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+    }
+  }
+  :root.reduce *,
+  :root.reduce *::before,
+  :root.reduce *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  :root.reduce .btn:active {
+    transform: none;
+    filter: brightness(0.92);
+  }
+
+  @media (max-width: 640px) {
+    .sheet-head {
+      grid-template-columns: 1fr;
+    }
+    .toolbar {
+      justify-content: flex-start;
+    }
+    .type-row {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+</style>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24">
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+    </symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24">
+      <path d="M14 3H6v18h12V7z" />
+      <path d="M14 3v4h4" />
+      <path d="M9 13h6M9 17h6" />
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" />
+    </symbol>
+    <symbol id="i-more" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </symbol>
+    <symbol id="i-ship" viewBox="0 0 24 24">
+      <path d="M2 20c2 1 4 1 6 0s4-1 6 0 4 1 6 0" />
+      <path d="M4 16l-1-5h18l-1 5" />
+      <path d="M12 11V3l5 4" />
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24">
+      <path d="M1 4h14v12H1z" />
+      <path d="M15 9h4l3 3v4h-7" />
+      <circle cx="6" cy="18" r="2" />
+      <circle cx="18" cy="18" r="2" />
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <circle cx="9" cy="8" r="4" />
+      <path d="M2 21a7 7 0 0 1 14 0" />
+      <path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6" />
+    </symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24">
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M21 3v5h-5M3 21v-5h5" />
+    </symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24">
+      <path d="M17.5 19H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 11a4 4 0 0 1-1.5 8z" />
+      <path d="M2 2l20 20" />
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v6M12 16.5h.01" />
+    </symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24">
+      <path d="M12 3l10 18H2z" />
+      <path d="M12 10v5M12 18h.01" />
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5h.01" />
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24">
+      <path d="M3 13l3-8h12l3 8v6H3z" />
+      <path d="M3 13h5l1 3h6l1-3h5" />
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24">
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+      />
+    </symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24">
+      <path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
+      <path d="M12 19.5h.01" />
+    </symbol>
+  </defs>
+</svg>
+
+<style>
+  /* T037: piezas propias de las pantallas de acceso, sobre el sistema de T017 */
+  .auth {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--ground);
+  }
+  .auth-body {
+    flex: 1;
+    overflow: auto;
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .auth-center {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: var(--ground);
+  }
+  .auth-card {
+    width: min(440px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo .mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .logo b {
+    display: block;
+    font-size: 17px;
+  }
+  .logo span {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .ph .logo-top {
+    padding: 34px 18px 8px;
+    display: flex;
+    justify-content: center;
+  }
+  .h3 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .muted {
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    margin: 0;
+  }
+  .btn.block {
+    width: 100%;
+  }
+  .btn.secondary {
+    background: var(--surface);
+    color: var(--accent-ink);
+    border-color: var(--line);
+  }
+  .linkish {
+    background: none;
+    border: 0;
+    color: var(--accent);
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    font-size: var(--t-sm);
+    text-align: left;
+  }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    font-size: var(--t-sm);
+  }
+  .check-row i {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--accent);
+    flex: none;
+    display: grid;
+    place-items: center;
+  }
+  .check-row i.on {
+    background: var(--accent);
+  }
+  .check-row i.on::after {
+    content: '';
+    width: 8px;
+    height: 4px;
+    border: 2px solid var(--on-accent);
+    border-top: 0;
+    border-right: 0;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .pw {
+    position: relative;
+  }
+  .pw .eye {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--t-xs);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .code-big {
+    font-family: var(--mono);
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-align: center;
+    color: var(--ink);
+    padding: 10px 0 4px;
+  }
+  .countdown {
+    text-align: center;
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .search-ring {
+    width: 84px;
+    height: 84px;
+    margin: 10px auto 2px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-soft);
+    border-top-color: var(--accent);
+    display: grid;
+    place-items: center;
+    animation: spin 1.1s linear infinite;
+  }
+  .search-ring svg {
+    width: 30px;
+    height: 30px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 1.8;
+    animation: spin 1.1s linear infinite reverse;
+  }
+  .methods {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--t-sm);
+  }
+  .methods div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-3);
+  }
+  .methods .done {
+    color: var(--ink-2);
+  }
+  .methods .now {
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .methods i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    flex: none;
+  }
+  .methods .done i {
+    background: var(--ink-3);
+    border-color: var(--ink-3);
+  }
+  .methods .now i {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .server-id {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .server-id .ic {
+    width: 28px;
+    height: 28px;
+    color: var(--ok);
+  }
+  .server-id b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .server-id span {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    font-family: var(--mono);
+  }
+  .secure-note {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .secure-note .ic {
+    width: 15px;
+    height: 15px;
+  }
+  .codes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .codes span {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    padding: 9px 4px;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    letter-spacing: 0.06em;
+  }
+  .wizard {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    height: 100%;
+  }
+  .wizard nav {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    padding: 22px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wstep {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .wstep b {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    flex: none;
+  }
+  .wstep.done {
+    color: var(--ink-2);
+  }
+  .wstep.done b {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: #fff;
+  }
+  .wstep.now {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .wstep.now b {
+    border-color: var(--accent);
+  }
+  .wizard main {
+    padding: 26px 30px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .stepbar {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px 0;
+  }
+  .stepbar i {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line-2);
+  }
+  .stepbar i.on {
+    background: var(--accent);
+  }
+  .sticky-foot {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .notice {
+    display: flex;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: var(--r-sm);
+    font-size: var(--t-sm);
+    align-items: flex-start;
+  }
+  .notice .ic {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin-top: 1px;
+  }
+  .notice.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+    border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+  }
+  .notice.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  }
+  .notice.info {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+    height: 100%;
+  }
+  .profile nav {
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .profile nav button {
+    border: 0;
+    background: none;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .profile nav button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .profile .content {
+    padding: 20px 24px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .session-row:last-child {
+    border-bottom: 0;
+  }
+  .session-row .ic {
+    width: 22px;
+    height: 22px;
+    color: var(--ink-3);
+  }
+  .session-row b {
+    display: block;
+    font-size: 13.5px;
+  }
+  .session-row small {
+    color: var(--ink-3);
+    font-size: var(--t-xs);
+  }
+  .session-row .grow {
+    flex: 1;
+  }
+  .toggle {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--line);
+    position: relative;
+    flex: none;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .toggle.on {
+    background: var(--accent);
+  }
+  .toggle.on::after {
+    left: 21px;
+  }
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--touch);
+    padding: 0 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-2);
+    font-size: 14.5px;
+  }
+  .list-item .chev {
+    margin-left: auto;
+    color: var(--ink-3);
+  }
+  .sema {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border-radius: var(--r-md);
+  }
+  .sema .dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex: none;
+    display: grid;
+    place-items: center;
+    color: #fff;
+  }
+  .sema .dot .ic {
+    width: 24px;
+    height: 24px;
+    stroke: #fff;
+  }
+  .sema.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .sema.ok .dot {
+    background: var(--ok);
+  }
+  .sema.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .sema.bad .dot {
+    background: var(--bad);
+  }
+  .sema b {
+    font-size: 17px;
+    display: block;
+  }
+  .sema span {
+    font-size: var(--t-sm);
+  }
+  .steps-ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .role-pill {
+    font-size: var(--t-xs);
+    font-weight: 650;
+  }
+  .caption {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    text-align: center;
+    padding-top: 6px;
+  }
+</style>
+
+<div class="page">
+  <header class="sheet-head">
+    <div>
+      <h1>Maquetas de acceso y usuarios · Órdenes de Carga</h1>
+      <p>
+        Tarea T037. Pantallas P-01 a P-05, P-21 y P-30 en teléfono, tablet y escritorio, con sus estados clave, sobre el
+        sistema de diseño aprobado en T017. Los nombres y datos son ficticios.
+      </p>
+    </div>
+    <div class="toolbar" role="group" aria-label="Opciones de vista">
+      <div class="seg" role="group" aria-label="Tema">
+        <button aria-pressed="true" data-theme-set="">Sistema</button>
+        <button aria-pressed="false" data-theme-set="light">Claro</button>
+        <button aria-pressed="false" data-theme-set="dark">Oscuro</button>
+      </div>
+      <div class="seg" role="group" aria-label="Movimiento">
+        <button aria-pressed="true" data-motion="on">Con animaciones</button>
+        <button aria-pressed="false" data-motion="off">Reducir animaciones</button>
+      </div>
+    </div>
+    <div class="approve">
+      <h2>Qué se aprueba en esta hoja</h2>
+      <ul>
+        <li>
+          P-01 Conexión y emparejamiento: búsqueda, servidor encontrado, código, no encontrado, crear servidor (ESC)
+        </li>
+        <li>P-02 Primer arranque: datos, contraseña y códigos con capturas bloqueadas; aviso en otros dispositivos</li>
+        <li>P-03 Iniciar sesión: normal, advertencia tras 3 fallos y bloqueo con tiempo restante</li>
+        <li>P-04 Recuperar contraseña: formulario y error que no dice qué dato falló</li>
+        <li>P-05 Perfil: sesiones, contraseña, códigos, tema y «Reducir animaciones»</li>
+        <li>P-21 Usuarios: lista, alta con códigos, cambio de rol y última Apoderada</li>
+        <li>P-30 Diagnóstico de red: todo bien y servidor que no responde</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ================= P-01 ================= -->
+  <section aria-labelledby="p01">
+    <div class="sec-h">
+      <h2 id="p01">P-01. Conexión y emparejamiento</h2>
+      <span class="ref">/conexion · RF-CON-01 · RF-RED-02 a 04 · RF-INS-03 · F-01</span>
+    </div>
+    <p class="note">
+      Teléfono: un paso por pantalla (Buscando → Encontrado → Código → Listo). Tablet: los mismos pasos en una tarjeta
+      centrada. Escritorio: ventana compacta; con el instalador completo ofrece «Crear servidor en este equipo».
+      Movimiento: la búsqueda gira (MOV-08), el código entra como hoja o diálogo (MOV-04) y al confirmar se dibuja la
+      marca (MOV-07).
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Teléfono</b><span>buscando · código · no encontrado</span></div>
+        <div class="frame-scroll">
+          <div class="frame-wrap">
+            <div class="frame phone">
+              <div class="auth">
+                <div class="auth-body">
+                  <div class="logo">
+                    <span class="mark">IC</span>
+                    <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                  </div>
+                  <h3 class="h3">Buscando el servidor</h3>
+                  <p class="muted">
+                    Conecte el teléfono a la misma red wifi que la PC servidor. No hace falta escribir nada.
+                  </p>
+                  <div class="search-ring">
+                    <svg><use href="#i-wifi" /></svg>
+                  </div>
+                  <div class="methods" aria-label="Métodos de búsqueda">
+                    <div class="done"><i></i>Última dirección conocida</div>
+                    <div class="now"><i></i>Anuncio del servidor en la red…</div>
+                    <div><i></i>Mensaje de difusión</div>
+                    <div><i></i>Direcciones de la red local</div>
+                  </div>
+                  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+                    <button class="btn secondary touch block">Escanear QR del servidor</button>
+                    <button class="linkish">Opciones avanzadas</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="frame phone">
+              <div class="auth">
+                <div class="stepbar"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+                <div class="auth-body">
+                  <h3 class="h3">Confirme este código en la pantalla del servidor</h3>
+                  <div class="server-id">
+                    <svg class="ic"><use href="#i-shield" /></svg>
+                    <div><b>IMPOCARIBE-7F3A</b><span>Identidad 7f3a2c19… · 192.168.1.10</span></div>
+                  </div>
+                  <div class="code-big">482 913</div>
+                  <div class="countdown">El código caduca en 4:38</div>
+                  <p class="muted" style="text-align: center">
+                    Quien esté ante la PC servidor debe ver el mismo código y pulsar «Confirmar».
+                  </p>
+                  <div class="secure-note">
+                    <svg class="ic"><use href="#i-lock" /></svg>Si los códigos no coinciden, no confirme: otro equipo
+                    podría estar haciéndose pasar por el servidor.
+                  </div>
+                </div>
+                <div class="sticky-foot"><button class="btn ghost touch block">Cancelar</button></div>
+              </div>
+            </div>
+            <div class="frame phone">
+              <div class="auth">
+                <div class="auth-body">
+                  <h3 class="h3">No se encontró el servidor</h3>
+                  <div class="notice warn">
+                    <svg class="ic"><use href="#i-warn" /></svg>
+                    <div>Se probaron los cuatro métodos sin respuesta.</div>
+                  </div>
+                  <ol class="steps-ol">
+                    <li>Compruebe que la PC servidor está encendida.</li>
+                    <li>Conéctese a la misma red wifi que ella.</li>
+                    <li>Si usa el hotspot de un celular, revise que esté activo.</li>
+                  </ol>
+                  <button class="btn touch block">Volver a buscar</button>
+                  <button class="btn secondary touch block">Abrir el Diagnóstico de red</button>
+                  <div class="field">
+                    <label for="m-addr">Escribir dirección</label>
+                    <div class="control"><input id="m-addr" value="192.168.1.10:8443" /></div>
+                    <div class="msgline">Por ejemplo 192.168.1.10 o 192.168.1.10:8443</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device">
+        <div class="device-h"><b>Tablet</b><span>servidor encontrado, en tarjeta centrada</span></div>
+        <div class="frame-scroll">
+          <div class="frame tablet">
+            <div class="auth-center">
+              <div class="auth-card">
+                <div class="logo">
+                  <span class="mark">IC</span>
+                  <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                </div>
+                <h3 class="h3">Servidor encontrado</h3>
+                <div class="server-id">
+                  <svg class="ic"><use href="#i-shield" /></svg>
+                  <div><b>IMPOCARIBE-7F3A</b><span>Encontrado por el anuncio en la red · 192.168.1.10</span></div>
+                </div>
+                <p class="muted">Este dispositivo aún no está emparejado. Se empareja una sola vez.</p>
+                <button class="btn touch block">Emparejar con código</button>
+                <button class="btn secondary touch block">Escanear QR del servidor</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device">
+        <div class="device-h">
+          <b>Escritorio</b><span>ventana compacta; «Crear servidor» desactivado porque ya hay uno en la red</span>
+        </div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div class="auth-center">
+              <div class="auth-card" style="width: 480px">
+                <div class="logo">
+                  <span class="mark">IC</span>
+                  <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                </div>
+                <h3 class="h3">Emparejar este equipo</h3>
+                <div class="server-id">
+                  <svg class="ic"><use href="#i-shield" /></svg>
+                  <div><b>IMPOCARIBE-7F3A</b><span>Identidad 7f3a2c19… · 192.168.1.10</span></div>
+                </div>
+                <div class="code-big" style="font-size: 34px">482 913</div>
+                <div class="countdown">Confirme este código en la pantalla del servidor · caduca en 4:38</div>
+                <div class="row" style="justify-content: space-between">
+                  <button class="btn ghost">Cancelar</button>
+                  <button class="btn secondary" disabled title="Ya hay un servidor en la red: IMPOCARIBE-7F3A">
+                    Crear servidor en este equipo
+                  </button>
+                </div>
+                <div class="msgline" style="justify-content: flex-end">
+                  Ya hay un servidor en la red (IMPOCARIBE-7F3A). Solo puede haber uno.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-02 ================= -->
+  <section aria-labelledby="p02">
+    <div class="sec-h">
+      <h2 id="p02">P-02. Primer arranque</h2>
+      <span class="ref">/setup · RF-USR-05 · RF-REC-01 · F-02 · solo en la PC servidor</span>
+    </div>
+    <p class="note">
+      Solo aparece en la PC servidor mientras no exista ninguna Apoderada. Pasos: datos de la Apoderada, contraseña y
+      códigos de recuperación. Los códigos se muestran una sola vez, con capturas bloqueadas, y «Los copié a mano» es
+      obligatorio para continuar. En cualquier otro dispositivo, el login explica que el sistema aún no está
+      configurado.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h">
+          <b>Escritorio</b><span>asistente con los pasos a la izquierda · paso 1 con validación (F-02)</span>
+        </div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div class="wizard">
+              <nav aria-label="Pasos">
+                <div class="logo" style="margin-bottom: 14px">
+                  <span class="mark">IC</span>
+                  <div><b>Primer arranque</b><span>PC servidor</span></div>
+                </div>
+                <div class="wstep now"><b>1</b>Datos de la Apoderada</div>
+                <div class="wstep"><b>2</b>Contraseña</div>
+                <div class="wstep"><b>3</b>Códigos de recuperación</div>
+              </nav>
+              <main>
+                <h3 class="h3">Datos de la primera Apoderada</h3>
+                <p class="muted">Será quien cree a los demás usuarios. Más adelante puede haber varias Apoderadas.</p>
+                <div class="two">
+                  <div class="field">
+                    <label for="s-name">Nombre y apellidos</label>
+                    <div class="control"><input id="s-name" value="Ilén Fernández Rojas" /></div>
+                    <div class="msgline"></div>
+                  </div>
+                  <div class="field">
+                    <label for="s-user">Usuario</label>
+                    <div class="control"><input id="s-user" value="ilen.fernandez" /></div>
+                    <div class="msgline">Con este nombre entrará al sistema</div>
+                  </div>
+                  <div class="field warn">
+                    <label for="s-ci">Carné de identidad</label>
+                    <div class="control"><input id="s-ci" value="84133105548" /></div>
+                    <div class="msgline">
+                      <svg class="ic"><use href="#i-warn" /></svg>Revise el carné: no empieza por una fecha de
+                      nacimiento válida
+                    </div>
+                  </div>
+                  <div class="field error">
+                    <label for="s-tel">Teléfono</label>
+                    <div class="control"><input id="s-tel" value="5234567" /></div>
+                    <div class="msgline">
+                      <svg class="ic"><use href="#i-alert" /></svg>El teléfono debe tener 8 dígitos (tiene 7).
+                    </div>
+                  </div>
+                  <div class="field locked">
+                    <label for="s-role">Rol</label>
+                    <div class="control"><input id="s-role" value="Apoderada" disabled /></div>
+                    <div class="msgline">La primera usuaria siempre es Apoderada</div>
+                  </div>
+                </div>
+                <div class="row" style="justify-content: flex-end; margin-top: auto">
+                  <button class="btn">Continuar</button>
+                </div>
+              </main>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <div class="device-h">
+          <b>Teléfono y tablet</b><span>paso 3 en teléfono · aviso en un dispositivo que no es la PC servidor</span>
+        </div>
+        <div class="frame-scroll">
+          <div class="frame-wrap">
+            <div class="frame phone">
+              <div class="auth">
+                <div class="stepbar"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+                <div class="auth-body">
+                  <h3 class="h3">Códigos de recuperación</h3>
+                  <div class="secure-note">
+                    <svg class="ic"><use href="#i-lock" /></svg>Capturas de pantalla bloqueadas
+                  </div>
+                  <p class="muted">
+                    Cópielos a mano y guárdelos. Cada uno sirve una sola vez para recuperar la contraseña. No se
+                    volverán a mostrar.
+                  </p>
+                  <div class="codes">
+                    <span>K7QM-3XTP</span><span>R2HW-9CND</span><span>F4ZB-7MRK</span><span>T8JX-2QPV</span>
+                    <span>W3NC-6HDF</span><span>P9KR-4TZM</span><span>H6VQ-8BXN</span><span>M2DT-5WJC</span>
+                  </div>
+                  <div class="check-row"><i class="on"></i>Los copié a mano</div>
+                </div>
+                <div class="sticky-foot"><button class="btn touch block">Terminar y entrar</button></div>
+              </div>
+            </div>
+            <div class="frame tablet" style="width: 760px">
+              <div class="auth-center">
+                <div class="auth-card">
+                  <div class="logo">
+                    <span class="mark">IC</span>
+                    <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                  </div>
+                  <div class="notice info">
+                    <svg class="ic"><use href="#i-info" /></svg>
+                    <div>El sistema aún no está configurado: créelo desde la PC servidor.</div>
+                  </div>
+                  <button class="btn secondary touch block">Volver a comprobar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-03 ================= -->
+  <section aria-labelledby="p03">
+    <div class="sec-h">
+      <h2 id="p03">P-03. Iniciar sesión</h2>
+      <span class="ref">/login · RF-AUT-01, 02, 05 · F-03</span>
+    </div>
+    <p class="note">
+      Teléfono: pantalla completa con el logotipo arriba. Tablet y escritorio: tarjeta centrada. Tras 3 fallos, la
+      contraseña avisa de los intentos que quedan; tras 5, explica cuánto falta para desbloquear.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Teléfono</b><span>normal · advertencia tras 3 fallos</span></div>
+        <div class="frame-scroll">
+          <div class="frame-wrap">
+            <div class="frame phone">
+              <div class="auth">
+                <div class="logo-top">
+                  <div class="logo">
+                    <span class="mark">IC</span>
+                    <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                  </div>
+                </div>
+                <div class="auth-body">
+                  <div class="field">
+                    <label for="l-u">Usuario</label>
+                    <div class="control"><input id="l-u" value="ilen.fernandez" /></div>
+                  </div>
+                  <div class="field">
+                    <label for="l-p">Contraseña</label>
+                    <div class="control pw">
+                      <input id="l-p" type="password" value="contraseña" /><span class="eye">Mostrar</span>
+                    </div>
+                  </div>
+                  <div class="check-row"><i></i>Mantener sesión (30 días)</div>
+                  <button class="btn touch block">Entrar</button>
+                  <button class="linkish" style="text-align: center">¿Olvidó la contraseña?</button>
+                  <div class="caption">Conectado a IMPOCARIBE-7F3A</div>
+                </div>
+              </div>
+            </div>
+            <div class="frame phone">
+              <div class="auth">
+                <div class="logo-top">
+                  <div class="logo">
+                    <span class="mark">IC</span>
+                    <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                  </div>
+                </div>
+                <div class="auth-body">
+                  <div class="notice bad">
+                    <svg class="ic"><use href="#i-alert" /></svg>
+                    <div>Usuario o contraseña incorrectos.</div>
+                  </div>
+                  <div class="field">
+                    <label for="l-u2">Usuario</label>
+                    <div class="control"><input id="l-u2" value="ilen.fernandez" /></div>
+                  </div>
+                  <div class="field warn">
+                    <label for="l-p2">Contraseña</label>
+                    <div class="control pw">
+                      <input id="l-p2" type="password" value="" /><span class="eye">Mostrar</span>
+                    </div>
+                    <div class="msgline">
+                      <svg class="ic"><use href="#i-warn" /></svg>Le quedan 2 intentos antes del bloqueo de 15 minutos
+                    </div>
+                  </div>
+                  <div class="check-row"><i></i>Mantener sesión (30 días)</div>
+                  <button class="btn touch block">Entrar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <div class="device-h"><b>Escritorio</b><span>usuario bloqueado con el tiempo restante</span></div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div class="auth-center">
+              <div class="auth-card">
+                <div class="logo">
+                  <span class="mark">IC</span>
+                  <div><b>Órdenes de Carga</b><span>IMPOCARIBE</span></div>
+                </div>
+                <div class="notice bad">
+                  <svg class="ic"><use href="#i-lock" /></svg>
+                  <div>
+                    <b>Cuenta bloqueada por 5 intentos fallidos.</b><br />Podrá intentarlo de nuevo en 12 minutos, a las
+                    16:52.
+                  </div>
+                </div>
+                <div class="field locked">
+                  <label for="l-u3">Usuario</label>
+                  <div class="control"><input id="l-u3" value="ilen.fernandez" disabled /></div>
+                </div>
+                <div class="field locked">
+                  <label for="l-p3">Contraseña</label>
+                  <div class="control"><input id="l-p3" type="password" disabled /></div>
+                </div>
+                <button class="btn block" disabled>Entrar</button>
+                <button class="linkish">¿Olvidó la contraseña?</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-04 ================= -->
+  <section aria-labelledby="p04">
+    <div class="sec-h">
+      <h2 id="p04">P-04. Recuperar contraseña</h2>
+      <span class="ref">/recuperar · RF-REC-02 a 04 · F-04</span>
+    </div>
+    <p class="note">
+      El error nunca dice cuál dato falló. Tras 3 intentos fallidos, la recuperación de ese usuario se bloquea 1 hora.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Tablet</b><span>datos que no coinciden</span></div>
+        <div class="frame-scroll">
+          <div class="frame tablet">
+            <div class="auth-center">
+              <div class="auth-card" style="width: 520px">
+                <h3 class="h3">Recuperar la contraseña</h3>
+                <div class="notice bad">
+                  <svg class="ic"><use href="#i-alert" /></svg>
+                  <div>Los datos no coinciden. Revíselos e inténtelo de nuevo. Le quedan 2 intentos.</div>
+                </div>
+                <div class="two">
+                  <div class="field">
+                    <label for="r-u">Usuario</label>
+                    <div class="control"><input id="r-u" value="ilen.fernandez" /></div>
+                  </div>
+                  <div class="field">
+                    <label for="r-c">Carné</label>
+                    <div class="control">
+                      <input id="r-c" value="84011905548" /><svg class="ic end check-ok"><use href="#i-check" /></svg>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="r-t">Teléfono</label>
+                    <div class="control"><input id="r-t" value="+53 52345678" /></div>
+                  </div>
+                  <div class="field">
+                    <label for="r-k">Código de recuperación</label>
+                    <div class="control">
+                      <input id="r-k" value="K7QM-3XTP" /><svg class="ic end check-ok"><use href="#i-check" /></svg>
+                    </div>
+                    <div class="msgline">Uno de los códigos que copió a mano</div>
+                  </div>
+                  <div class="field">
+                    <label for="r-n">Nueva contraseña</label>
+                    <div class="control"><input id="r-n" type="password" value="12345678" /></div>
+                  </div>
+                  <div class="field">
+                    <label for="r-n2">Confirmar</label>
+                    <div class="control"><input id="r-n2" type="password" value="12345678" /></div>
+                  </div>
+                </div>
+                <div class="row" style="justify-content: space-between">
+                  <button class="btn ghost touch">Volver</button>
+                  <button class="btn touch">Cambiar contraseña</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-05 ================= -->
+  <section aria-labelledby="p05">
+    <div class="sec-h">
+      <h2 id="p05">P-05. Perfil</h2>
+      <span class="ref">/perfil · RF-AUT-07 · RF-REC-03 · RF-UI-06 · F-04</span>
+    </div>
+    <p class="note">
+      Teléfono: lista de secciones que abren pantallas. Tablet y escritorio: secciones a la izquierda y contenido a la
+      derecha. «Reducir animaciones» es una preferencia de este dispositivo.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Teléfono</b><span>lista de secciones</span></div>
+        <div class="frame-scroll">
+          <div class="frame phone">
+            <div class="ph">
+              <div class="ph-top"><h4>Perfil</h4></div>
+              <div style="flex: 1; overflow: auto">
+                <div style="padding: 16px 16px 10px">
+                  <b style="font-size: 16px">Ilén Fernández Rojas</b>
+                  <div class="muted">ilen.fernandez · Apoderada</div>
+                </div>
+                <div class="list-item">
+                  Sesiones abiertas <span class="pill mute">3</span><span class="chev">›</span>
+                </div>
+                <div class="list-item">Cambiar contraseña<span class="chev">›</span></div>
+                <div class="list-item">Códigos de recuperación<span class="chev">›</span></div>
+                <div class="list-item">Tema<span class="chev" style="font-size: 13px">Del sistema ›</span></div>
+                <div class="list-item">Reducir animaciones<span class="toggle" style="margin-left: auto"></span></div>
+                <div class="list-item" style="color: var(--bad)">Cerrar sesión</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <div class="device-h"><b>Escritorio</b><span>sesiones abiertas</span></div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div class="profile">
+              <nav aria-label="Secciones del perfil">
+                <div style="padding: 6px 12px 14px">
+                  <b>Ilén Fernández Rojas</b>
+                  <div class="muted">Apoderada</div>
+                </div>
+                <button>Datos</button>
+                <button aria-current="page">Sesiones abiertas</button>
+                <button>Contraseña</button>
+                <button>Códigos de recuperación</button>
+                <button>Apariencia</button>
+              </nav>
+              <div class="content">
+                <div class="row" style="justify-content: space-between">
+                  <h3 class="h3">Sesiones abiertas</h3>
+                  <button class="btn ghost">Cerrar las demás sesiones</button>
+                </div>
+                <div class="panel">
+                  <div class="session-row">
+                    <svg class="ic"><use href="#i-home" /></svg>
+                    <div class="grow">
+                      <b>PC OFICINA · Windows</b><small>Desde el 14/10/2026 08:12 · vence el 15/10/2026 08:12</small>
+                    </div>
+                    <span class="pill ok">Esta sesión</span>
+                  </div>
+                  <div class="session-row">
+                    <svg class="ic"><use href="#i-doc" /></svg>
+                    <div class="grow">
+                      <b>Teléfono de patio · Android</b
+                      ><small>Desde el 13/10/2026 07:40 · mantener sesión, vence el 12/11/2026</small>
+                    </div>
+                    <button class="btn ghost">Cerrar</button>
+                  </div>
+                  <div class="session-row">
+                    <svg class="ic"><use href="#i-doc" /></svg>
+                    <div class="grow">
+                      <b>Tablet almacén · Android</b
+                      ><small>Desde el 14/10/2026 06:58 · vence el 15/10/2026 06:58</small>
+                    </div>
+                    <button class="btn ghost">Cerrar</button>
+                  </div>
+                </div>
+                <div class="panel" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+                  <b>Apariencia</b>
+                  <div class="seg" role="group" aria-label="Tema">
+                    <button aria-pressed="true">Del sistema</button><button aria-pressed="false">Claro</button
+                    ><button aria-pressed="false">Oscuro</button>
+                  </div>
+                  <div class="row"><span class="toggle on"></span>Reducir animaciones (solo en este dispositivo)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-21 ================= -->
+  <section aria-labelledby="p21">
+    <div class="sec-h">
+      <h2 id="p21">P-21. Usuarios</h2>
+      <span class="ref">/usuarios · solo Apoderada · RF-USR-01 a 05 · RF-REC-06 · RF-AUT-04, 10 · F-02</span>
+    </div>
+    <p class="note">
+      Lista con rol, estado y último acceso. Alta con los códigos del nuevo usuario (capturas bloqueadas). Cambiar el
+      rol avisa que se cerrarán sus sesiones. A la última Apoderada activa no se la puede desactivar ni cambiar de rol.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Escritorio</b><span>tabla y edición en panel con el aviso de cambio de rol</span></div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div style="display: grid; grid-template-columns: 1fr 340px; height: 100%">
+              <div style="padding: 18px 22px; overflow: auto; display: flex; flex-direction: column; gap: 14px">
+                <div class="row" style="justify-content: space-between">
+                  <h3 class="h3">Usuarios</h3>
+                  <button class="btn">
+                    <svg class="ic" style="width: 16px; height: 16px"><use href="#i-plus" /></svg>Nuevo usuario
+                  </button>
+                </div>
+                <div class="panel">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Último acceso</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Ilén Fernández Rojas</td>
+                        <td class="code">ilen.fernandez</td>
+                        <td>Apoderada</td>
+                        <td><span class="pill ok">Activo</span></td>
+                        <td>Hoy 08:12</td>
+                      </tr>
+                      <tr class="hl">
+                        <td>Mario Delgado Pérez</td>
+                        <td class="code">mario.delgado</td>
+                        <td>Operador</td>
+                        <td><span class="pill ok">Activo</span></td>
+                        <td>Hoy 07:40</td>
+                      </tr>
+                      <tr>
+                        <td>Yanet Ruiz Castro</td>
+                        <td class="code">yanet.ruiz</td>
+                        <td>Operador</td>
+                        <td><span class="pill ok">Activo</span></td>
+                        <td>Ayer 18:05</td>
+                      </tr>
+                      <tr>
+                        <td>Oscar Leyva Martín</td>
+                        <td class="code">oscar.leyva</td>
+                        <td>Solo lectura</td>
+                        <td><span class="pill mute">Inactivo</span></td>
+                        <td>02/10/2026</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div
+                style="
+                  border-left: 1px solid var(--line);
+                  background: var(--surface);
+                  padding: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 12px;
+                "
+              >
+                <b>Mario Delgado Pérez</b>
+                <div class="field warn">
+                  <label for="u-role">Rol</label>
+                  <div class="control"><input id="u-role" value="Solo lectura" /></div>
+                  <div class="msgline">
+                    <svg class="ic"><use href="#i-warn" /></svg>Se cerrarán sus sesiones
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="u-tel">Teléfono</label>
+                  <div class="control"><input id="u-tel" value="52345678" /></div>
+                  <div class="msgline">8 dígitos, por ejemplo 52345678</div>
+                </div>
+                <div class="row">
+                  <button class="btn">Guardar</button><button class="btn ghost">Restablecer contraseña</button>
+                </div>
+                <div class="row"><button class="btn ghost">Desactivar</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <div class="device-h">
+          <b>Teléfono y tablet</b><span>tarjetas por usuario · última Apoderada protegida</span>
+        </div>
+        <div class="frame-scroll">
+          <div class="frame-wrap">
+            <div class="frame phone">
+              <div class="ph">
+                <div class="ph-top">
+                  <h4>Usuarios</h4>
+                  <button class="icon-btn" aria-label="Nuevo usuario">
+                    <svg><use href="#i-plus" /></svg>
+                  </button>
+                </div>
+                <div class="ph-body">
+                  <div class="dm-card">
+                    <div class="t">
+                      <b style="font-family: var(--ui)">Ilén Fernández Rojas</b><span class="pill ok">Activo</span>
+                    </div>
+                    <div class="who">Apoderada · ilen.fernandez</div>
+                    <div class="meta"><span>Último acceso hoy 08:12</span></div>
+                  </div>
+                  <div class="dm-card">
+                    <div class="t">
+                      <b style="font-family: var(--ui)">Mario Delgado Pérez</b><span class="pill ok">Activo</span>
+                    </div>
+                    <div class="who">Operador · mario.delgado</div>
+                    <div class="meta"><span>Último acceso hoy 07:40</span></div>
+                  </div>
+                  <div class="dm-card">
+                    <div class="t">
+                      <b style="font-family: var(--ui)">Oscar Leyva Martín</b><span class="pill mute">Inactivo</span>
+                    </div>
+                    <div class="who">Solo lectura · oscar.leyva</div>
+                    <div class="meta"><span>Último acceso 02/10/2026</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="frame tablet" style="width: 760px">
+              <div class="auth-center" style="background: rgba(13, 20, 28, 0.38)">
+                <div class="auth-card">
+                  <h3 class="h3">Desactivar a Ilén Fernández Rojas</h3>
+                  <div class="notice bad">
+                    <svg class="ic"><use href="#i-alert" /></svg>
+                    <div>
+                      No se puede desactivar ni cambiar de rol a la última Apoderada activa. Cree o active otra
+                      Apoderada antes.
+                    </div>
+                  </div>
+                  <div class="row" style="justify-content: flex-end"><button class="btn touch">Entendido</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-30 ================= -->
+  <section aria-labelledby="p30">
+    <div class="sec-h">
+      <h2 id="p30">P-30. Diagnóstico de red</h2>
+      <span class="ref">/diagnostico · cualquiera, incluso sin sesión · RF-RED-06</span>
+    </div>
+    <p class="note">
+      Semáforo con un mensaje claro, el detalle (red, método, dirección, tiempo de respuesta, identidad verificada y
+      última sincronización) y qué hacer, paso a paso. Teléfono: tarjetas apiladas. Tablet y escritorio: semáforo arriba
+      y detalle en dos columnas.
+    </p>
+    <div class="devices">
+      <div class="device">
+        <div class="device-h"><b>Teléfono</b><span>servidor que no responde</span></div>
+        <div class="frame-scroll">
+          <div class="frame phone">
+            <div class="ph">
+              <div class="ph-top"><h4>Diagnóstico de red</h4></div>
+              <div class="ph-body">
+                <div class="sema bad">
+                  <span class="dot"
+                    ><svg class="ic"><use href="#i-alert" /></svg
+                  ></span>
+                  <div><b>El servidor no responde</b><span>Última respuesta hace 6 minutos</span></div>
+                </div>
+                <div class="card">
+                  <h3>Qué hacer</h3>
+                  <ol class="steps-ol">
+                    <li>Compruebe que la PC servidor está encendida y no está en suspensión.</li>
+                    <li>Compruebe que este teléfono está en la misma red wifi.</li>
+                    <li>Si nada cambia, avise a la Apoderada.</li>
+                  </ol>
+                </div>
+                <div class="card">
+                  <h3>Detalle</h3>
+                  <div class="kv">
+                    <div>
+                      <div class="k">Red</div>
+                      <div class="v" style="font-size: 13px">IMPOCARIBE-WIFI</div>
+                    </div>
+                    <div>
+                      <div class="k">Dirección</div>
+                      <div class="v" style="font-size: 13px">192.168.1.10</div>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn touch block">Volver a probar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <div class="device-h">
+          <b>Escritorio</b><span>todo bien · en la PC servidor, con dispositivos y montaje</span>
+        </div>
+        <div class="frame-scroll">
+          <div class="frame desktop">
+            <div
+              style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; height: 100%; overflow: auto"
+            >
+              <div class="row" style="justify-content: space-between">
+                <h3 class="h3">Diagnóstico de red</h3>
+                <button class="btn secondary">Volver a probar</button>
+              </div>
+              <div class="sema ok">
+                <span class="dot"
+                  ><svg class="ic"><use href="#i-check" /></svg
+                ></span>
+                <div><b>Todo bien</b><span>El servidor responde y su identidad está verificada.</span></div>
+              </div>
+              <div class="two">
+                <div class="panel">
+                  <div class="panel-h"><h5>Conexión</h5></div>
+                  <table>
+                    <tbody>
+                      <tr>
+                        <td>Red wifi</td>
+                        <td class="r">IMPOCARIBE-WIFI</td>
+                      </tr>
+                      <tr>
+                        <td>Método</td>
+                        <td class="r">Última dirección conocida</td>
+                      </tr>
+                      <tr>
+                        <td>Dirección</td>
+                        <td class="r num">192.168.1.10:8443</td>
+                      </tr>
+                      <tr>
+                        <td>Tiempo de respuesta</td>
+                        <td class="r num">12 ms</td>
+                      </tr>
+                      <tr>
+                        <td>Identidad</td>
+                        <td class="r">IMPOCARIBE-7F3A <span class="pill ok">Verificada</span></td>
+                      </tr>
+                      <tr>
+                        <td>Última sincronización</td>
+                        <td class="r">Hace 4 segundos</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="panel">
+                  <div class="panel-h"><h5>Esta PC es el servidor</h5></div>
+                  <table>
+                    <tbody>
+                      <tr>
+                        <td>Montaje de red</td>
+                        <td class="r">Router wifi</td>
+                      </tr>
+                      <tr>
+                        <td>Dispositivos conectados</td>
+                        <td class="r num">5</td>
+                      </tr>
+                      <tr>
+                        <td>Teléfono de patio</td>
+                        <td class="r">Android · hace 3 s</td>
+                      </tr>
+                      <tr>
+                        <td>Tablet almacén</td>
+                        <td class="r">Android · hace 9 s</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const pressed = (group, btn) =>
+      group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    document.querySelectorAll('[data-theme-set]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const v = b.dataset.themeSet;
+        if (v) root.setAttribute('data-theme', v);
+        else root.removeAttribute('data-theme');
+        pressed(b.parentElement, b);
+      }),
+    );
+    document.querySelectorAll('[data-motion]').forEach((b) =>
+      b.addEventListener('click', () => {
+        root.classList.toggle('reduce', b.dataset.motion === 'off');
+        pressed(b.parentElement, b);
+      }),
+    );
+  })();
+</script>
