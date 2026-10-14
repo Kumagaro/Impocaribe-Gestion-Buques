@@ -20,8 +20,9 @@
     "db:migrate": "pnpm --filter @impocaribe/server db:migrate",
     "db:reset": "pnpm --filter @impocaribe/server db:reset",
     "db:seed": "pnpm --filter @impocaribe/server db:seed",
-    "mutation": "pnpm -r --if-present mutation",
-    "db:generate": "pnpm --filter @impocaribe/server db:generate"
+    "mutation": "pnpm --filter @impocaribe/shared mutation && node scripts/quality/server-mutation.ts",
+    "db:generate": "pnpm --filter @impocaribe/server db:generate",
+    "mutation:full": "pnpm -r --if-present mutation"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

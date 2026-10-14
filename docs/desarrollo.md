@@ -171,7 +171,7 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 | Movimiento barato | `web/src/motion` | Solo posición, escala y opacidad |
 | Integración sin simulaciones | `*.int.test.ts` | Sin `vi.mock`, `vi.doMock`, `vi.spyOn` ni `vi.stubGlobal` |
 | Cobertura | `shared` y `server` | ≥ 85 % de líneas |
-| Mutación | `shared/src/domain` (y los servicios críticos del servidor cuando existan) | ≥ 90 %, incremental (`reports/stryker-incremental.json`); el informe queda en `packages/*/reports/mutation/` |
+| Mutación | `shared/src/domain` y los módulos críticos del servidor (`mutate` en `packages/server/stryker.config.mjs`) | ≥ 90 %. La de `shared` corre en cada `verify`; la del servidor (contra PostgreSQL real, lenta) solo si la rama toca un módulo crítico, sus pruebas o la configuración de Stryker. `pnpm mutation:full` corre las dos completas, y el CI lo hace cada noche. Informes en `packages/*/reports/mutation/` |
 | Cambio de pruebas | hook `commit-msg` | Si el commit modifica o borra aserciones de pruebas existentes, el mensaje debe incluir `Motivo de cambio de prueba: …` |
 
 Las pruebas de `scripts/quality/` demuestran que cada regla de lint rechaza su ejemplo prohibido.
