@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AnimatedIcon, type IconName, type IconState } from './AnimatedIcon';
+import { AnimatedIcon, type IconName, type IconState } from '../motion/AnimatedIcon';
 
 // T022 · MOV-08: cada icono en el estado con que se usa. Con "Reducir animaciones" en la barra superior quedan estáticos.
 const USES: [IconName, IconState, string][] = [
