@@ -62,7 +62,10 @@ export function useSetup() {
       password: 'Contraseña',
       confirm: 'Confirmar',
     },
-    warnings: (v) => ({ nationalId: nationalIdDateWarning(v.nationalId) ?? undefined }),
+    warnings: (v) => {
+      const nationalId = nationalIdDateWarning(v.nationalId);
+      return nationalId ? { nationalId } : {};
+    },
     onSubmit: async (values) => {
       try {
         const res = await session.api().request(postSetup, { body: { ...values, confirm: values.password } });

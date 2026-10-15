@@ -96,7 +96,7 @@ function RecoveryCodes({ model }: { model: SetupModel }) {
         onClick={model.finish}
         busy={model.finishing}
         busyLabel="Entrando…"
-        disabledReason={model.copied ? undefined : 'Marque «Los copié a mano» para continuar.'}
+        {...(model.copied ? {} : { disabledReason: 'Marque «Los copié a mano» para continuar.' })}
       >
         Terminar y entrar
       </Button>
