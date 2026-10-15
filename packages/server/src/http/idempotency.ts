@@ -34,8 +34,25 @@ export function idempotencyRequest(req: Request & { rawBody?: Buffer }): Idempot
   };
 }
 
+/** Campos que nunca entran al hash guardado: con un hash simple del cuerpo se podría adivinar la contraseña. */
+const SECRETS = new Set(['password', 'confirm', 'current', 'code', 'temporaryPassword']);
+
+/** El cuerpo sin los secretos: el mismo intento con otro secreto se trata como repetición, que es lo prudente. */
+function withoutSecrets(body: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return body;
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return body;
+  return JSON.stringify(Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, SECRETS.has(k) ? '*' : v])));
+}
+
 function requestHash(r: IdempotencyRequest): string {
-  return createHash('sha256').update(`${r.method}\n${r.path}\n${r.body}`).digest('hex');
+  return createHash('sha256')
+    .update(`${r.method}\n${r.path}\n${withoutSecrets(r.body)}`)
+    .digest('hex');
 }
 
 /**

@@ -1,7 +1,7 @@
 // T029 · plan §9: token aleatorio de 256 bits guardado como hash; duración absoluta de 24 h o 30 días (RF-AUT-02).
 import type { Clock } from '@impocaribe/shared';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, gt, isNull, ne } from 'drizzle-orm';
+import { and, eq, gt, isNull, ne, not } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Tx } from '../audit/audit-log.ts';
 import { sessions, users } from '../db/schema/users.ts';
@@ -32,10 +32,16 @@ export async function createSession(tx: Tx, clock: Clock, input: NewSession, exp
 }
 
 /**
- * RF-AUT-04 y 10: cierra todas las sesiones vigentes de un usuario (al cambiar el rol o la contraseña, al desactivarlo
- * o al revocar su dispositivo), salvo la indicada. Devuelve las sesiones cerradas.
+ * RF-AUT-04 y 10: cierra todas las sesiones vigentes de un usuario, de la app y de alertas (al cambiar el rol o la
+ * contraseña, al desactivarlo o al revocar su dispositivo). Con `keep`, conserva esa sesión y el token de alertas de su
+ * dispositivo, que vive con ella (DT-05). Devuelve las sesiones cerradas.
  */
-export async function revokeUserSessions(tx: Tx, clock: Clock, userId: string, exceptSessionId?: string) {
+export async function revokeUserSessions(
+  tx: Tx,
+  clock: Clock,
+  userId: string,
+  keep?: { sessionId: string; deviceId: string },
+) {
   const now = clock.now();
   return tx
     .update(sessions)
@@ -45,10 +51,26 @@ export async function revokeUserSessions(tx: Tx, clock: Clock, userId: string, e
         eq(sessions.userId, userId),
         isNull(sessions.revokedAt),
         gt(sessions.expiresAt, now),
-        exceptSessionId ? ne(sessions.id, exceptSessionId) : undefined,
+        keep ? ne(sessions.id, keep.sessionId) : undefined,
+        keep ? not(and(eq(sessions.kind, 'device'), eq(sessions.deviceId, keep.deviceId))!) : undefined,
       ),
     )
     .returning({ id: sessions.id });
+}
+
+/** DT-05: el token de alertas de un dispositivo se cierra con la sesión de la app de ese dispositivo. */
+export function revokeDeviceTokens(tx: Tx, clock: Clock, userId: string, deviceId: string) {
+  return tx
+    .update(sessions)
+    .set({ revokedAt: clock.now() })
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        eq(sessions.deviceId, deviceId),
+        eq(sessions.kind, 'device'),
+        isNull(sessions.revokedAt),
+      ),
+    );
 }
 
 /**

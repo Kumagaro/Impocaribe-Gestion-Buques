@@ -73,7 +73,9 @@ beforeEach(async () => {
 
 describe('POST /auth/device-token', () => {
   it('emite un token de dispositivo que vence con la sesión que lo pidió', async () => {
-    const res = await issue(await appToken(true));
+    const app = await appToken(true);
+    clock.set('2026-10-14T18:00:00.000Z');
+    const res = await issue(app);
     const json = (await res.json()) as { token: string; expiresAt: string };
     expect([res.status, json.expiresAt]).toEqual([201, '2026-11-13T12:00:00.000Z']);
     expect(json.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
@@ -116,3 +118,54 @@ describe('POST /auth/device-token', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('DT-05: el token de alertas vive y muere con la sesión de su dispositivo', () => {
+  const live = async (token: string) => (await findDeviceTokenSession(drizzle(suite.app), clock, token)) !== null;
+  const call = (token: string, path: string, method: string) =>
+    fetch(`${t.base}${path}`, { method, headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+
+  it('al cerrar la sesión (logout) deja de valer', async () => {
+    const app = await appToken();
+    const { token } = (await (await issue(app)).json()) as { token: string };
+    await call(app, '/auth/logout', 'POST');
+    expect(await live(token)).toBe(false);
+  });
+
+  it('al cerrar esa sesión desde otro dispositivo deja de valer', async () => {
+    const phone = await appToken();
+    const { token } = (await (await issue(phone)).json()) as { token: string };
+    const pc = await appTokenFrom('pc-oficina');
+    const list = (await (await call(pc, '/auth/sessions', 'GET')).json()) as { id: string; current: boolean }[];
+    await call(pc, `/auth/sessions/${list.find((x) => !x.current)!.id}`, 'DELETE');
+    expect(await live(token)).toBe(false);
+  });
+
+  it('cerrar las demás sesiones no apaga las alertas de este mismo dispositivo', async () => {
+    const app = await appToken();
+    const { token } = (await (await issue(app)).json()) as { token: string };
+    await appTokenFrom('pc-oficina');
+    await call(app, '/auth/sessions', 'DELETE');
+    expect(await live(token)).toBe(true);
+  });
+
+  it('dos peticiones simultáneas dejan un solo token vivo', async () => {
+    const app = await appToken();
+    await Promise.all([issue(app), issue(app), issue(app)]);
+    expect((await deviceSessions()).filter((x) => x.live)).toHaveLength(1);
+  });
+});
+
+async function appTokenFrom(deviceId: string) {
+  const res = await fetch(`${t.base}/auth/login`, {
+    method: 'POST',
+    headers: appHeaders(),
+    body: JSON.stringify({
+      username: 'mario.delgado',
+      password: 'contraseña1',
+      deviceId,
+      deviceLabel: deviceId,
+      platform: 'windows',
+    }),
+  });
+  return ((await res.json()) as { token: string }).token;
+}

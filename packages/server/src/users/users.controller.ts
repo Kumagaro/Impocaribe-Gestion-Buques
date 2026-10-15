@@ -89,13 +89,15 @@ export class UsersController {
     const { expectedVersion, ...values } = input;
     await this.write(req, res, 'user.edit', id, async (tx, before) => {
       if (before.role === 'apoderada' && values.role !== 'apoderada') await this.assertAnotherApoderada(tx, id);
-      const updated = await updateVersioned(tx, users, id, expectedVersion, {
+      await updateVersioned(tx, users, id, expectedVersion, {
         ...values,
         updatedAt: this.clock.now(),
       }).catch((err: unknown) => uniqueViolation(err, values));
       // RF-AUT-10: un cambio de rol cierra todas sus sesiones.
       if (before.role !== values.role) await revokeUserSessions(tx, this.clock, id);
-      return updated;
+      // Solo las columnas públicas: nunca el hash ni los contadores de seguridad (plan §9).
+      const [dto] = await tx.select(userColumns).from(users).where(eq(users.id, id));
+      return dto!;
     });
   }
 

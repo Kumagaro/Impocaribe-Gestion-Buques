@@ -1,5 +1,5 @@
 // T029 · RF-AUT-01 a 07 y 10, plan §6.2: inicio de sesión, sesiones propias y cambio de contraseña.
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
 import { ACTIONS, AppError, can, type Clock } from '@impocaribe/shared';
 import {
   changePasswordSchema,
@@ -11,22 +11,24 @@ import {
 } from '@impocaribe/shared/validation';
 import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { Response } from 'express';
 import type { z } from 'zod';
 import { auditedTransaction, recordAudit, recordRejected, type Tx } from '../audit/audit-log.ts';
 import { sessions, users } from '../db/schema/users.ts';
+import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
+import { idempotencyRequest, withIdempotency, type WriteResult } from '../http/idempotency.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
 import { recordChanges } from '../sync/change-log.ts';
 import { CLOCK, DB } from '../tokens.ts';
 import { userColumns } from '../users/users.repo.ts';
+import { activeLock, badCredentials, registerFailure } from './lockout.ts';
 import { hashSecret, verifySecret } from './password.ts';
 import type { AuthedRequest } from './session.guard.ts';
-import { createSession, revokeUserSessions } from './sessions.ts';
+import { createSession, revokeDeviceTokens, revokeUserSessions } from './sessions.ts';
 
 export const ALL_ROLES = ['apoderada', 'operador', 'lectura'] as const;
-/** RF-AUT-05: 5 intentos fallidos seguidos bloquean 15 minutos. */
-export const MAX_FAILED_LOGINS = 5;
-const LOCK_MS = 15 * 60_000;
+export { MAX_FAILED_LOGINS } from './lockout.ts';
 /** Un hash cualquiera para gastar el mismo tiempo cuando el usuario no existe: el tiempo no revela qué usuarios hay. */
 const DECOY = hashSecret('impocaribe-decoy');
 
@@ -36,20 +38,10 @@ type LoginResponse = z.infer<typeof loginResponseSchema>;
 type LoginOutcome =
   { ok: true; value: LoginResponse } | { ok: false; error: AppError; userId?: string; audited: boolean };
 
-const badCredentials = (remainingAttempts?: number) =>
-  new AppError(
-    'FORBIDDEN',
-    'Usuario o contraseña incorrectos.',
-    remainingAttempts === undefined ? undefined : { remainingAttempts },
-  );
-
-export function lockedError(lockedUntil: Date, now: Date): AppError {
-  const minutes = Math.max(1, Math.ceil((lockedUntil.getTime() - now.getTime()) / 60_000));
-  return new AppError(
-    'ACCOUNT_LOCKED',
-    `Cuenta bloqueada por ${MAX_FAILED_LOGINS} intentos fallidos. Podrá intentarlo de nuevo en ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`,
-    { lockedUntil: lockedUntil.toISOString() },
-  );
+/** Responde una escritura idempotente: 204 sin cuerpo, o el estado y el cuerpo guardados. */
+function send(res: Response, result: WriteResult): void {
+  if (result.body === null || result.body === undefined) res.status(result.status).end();
+  else res.status(result.status).json(result.body);
 }
 
 @Controller('auth')
@@ -59,6 +51,10 @@ export class AuthController {
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
+  /**
+   * La respuesta lleva el token en claro, así que no se guarda para la idempotencia (plan §6, DT-22): repetir el login
+   * abre otra sesión, que no tiene efecto de negocio y caduca sola.
+   */
   @Post('login')
   @HttpCode(200)
   @Contract({ input: loginRequestSchema, output: loginResponseSchema, roles: 'public' })
@@ -86,28 +82,11 @@ export class AuthController {
       return { ok: false, error: badCredentials(), audited: false };
     }
     const reject = (error: AppError, audited = false): LoginOutcome => ({ ok: false, error, userId: user.id, audited });
-    if (user.lockedUntil && user.lockedUntil > now) return reject(lockedError(user.lockedUntil, now));
-    // Un bloqueo vencido empieza la cuenta de cero.
-    const failed = user.lockedUntil ? 0 : user.failedLogins;
+    const lock = activeLock(user, now);
+    if (lock) return reject(lock);
     if (!(await verifySecret(user.passwordHash, input.password))) {
-      if (failed + 1 < MAX_FAILED_LOGINS) {
-        await tx
-          .update(users)
-          .set({ failedLogins: failed + 1, lockedUntil: null })
-          .where(eq(users.id, user.id));
-        return reject(badCredentials(MAX_FAILED_LOGINS - failed - 1));
-      }
-      const lockedUntil = new Date(now.getTime() + LOCK_MS);
-      await tx.update(users).set({ failedLogins: 0, lockedUntil }).where(eq(users.id, user.id));
-      await recordAudit(tx, this.clock, {
-        userId: user.id,
-        deviceId: input.deviceId,
-        action: 'auth.locked',
-        entityType: 'user',
-        entityId: user.id,
-        after: { lockedUntil: lockedUntil.toISOString() },
-      });
-      return reject(lockedError(lockedUntil, now), true);
+      const failure = await registerFailure(tx, this.clock, user, input.deviceId);
+      return 'locked' in failure ? reject(failure.locked, true) : reject(badCredentials(failure.remaining));
     }
     if (!user.active)
       return reject(new AppError('FORBIDDEN', 'Este usuario está desactivado. Consulte a una Apoderada.'));
@@ -133,15 +112,21 @@ export class AuthController {
     return { ok: true, value: { token: session.token, expiresAt: session.expiresAt.toISOString(), user: dto! } };
   }
 
+  /** Cierra esta sesión y, con ella, el token de alertas de este dispositivo (DT-05, RF-AUT-08). */
   @Post('logout')
   @HttpCode(204)
   @Contract({ roles: ALL_ROLES, whileMustChangePassword: true })
-  async logout(@Req() req: AuthedRequest): Promise<void> {
-    const { sessionId } = req.auth;
-    await auditedTransaction(this.db, this.clock, this.entry(req, 'auth.logout', 'session', sessionId), async (tx) => {
-      await tx.update(sessions).set({ revokedAt: this.clock.now() }).where(eq(sessions.id, sessionId));
-      return { value: undefined };
-    });
+  async logout(@Req() req: AuthedRequest, @Res() res: Response): Promise<void> {
+    const { sessionId, userId, deviceId } = req.auth;
+    const entry = this.entry(req, 'auth.logout', 'session', sessionId);
+    send(
+      res,
+      await auditedWrite(this.db, this.clock, req, entry, async (tx) => {
+        await tx.update(sessions).set({ revokedAt: this.clock.now() }).where(eq(sessions.id, sessionId));
+        await revokeDeviceTokens(tx, this.clock, userId, deviceId);
+        return { status: 204, body: null };
+      }),
+    );
   }
 
   @Get('me')
@@ -170,77 +155,114 @@ export class AuthController {
     }));
   }
 
+  /** RF-AUT-07: cierra una sesión propia y el token de alertas de su dispositivo. */
   @Delete('sessions/:id')
   @HttpCode(204)
   @Contract({ roles: ALL_ROLES })
-  async closeSession(@Req() req: AuthedRequest, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await auditedTransaction(this.db, this.clock, this.entry(req, 'auth.session_closed', 'session', id), async (tx) => {
-      const closed = await tx
-        .update(sessions)
-        .set({ revokedAt: this.clock.now() })
-        .where(and(eq(sessions.id, id), this.ownActive(req.auth.userId)))
-        .returning({ id: sessions.id });
-      if (closed.length === 0) throw new AppError('NOT_FOUND', 'La sesión no existe o ya está cerrada.');
-      return { value: undefined };
-    });
-  }
-
-  /** RF-AUT-07: cierra todas las demás sesiones del usuario. */
-  @Delete('sessions')
-  @HttpCode(204)
-  @Contract({ roles: ALL_ROLES })
-  async closeOtherSessions(@Req() req: AuthedRequest): Promise<void> {
-    const { sessionId, userId } = req.auth;
-    await auditedTransaction(
-      this.db,
-      this.clock,
-      this.entry(req, 'auth.sessions_closed', 'user', userId),
-      async (tx) => {
-        const closed = await revokeUserSessions(tx, this.clock, userId, sessionId);
-        return { value: undefined, after: { closedSessions: closed.length } };
-      },
+  async closeSession(
+    @Req() req: AuthedRequest,
+    @Res() res: Response,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    const { userId } = req.auth;
+    send(
+      res,
+      await auditedWrite(
+        this.db,
+        this.clock,
+        req,
+        this.entry(req, 'auth.session_closed', 'session', id),
+        async (tx) => {
+          const [closed] = await tx
+            .update(sessions)
+            .set({ revokedAt: this.clock.now() })
+            .where(and(eq(sessions.id, id), this.ownActive(userId)))
+            .returning({ deviceId: sessions.deviceId });
+          if (!closed) throw new AppError('NOT_FOUND', 'La sesión no existe o ya está cerrada.');
+          await revokeDeviceTokens(tx, this.clock, userId, closed.deviceId);
+          return { status: 204, body: null };
+        },
+      ),
     );
   }
 
-  /** RF-AUT-04: cambiar la contraseña cierra las demás sesiones. */
+  /** RF-AUT-07: cierra todas las demás sesiones del usuario; este dispositivo conserva la suya y sus alertas. */
+  @Delete('sessions')
+  @HttpCode(204)
+  @Contract({ roles: ALL_ROLES })
+  async closeOtherSessions(@Req() req: AuthedRequest, @Res() res: Response): Promise<void> {
+    const { sessionId, userId, deviceId } = req.auth;
+    send(
+      res,
+      await auditedWrite(
+        this.db,
+        this.clock,
+        req,
+        this.entry(req, 'auth.sessions_closed', 'user', userId),
+        async (tx) => {
+          const closed = await revokeUserSessions(tx, this.clock, userId, { sessionId, deviceId });
+          return { status: 204, body: null, after: { closedSessions: closed.length } };
+        },
+      ),
+    );
+  }
+
+  /**
+   * RF-AUT-04: cambiar la contraseña cierra las demás sesiones. Una contraseña actual equivocada cuenta como intento
+   * fallido (RF-AUT-05): el contador y el rechazo se confirman en la base aunque la respuesta sea un error.
+   */
   @Post('change-password')
   @HttpCode(204)
   @Contract({ input: changePasswordSchema, roles: ALL_ROLES, whileMustChangePassword: true })
   async changePassword(
     @Req() req: AuthedRequest,
+    @Res() res: Response,
     @Body(new ZodValidationPipe(changePasswordSchema)) input: z.output<typeof changePasswordSchema>,
   ): Promise<void> {
-    const { sessionId, userId } = req.auth;
-    await auditedTransaction(
-      this.db,
-      this.clock,
-      this.entry(req, 'auth.change_password', 'user', userId),
-      async (tx) => {
-        const [user] = await tx.select().from(users).where(eq(users.id, userId)).for('update');
-        if (!(await verifySecret(user!.passwordHash, input.current)))
-          throw new AppError('VALIDATION_ERROR', 'Hay 1 campo por corregir.', {
+    const { sessionId, userId, deviceId } = req.auth;
+    const entry = this.entry(req, 'auth.change_password', 'user', userId);
+    const result = await withIdempotency(this.db, this.clock, idempotencyRequest(req), async (tx) => {
+      const [user] = await tx.select().from(users).where(eq(users.id, userId)).for('update');
+      const refuse = async (error: AppError): Promise<WriteResult> => {
+        await recordRejected(tx, this.clock, entry, error);
+        return { status: error.status, body: error.toBody() };
+      };
+      const lock = activeLock(user!, this.clock.now());
+      if (lock) return refuse(lock);
+      if (!(await verifySecret(user!.passwordHash, input.current))) {
+        const failure = await registerFailure(tx, this.clock, user!, deviceId);
+        if ('locked' in failure) return refuse(failure.locked);
+        return refuse(
+          new AppError('VALIDATION_ERROR', 'Hay 1 campo por corregir.', {
             fields: { current: 'La contraseña actual no es correcta.' },
-          });
-        const [dto] = await tx
-          .update(users)
-          .set({
-            passwordHash: await hashSecret(input.password),
-            mustChangePassword: false,
-            rowVersion: sql`${users.rowVersion} + 1`,
-            updatedAt: this.clock.now(),
-          })
-          .where(eq(users.id, userId))
-          .returning(userColumns);
-        const closed = await revokeUserSessions(tx, this.clock, userId, sessionId);
-        await recordChanges(tx, this.clock, [
-          { entityType: 'user', entityId: userId, op: 'upsert', audience: 'apoderada', payload: dto },
-        ]);
-        return { value: undefined, after: { closedSessions: closed.length } };
-      },
-    );
+          }),
+        );
+      }
+      const [dto] = await tx
+        .update(users)
+        .set({
+          passwordHash: await hashSecret(input.password),
+          mustChangePassword: false,
+          failedLogins: 0,
+          rowVersion: sql`${users.rowVersion} + 1`,
+          updatedAt: this.clock.now(),
+        })
+        .where(eq(users.id, userId))
+        .returning(userColumns);
+      const closed = await revokeUserSessions(tx, this.clock, userId, { sessionId, deviceId });
+      await recordChanges(tx, this.clock, [
+        { entityType: 'user', entityId: userId, op: 'upsert', audience: 'apoderada', payload: dto },
+      ]);
+      await recordAudit(tx, this.clock, { ...entry, after: { closedSessions: closed.length } });
+      return { status: 204, body: null };
+    });
+    send(res, result);
   }
 
-  /** DT-05: token de alertas para el servicio nativo de Android; vence con esta sesión y reemplaza al anterior. */
+  /**
+   * DT-05: token de alertas para el servicio nativo de Android; vence con esta sesión y reemplaza al anterior. Lleva
+   * el token en claro, así que no se guarda para la idempotencia: repetirlo solo reemplaza el token.
+   */
   @Post('device-token')
   @HttpCode(201)
   @Contract({ output: deviceTokenResponseSchema, roles: ALL_ROLES })
@@ -251,18 +273,9 @@ export class AuthController {
       this.clock,
       this.entry(req, 'auth.device_token', 'session', sessionId),
       async (tx) => {
-        const [app] = await tx.select().from(sessions).where(eq(sessions.id, sessionId));
-        await tx
-          .update(sessions)
-          .set({ revokedAt: this.clock.now() })
-          .where(
-            and(
-              eq(sessions.userId, userId),
-              eq(sessions.deviceId, deviceId),
-              eq(sessions.kind, 'device'),
-              isNull(sessions.revokedAt),
-            ),
-          );
+        // FOR UPDATE: dos peticiones a la vez se hacen una tras otra y la segunda reemplaza el token de la primera.
+        const [app] = await tx.select().from(sessions).where(eq(sessions.id, sessionId)).for('update');
+        await revokeDeviceTokens(tx, this.clock, userId, deviceId);
         const issued = await createSession(
           tx,
           this.clock,

@@ -315,7 +315,7 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Pruebas:* el certificado no contiene ninguna IP; regenerar la identidad sin borrar la anterior es imposible sin la acción explícita del ayudante.
 
 - [ ] **T034. Descubrimiento: anuncio del servidor.** Servicio DNS-SD `_impocaribe._tcp`, respuesta a difusión UDP 47800 y `GET /discovery`.
-  - *Cubre:* RF-RED-02, DT-20
+  - *Cubre:* RF-RED-02, DT-20 
   - *Depende:* T033
   - *Pruebas:* el anuncio incluye identidad, versión y huella; la respuesta a difusión no revela nada más.
 

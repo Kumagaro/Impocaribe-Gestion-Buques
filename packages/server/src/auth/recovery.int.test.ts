@@ -1,7 +1,7 @@
 import { ManualClock } from '@impocaribe/shared';
 import { newUserSchema } from '@impocaribe/shared/validation';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appHeaders, createTestApp, type TestApp } from '../../test/app.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
 import { issueRecoveryCodes } from '../users/recovery-codes.ts';
@@ -9,6 +9,10 @@ import { createUser } from '../users/users.repo.ts';
 
 // T030 · RF-REC-02 a 05 y plan §6.2 (POST /auth/recover, POST /auth/recovery-codes), ui-spec P-04: el error nunca dice
 // cuál dato falló.
+// Cada intento hace a propósito 8 comprobaciones argon2id de 64 MB (mismo tiempo exista o no el usuario): con varias
+// suites en paralelo, una prueba de 5 intentos pasa de los 30 s generales.
+vi.setConfig({ testTimeout: 120_000 });
+
 let suite: SuiteDb;
 let t: TestApp;
 const clock = new ManualClock('2026-10-14T12:00:00.000Z');
@@ -101,7 +105,7 @@ describe('RF-REC-03: cada código vale una sola vez; un juego nuevo invalida el 
   it('un código ya usado se rechaza', async () => {
     expect((await recover()).status).toBe(204);
     const res = await recover({ password: 'otra-clave-1', confirm: 'otra-clave-1' });
-    expect([res.status, await res.json()]).toEqual([422, { ...FAILED, details: { remainingAttempts: 2 } }]);
+    expect([res.status, await res.json()]).toEqual([422, FAILED]);
   });
 
   it('tras generar un juego nuevo, los códigos anteriores ya no valen', async () => {
@@ -129,6 +133,11 @@ describe('P-04: el error nunca dice cuál dato falló', () => {
     expect([res.status, json.code, json.message]).toEqual([422, FAILED.code, FAILED.message]);
   });
 
+  it('un usuario que no existe recibe exactamente la misma respuesta que uno que existe', async () => {
+    const [unknown, known] = await Promise.all([recover({ username: 'nadie.existe' }), recover({ code: 'AAAA-BBBB' })]);
+    expect([unknown.status, await unknown.json()]).toEqual([known.status, await known.json()]);
+  });
+
   it('un usuario desactivado no puede recuperar', async () => {
     await suite.admin.query('UPDATE users SET active = false WHERE id = $1', [userId]);
     expect((await recover()).status).toBe(422);
@@ -139,7 +148,7 @@ describe('RF-REC-04: tras 3 intentos fallidos, la recuperación se bloquea 1 hor
   it('2 fallos dejan intentarlo; el 3.º bloquea, incluso con los datos correctos', async () => {
     await recover({ code: 'AAAA-BBBB' });
     const second = await recover({ code: 'AAAA-BBBB' });
-    expect(await second.json()).toEqual({ ...FAILED, details: { remainingAttempts: 1 } });
+    expect(await second.json()).toEqual(FAILED);
     clock.set('2026-10-14T12:10:00.000Z');
     const third = await recover({ code: 'AAAA-BBBB' });
     expect([third.status, await third.json()]).toEqual([
@@ -161,16 +170,20 @@ describe('RF-REC-04: tras 3 intentos fallidos, la recuperación se bloquea 1 hor
     await recover({ code: 'AAAA-BBBB' });
     await recover({ code: 'AAAA-BBBB' });
     expect((await recover()).status).toBe(204);
-    const res = await recover({ code: 'AAAA-BBBB' });
-    expect(await res.json()).toEqual({ ...FAILED, details: { remainingAttempts: 2 } });
+    // Tras el acierto hacen falta otros 3 fallos para bloquear.
+    const after = [];
+    for (let i = 0; i < 3; i++) after.push((await recover({ code: 'AAAA-BBBB' })).status);
+    expect(after).toEqual([422, 422, 423]);
   });
 
   it('fallos separados por más de una hora no se suman', async () => {
     await recover({ code: 'AAAA-BBBB' });
     await recover({ code: 'AAAA-BBBB' });
+    // Los de las 12:00 ya no cuentan a las 13:00:01: hacen falta 3 fallos nuevos.
     clock.set('2026-10-14T13:00:01.000Z');
-    const res = await recover({ code: 'AAAA-BBBB' });
-    expect(await res.json()).toEqual({ ...FAILED, details: { remainingAttempts: 2 } });
+    const after = [];
+    for (let i = 0; i < 3; i++) after.push((await recover({ code: 'AAAA-BBBB' })).status);
+    expect(after).toEqual([422, 422, 423]);
   });
 });
 

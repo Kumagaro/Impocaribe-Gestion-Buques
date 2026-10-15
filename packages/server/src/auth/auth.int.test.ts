@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { ManualClock } from '@impocaribe/shared';
 import { newUserSchema } from '@impocaribe/shared/validation';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -122,21 +123,19 @@ describe('POST /auth/login (RF-AUT-01, 02)', () => {
     expect([rows[0].token_hash === token, (rows[0].token_hash as string).length]).toEqual([false, 64]);
   });
 
-  it('una contraseña equivocada no entra y dice cuántos intentos quedan', async () => {
+  it('una contraseña equivocada no entra, con la misma respuesta que un usuario que no existe', async () => {
     await addUser('mario.delgado', 'operador', '84011905548');
-    const res = await login('mario.delgado', 'otra-clave');
-    expect([res.status, await res.json()]).toEqual([
-      403,
-      { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.', details: { remainingAttempts: 4 } },
-    ]);
+    const [known, unknown] = await Promise.all([login('mario.delgado', 'otra-clave'), login('nadie', 'contraseña1')]);
+    const body = { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.' };
+    expect([known.status, await known.json(), unknown.status, await unknown.json()]).toEqual([403, body, 403, body]);
   });
 
-  it('un usuario que no existe recibe el mismo mensaje', async () => {
-    const res = await login('nadie', 'contraseña1');
-    expect([res.status, await res.json()]).toEqual([
-      403,
-      { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.' },
-    ]);
+  it('F-03: desde el 3.er fallo dice cuántos intentos quedan antes del bloqueo', async () => {
+    await addUser('mario.delgado', 'operador', '84011905548');
+    const details = [];
+    for (let i = 0; i < 4; i++)
+      details.push(((await (await login('mario.delgado', 'otra-clave')).json()) as { details?: unknown }).details);
+    expect(details).toEqual([undefined, undefined, { remainingAttempts: 2 }, { remainingAttempts: 1 }]);
   });
 
   it('RF-AUT-01: un usuario desactivado no puede entrar', async () => {
@@ -163,8 +162,9 @@ describe('RF-AUT-05: 5 intentos fallidos seguidos bloquean 15 minutos', () => {
     await addUser('mario.delgado', 'operador', '84011905548');
     for (let i = 0; i < 4; i++) await login('mario.delgado', 'otra-clave');
     expect((await login('mario.delgado', 'contraseña1')).status).toBe(200);
+    // El contador vuelve a empezar: el siguiente fallo es el primero y no avisa todavía.
     const fail = await login('mario.delgado', 'otra-clave');
-    expect(((await fail.json()) as { details: unknown }).details).toEqual({ remainingAttempts: 4 });
+    expect(await fail.json()).toEqual({ code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.' });
   });
 
   it('el 5.º fallo bloquea: ni la contraseña correcta entra hasta pasados 15 minutos', async () => {
@@ -389,5 +389,56 @@ describe('RF-REC-06: quien debe cambiar la contraseña no hace nada más', () =>
       body: JSON.stringify({ current: 'contraseña1', password: 'clave-nueva', confirm: 'clave-nueva' }),
     });
     expect([changed.status, (await authed(token, '/prueba-roles/todos')).status]).toEqual([204, 200]);
+  });
+});
+
+describe('RF-AUT-05 también al cambiar la contraseña', () => {
+  it('adivinar la contraseña actual cuenta como intento fallido: al 5.º bloquea', async () => {
+    await addUser('mario.delgado', 'operador', '84011905548');
+    const token = await tokenOf('mario.delgado');
+    const statuses = [];
+    for (let i = 0; i < 5; i++) {
+      const res = await authed(token, '/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ current: 'adivinanza', password: 'clave-nueva', confirm: 'clave-nueva' }),
+      });
+      statuses.push(res.status);
+    }
+    expect(statuses).toEqual([400, 400, 400, 400, 423]);
+    expect((await login('mario.delgado', 'contraseña1')).status).toBe(423);
+  });
+});
+
+describe('DT-22: las escrituras de la sesión son idempotentes', () => {
+  it('cambiar la contraseña dos veces con la misma clave tiene un solo efecto', async () => {
+    await addUser('mario.delgado', 'operador', '84011905548');
+    const token = await tokenOf('mario.delgado');
+    const headers = appHeaders({
+      Authorization: `Bearer ${token}`,
+      'Idempotency-Key': '0192a3b4-0000-7000-8000-00000000e001',
+    });
+    const body = JSON.stringify({ current: 'contraseña1', password: 'clave-nueva', confirm: 'clave-nueva' });
+    const first = await fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
+    const second = await fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
+    expect([first.status, second.status]).toEqual([204, 204]);
+    const { rows } = await suite.admin.query(
+      "SELECT count(*)::int AS n FROM audit_log WHERE action = 'auth.change_password'",
+    );
+    expect(rows).toEqual([{ n: 1 }]);
+  });
+
+  it('la clave guardada no permite recuperar la contraseña del cuerpo (sin hash simple del cuerpo)', async () => {
+    await addUser('mario.delgado', 'operador', '84011905548');
+    const token = await tokenOf('mario.delgado');
+    const key = '0192a3b4-0000-7000-8000-00000000e002';
+    const body = JSON.stringify({ current: 'contraseña1', password: 'clave-nueva', confirm: 'clave-nueva' });
+    await fetch(`${t.base}/auth/change-password`, {
+      method: 'POST',
+      headers: appHeaders({ Authorization: `Bearer ${token}`, 'Idempotency-Key': key }),
+      body,
+    });
+    const naive = createHash('sha256').update(`POST\n/api/v1/auth/change-password\n${body}`).digest('hex');
+    const { rows } = await suite.admin.query('SELECT request_hash FROM idempotency_keys WHERE key = $1', [key]);
+    expect([rows.length, rows[0]?.request_hash === naive]).toEqual([1, false]);
   });
 });

@@ -159,6 +159,13 @@ describe('PATCH /users/:id', () => {
     expect(await me(tokens.mario!)).toBe(401);
   });
 
+  it('la respuesta y el registro de cambios nunca llevan el hash ni los contadores de seguridad', async () => {
+    const res = await edit('ana', ids.mario!, mario({ phone: '59876543' }));
+    const { rows } = await suite.admin.query("SELECT payload FROM change_log WHERE entity_type = 'user'");
+    const keys = [Object.keys((await res.json()) as object), ...rows.map((r) => Object.keys(r.payload as object))];
+    expect(keys.flat().filter((k) => /password|failed|locked/i.test(k) && k !== 'mustChangePassword')).toEqual([]);
+  });
+
   it('cambiar otros datos sin tocar el rol no cierra sus sesiones', async () => {
     const res = await edit('ana', ids.mario!, mario({ phone: '+53 59876543' }));
     expect([res.status, ((await res.json()) as { phone: string }).phone, await me(tokens.mario!)]).toEqual([
@@ -211,6 +218,8 @@ describe('activar y desactivar (RF-USR-03, RF-AUT-04)', () => {
       true,
       200,
     ]);
+    // Reactivar no revive las sesiones que la desactivación cerró.
+    expect(await me(tokens.mario!)).toBe(401);
   });
 
   it('RF-USR-04: la última Apoderada activa no se puede desactivar', async () => {
