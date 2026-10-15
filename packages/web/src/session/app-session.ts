@@ -29,7 +29,7 @@ export class AppSession {
   constructor(
     private readonly platform: Platform,
     private readonly appVersion: string,
-    private readonly now: () => Date = () => new Date(),
+    private readonly clock: () => Date = () => new Date(),
   ) {}
 
   getState = (): SessionState => this.state;
@@ -77,17 +77,36 @@ export class AppSession {
     return this.platform.secureScreen(enabled);
   }
 
+  /** La plataforma: descubrimiento y cámara para emparejar (P-01). */
+  get device(): Platform {
+    return this.platform;
+  }
+
+  /** La hora de la app (la del servidor en las pruebas): cuenta atrás del código (P-01). */
+  now(): Date {
+    return this.clock();
+  }
+
+  /** Un cliente para un servidor aún sin emparejar, sin firma de dispositivo (descubrimiento y emparejamiento). */
+  apiFor(address: string, port: number) {
+    return this.client(address, port, async () => null);
+  }
+
   /** El cliente de API del servidor emparejado, por su última dirección conocida. */
   api() {
     const pairing = this.state.pairing;
     if (!pairing?.lastAddress) throw new Error('Este dispositivo no está emparejado con el servidor.');
     const { address, port } = pairing.lastAddress;
+    return this.client(address, port, async () => ({ id: pairing.deviceId, secret: pairing.deviceSecret }));
+  }
+
+  private client(address: string, port: number, getDevice: () => Promise<{ id: string; secret: string } | null>) {
     return createApiClient({
       baseUrl: `${this.platform.serverScheme ?? 'https'}://${address}:${port}/api/v1`,
       appVersion: this.appVersion,
       getToken: async () => this.state.session?.token ?? null,
-      getDevice: async () => ({ id: pairing.deviceId, secret: pairing.deviceSecret }),
-      now: this.now,
+      getDevice,
+      now: this.clock,
       transport: this.platform.http,
       onSessionExpired: () => void this.signOut(),
     });

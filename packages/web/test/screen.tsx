@@ -4,7 +4,7 @@ import { act, type RenderResult } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router';
 import type { PairingRecord } from '../src/connection/pairing';
-import type { PlatformDiscovery } from '../src/platform/platform';
+import type { DeviceInfo, PlatformDiscovery } from '../src/platform/platform';
 import { createTestPlatform, type TestPlatform } from '../src/platform/test-platform';
 import { AppSession, type StoredSession } from '../src/session/app-session';
 import { SessionProvider } from '../src/session/SessionProvider';
@@ -44,6 +44,8 @@ export async function renderScreen(
     pairing?: PairingRecord | null;
     session?: StoredSession | null;
     discovery?: PlatformDiscovery;
+    deviceInfo?: DeviceInfo;
+    scanQr?: () => Promise<string | null>;
     otherRoutes?: string[];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
@@ -54,6 +56,8 @@ export async function renderScreen(
   const platform = await createTestPlatform({
     http: server.transport,
     ...(options.discovery ? { discovery: options.discovery } : {}),
+    ...(options.deviceInfo ? { deviceInfo: options.deviceInfo } : {}),
+    ...(options.scanQr ? { scanQr: options.scanQr } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

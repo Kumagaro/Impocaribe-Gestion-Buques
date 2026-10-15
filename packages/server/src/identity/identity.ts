@@ -3,7 +3,7 @@
 // siendo el mismo aunque cambie su dirección. Las apps aprenden la huella de la CA al emparejarse.
 // @peculiar/x509 usa tsyringe, que necesita los metadatos de reflexión (los mismos que NestJS).
 import 'reflect-metadata';
-import type { Clock } from '@impocaribe/shared';
+import { serverName, type Clock } from '@impocaribe/shared';
 import * as x509 from '@peculiar/x509';
 import { randomBytes, randomUUID, webcrypto, X509Certificate } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
@@ -85,7 +85,7 @@ export async function createIdentity(
   }
 
   const serverId = randomUUID();
-  const name = `IMPOCARIBE-${serverId.slice(0, 4).toUpperCase()}`;
+  const name = serverName(serverId);
   const notAfter = new Date(now);
   notAfter.setUTCFullYear(notAfter.getUTCFullYear() + VALID_YEARS);
   const keyUsage = x509.KeyUsageFlags;

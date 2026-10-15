@@ -6,6 +6,8 @@ export interface DeviceInfo {
   appVersion: string;
   /** Ancho mínimo de la pantalla en dp: decide teléfono o tablet en Android (RF-UI-02). */
   smallestWidthDp: number;
+  /** Nombre del equipo o modelo del teléfono: propone el nombre del dispositivo al emparejarlo (P-01). */
+  name?: string;
 }
 
 export type SqlValue = string | number | null | Uint8Array;
@@ -79,6 +81,8 @@ export interface Platform {
   notify(notification: { title: string; body: string }): Promise<void>;
   /** Bloquea las capturas en pantallas sensibles (RNF-09). */
   secureScreen(enabled: boolean): Promise<void>;
+  /** Lee un QR con la cámara (TEL y TAB, P-01); null si se cancela. Sin cámara, no existe. */
+  scanQr?(): Promise<string | null>;
   installUpdate(downloadUrl: string): Promise<void>;
 }
 

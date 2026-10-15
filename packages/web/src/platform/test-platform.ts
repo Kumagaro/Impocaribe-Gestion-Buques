@@ -60,6 +60,8 @@ export async function createTestPlatform(
     http?: HttpTransport;
     ws?: (url: string) => PlatformSocket;
     discovery?: PlatformDiscovery;
+    /** El texto que "lee" la cámara; sin él, la plataforma no tiene cámara. */
+    scanQr?: () => Promise<string | null>;
   } = {},
 ): Promise<TestPlatform> {
   sqlJs ??= initSqlJs();
@@ -102,5 +104,6 @@ export async function createTestPlatform(
     notify: record('notify'),
     secureScreen: record('secureScreen'),
     installUpdate: record('installUpdate'),
+    ...(options.scanQr ? { scanQr: options.scanQr } : {}),
   };
 }

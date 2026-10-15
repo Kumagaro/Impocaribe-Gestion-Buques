@@ -6,6 +6,7 @@ import {
   pairingRequestSchema,
   pairingStatusSchema,
   qrPairSchema,
+  selfPairSchema,
 } from '@impocaribe/shared/validation';
 import { defineEndpoint } from '../client';
 
@@ -38,5 +39,14 @@ export const postPairingQr = defineEndpoint({
   input: qrPairSchema,
   output: pairedDeviceSchema,
   errors: ['PAIRING_EXPIRED'],
+  roles: 'public',
+});
+
+// La app de la propia PC servidor se empareja sola por la interfaz local (P-01); el servidor lo comprueba (T035).
+export const postPairSelf = defineEndpoint({
+  method: 'POST',
+  path: '/local/pair-self',
+  input: selfPairSchema,
+  output: pairedDeviceSchema,
   roles: 'public',
 });

@@ -49,6 +49,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   });
 }
 
+/** Pregunta a una dirección concreta (la propia PC o una escrita a mano); null si no contesta a tiempo. */
+export function probeServer(discovery: PlatformDiscovery, address: string, port: number, timeoutMs: number) {
+  return withTimeout(discovery.probe(address, port, timeoutMs), timeoutMs, null);
+}
+
 export async function findServer(
   discovery: PlatformDiscovery,
   paired: PairedServer | null,
