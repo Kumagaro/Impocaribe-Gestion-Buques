@@ -344,19 +344,23 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
 - [ ] **T038. (PP) Pantallas P-01 a P-04:** Conexión y emparejamiento, Primer arranque, Login y Recuperar.
   - *Cubre:* HU-05, RF-AUT, RF-REC, RF-RED-02 a 04, RNF-09, HU-15
   - *Depende:* T026, T030, T037, T036
+  - *Estado (2026-10-15):* hecho salvo el punto 9 del PP: **falta aprobar las referencias visuales** (`Pantallas/Acceso`, 84). `web/src/screens/{connection,setup,login,recover}` con hook, tres presentaciones, historias y pruebas de componente; rutas y `SessionGate` (`web/src/app/routes.tsx`, router por hash). E2E contra el servidor real en las tres clases con el efecto en la base y la bitácora (`e2e/setup.e2e.ts`, `e2e/access.e2e.ts`): primer arranque en la PC servidor, emparejamiento por código, login, bloqueo y recuperación con código válido y usado. El navegador de pruebas llega al servidor por el mismo origen (proxy de vite) y el servidor de E2E sirve HTTP con `IMPOCARIBE_TLS=off`, prohibido en producción. Queda fuera, con su tarea: "Crear servidor en este equipo" (P-28), "Abrir el Diagnóstico de red" (P-30), la primera sincronización (F2, RNF-20), y la cámara para el QR y la verificación de la identidad en el transporte nativo (T115 y T118); el QR, el rechazo de un servidor con otra identidad y el redescubrimiento en menos de 10 s se prueban en componente y en T036, no en E2E del navegador. El código entra sin la hoja de MOV-04 (se muestra en el mismo paso).
 
 - [ ] **T039. (PP) Pantalla P-05 Perfil.** Sesiones, contraseña, códigos, tema y "Reducir animaciones".
   - *Cubre:* RF-AUT-07, RF-REC-03, RF-UI-06
   - *Depende:* T038
+  - *Estado (2026-10-15):* hecho salvo el punto 9 del PP: **falta aprobar las referencias visuales** (`Pantallas/Perfil`, 36, y 28 de la estructura, que ahora lleva la entrada al perfil). `web/src/screens/profile/`; preferencias del dispositivo (tema y "Reducir animaciones") en `AppSession`, aplicadas a toda la app. E2E (`e2e/profile.e2e.ts`): cerrar otra sesión la invalida en el servidor y "Reducir animaciones" quita los desplazamientos en toda la app y se recuerda.
 
 - [ ] **T040. (PP) Pantalla P-21 Usuarios.**
   - *Cubre:* HU-11, RF-USR, RF-AUT-10
   - *Depende:* T031, T038
+  - *Estado (2026-10-15):* hecho salvo el punto 9 del PP: **falta aprobar las referencias visuales** (`Pantallas/Usuarios`, 30). `web/src/screens/users/`: alta con códigos y capturas bloqueadas, edición con aviso de cambio de rol, última Apoderada protegida, activar, desactivar y restablecer contraseña. E2E (`e2e/users.e2e.ts`): cambiar el rol cierra la sesión del usuario en su dispositivo, comprobado en la base y la bitácora.
 
-- [ ] **T041. Guardas de rol en la interfaz.**
+- [x] **T041. Guardas de rol en la interfaz.**
   - *Cubre:* Spec §2, EST-05
   - *Depende:* T038
   - *Pruebas:* E2E con los tres roles en las tres clases.
+  - *Estado (2026-10-15):* `web/src/app/SectionGuard.tsx` usa la misma tabla de permisos que el menú (`navigation.ts`): lo prohibido no aparece y, si se llega por enlace, se explica y se ofrece volver. Pruebas de componente y E2E con los tres roles en las tres clases (`e2e/roles.e2e.ts`). Cada pantalla nueva añade su ruta bajo esta guarda.
 
 ## F2. Sincronización base y copia local
 
