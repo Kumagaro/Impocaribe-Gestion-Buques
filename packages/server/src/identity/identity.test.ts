@@ -4,7 +4,7 @@ import { createCipheriv, createDecipheriv, randomBytes, X509Certificate } from '
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { createIdentity, IdentityExistsError, loadIdentity, type SecretProtector } from './identity.ts';
 import { windowsMachineProtector } from './protector.ts';
 
@@ -109,19 +109,16 @@ describe('el servidor arranca con su identidad (HTTPS)', () => {
     const { createServer } = await import('node:https');
     const server = createServer({ key: id.keyPem, cert: id.certPem + id.caCertPem }, (_req, res) => res.end('ok'));
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+    onTestFinished(() => void server.close());
     const port = (server.address() as { port: number }).port;
-    try {
-      const good = createNodeTransport({ identity: id.serverId, caFingerprint: id.caFingerprint });
-      const res = await good(`https://127.0.0.1:${port}/`, { method: 'GET' });
-      expect([res.status, await res.text()]).toEqual([200, 'ok']);
-      const other = createNodeTransport({
-        identity: '7f3c2a10-1b2c-4d5e-8f90-abcdef123456',
-        caFingerprint: id.caFingerprint,
-      });
-      await expect(other(`https://127.0.0.1:${port}/`, { method: 'GET' })).rejects.toThrow(ServerIdentityError);
-    } finally {
-      server.close();
-    }
+    const good = createNodeTransport({ identity: id.serverId, caFingerprint: id.caFingerprint });
+    const res = await good(`https://127.0.0.1:${port}/`, { method: 'GET' });
+    expect([res.status, await res.text()]).toEqual([200, 'ok']);
+    const other = createNodeTransport({
+      identity: '7f3c2a10-1b2c-4d5e-8f90-abcdef123456',
+      caFingerprint: id.caFingerprint,
+    });
+    await expect(other(`https://127.0.0.1:${port}/`, { method: 'GET' })).rejects.toThrow(ServerIdentityError);
   });
 });
 

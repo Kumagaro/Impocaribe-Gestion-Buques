@@ -75,9 +75,10 @@ describe('DT-11: versión mínima de la app', () => {
 });
 
 describe('T033: carpeta de la identidad del servidor (plan §4.2)', () => {
-  it('en producción es C:\ProgramData\Impocaribe\identity, junto a la de datos', () => {
-    const c = loadConfig({ NODE_ENV: 'production', DATABASE_URL: DEV_URL, ProgramData: 'C:\ProgramData' });
-    expect(c.identityDir).toBe(join('C:\ProgramData', 'Impocaribe', 'identity'));
+  it('en producción es C:\\ProgramData\\Impocaribe\\identity, junto a la de datos', () => {
+    const c = loadConfig({ NODE_ENV: 'production', DATABASE_URL: DEV_URL, ProgramData: 'C:\\ProgramData' });
+    expect(c.identityDir).toBe(join('C:\\ProgramData', 'Impocaribe', 'identity'));
+    expect(join(c.dataDir, '..')).toBe(join(c.identityDir, '..'));
   });
 
   it('en desarrollo, fuera del repositorio', () => {
@@ -86,6 +87,6 @@ describe('T033: carpeta de la identidad del servidor (plan §4.2)', () => {
   });
 
   it('IMPOCARIBE_IDENTITY_DIR tiene prioridad', () => {
-    expect(loadConfig({ DATABASE_URL: DEV_URL, IMPOCARIBE_IDENTITY_DIR: 'D:\id' }).identityDir).toBe('D:\id');
+    expect(loadConfig({ DATABASE_URL: DEV_URL, IMPOCARIBE_IDENTITY_DIR: 'D:\\id' }).identityDir).toBe('D:\\id');
   });
 });
