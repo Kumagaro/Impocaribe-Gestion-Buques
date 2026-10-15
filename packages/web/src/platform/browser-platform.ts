@@ -2,14 +2,8 @@
 // un transporte de prueba"). Las apps registran siempre la suya, nativa (Electron, T115; Android, T118): esta solo se
 // usa cuando no hay ninguna. No verifica la identidad del servidor (lo hace el transporte nativo, DT-19) y guarda los
 // secretos en sessionStorage, que muere con la pestaña: sirve para probar, nunca para trabajar.
+import { SERVER_PORT } from '../connection/discovery';
 import type { DeviceInfo, Platform, PlatformDiscovery, ServerAnnouncement } from './platform';
-
-/** `?server=127.0.0.1:8444`: el servidor que el navegador "encuentra" como si se anunciara en la red. */
-export function serverFromSearch(search: string): { address: string; port: number } | null {
-  const value = new URLSearchParams(search).get('server');
-  const match = value?.match(/^([\w.-]+):(\d{1,5})$/);
-  return match ? { address: match[1]!, port: Number(match[2]) } : null;
-}
 
 async function probe(address: string, port: number, timeoutMs: number): Promise<ServerAnnouncement | null> {
   const controller = new AbortController();
@@ -26,18 +20,40 @@ async function probe(address: string, port: number, timeoutMs: number): Promise<
   }
 }
 
-export function browserDiscovery(search: string): PlatformDiscovery {
-  const configured = serverFromSearch(search);
+const LOOPBACK = new Set(['127.0.0.1', 'localhost']);
+
+/**
+ * El servidor es el propio origen de la página (vite lo redirige a /api): se "anuncia" como si estuviera en la red. Si la
+ * página se abre en este mismo equipo, su servidor es también "el de este equipo" (127.0.0.1:8443, PC servidor, P-01).
+ */
+export function browserDiscovery(origin: { address: string; port: number }): PlatformDiscovery {
   const announce = async (timeoutMs: number) => {
-    if (!configured) return [];
-    const found = await probe(configured.address, configured.port, timeoutMs);
+    const found = await probe(origin.address, origin.port, timeoutMs);
     return found ? [found] : [];
   };
-  return { browse: announce, broadcast: announce, probe, subnetAddresses: async () => [] };
+  const local = LOOPBACK.has(origin.address);
+  return {
+    browse: announce,
+    broadcast: announce,
+    probe: (address, port, timeoutMs) =>
+      local && LOOPBACK.has(address) && port === SERVER_PORT
+        ? probe(origin.address, origin.port, timeoutMs)
+        : probe(address, port, timeoutMs),
+    subnetAddresses: async () => [],
+  };
 }
 
-export function createBrowserPlatform(search: string, appVersion: string): Platform {
-  const info: DeviceInfo = { platform: 'windows', appVersion, smallestWidthDp: 1024 };
+export function createBrowserPlatform(
+  location: { hostname: string; port: string; search: string },
+  appVersion: string,
+): Platform {
+  // ?device=phone o tablet se comporta como Android (se empareja por código); escritorio, como Windows.
+  const android = /[?&]device=(phone|tablet)\b/.test(location.search);
+  const info: DeviceInfo = {
+    platform: android ? 'android' : 'windows',
+    appVersion,
+    smallestWidthDp: android ? 360 : 1024,
+  };
   const storage = window.sessionStorage;
   return {
     serverScheme: 'http',
@@ -45,7 +61,7 @@ export function createBrowserPlatform(search: string, appVersion: string): Platf
     ws: () => {
       throw new Error('El WebSocket llega con la sincronización (T043).');
     },
-    discovery: browserDiscovery(search),
+    discovery: browserDiscovery({ address: location.hostname, port: Number(location.port || 80) }),
     deviceInfo: () => info,
     secureStorage: {
       get: async (key) => storage.getItem(`impocaribe-prueba:${key}`),

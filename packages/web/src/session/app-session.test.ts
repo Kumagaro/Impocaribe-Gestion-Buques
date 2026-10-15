@@ -46,7 +46,10 @@ describe('AppSession.load', () => {
     await savePairing(platform.secureStorage, PAIRING);
     await session.load();
     expect(session.getState().status).toBe('signedOut');
-    await platform.secureStorage.set(SESSION_KEY, JSON.stringify({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER }));
+    await platform.secureStorage.set(
+      SESSION_KEY,
+      JSON.stringify({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER }),
+    );
     await session.load();
     expect(session.getState()).toEqual({
       status: 'signedIn',
@@ -71,7 +74,10 @@ describe('AppSession.api', () => {
       'dev-1',
     ]);
     expect(h['x-device-signature']).toBe(
-      await signRequest({ method: 'GET', path: '/api/v1/auth/me', time: h['x-device-time']!, body: '' }, 'secreto-del-dispositivo'),
+      await signRequest(
+        { method: 'GET', path: '/api/v1/auth/me', time: h['x-device-time']!, body: '' },
+        'secreto-del-dispositivo',
+      ),
     );
   });
 
@@ -88,7 +94,10 @@ describe('AppSession.api', () => {
     await savePairing(platform.secureStorage, PAIRING);
     await session.load();
     await session.signedIn({ token: 'token-1', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
-    await session.api().request(getMe).catch(() => undefined);
+    await session
+      .api()
+      .request(getMe)
+      .catch(() => undefined);
     expect([session.getState().status, await platform.secureStorage.get(SESSION_KEY)]).toEqual(['signedOut', null]);
   });
 });

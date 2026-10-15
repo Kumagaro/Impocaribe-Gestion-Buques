@@ -1,9 +1,9 @@
 import { createServer, type Server } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { browserDiscovery, serverFromSearch } from './browser-platform';
+import { browserDiscovery, createBrowserPlatform } from './browser-platform';
 
-// T038 · Plataforma del navegador de pruebas (plan §11.2): el servidor de la prueba se indica con ?server=host:puerto y
-// se "descubre" con su GET /discovery real.
+// T038 · Plataforma del navegador de pruebas (plan §11.2): el servidor es el propio origen de la página (vite lo
+// redirige a /api) y se "descubre" con su GET /discovery real.
 let server: Server;
 let port: number;
 
@@ -25,31 +25,42 @@ afterAll(() => {
   server.close();
 });
 
-describe('serverFromSearch', () => {
-  it.each([
-    ['?server=127.0.0.1:8444', { address: '127.0.0.1', port: 8444 }],
-    ['?device=phone&server=pc-servidor:8443', { address: 'pc-servidor', port: 8443 }],
-    ['?server=127.0.0.1', null],
-    ['?server=a b:1', null],
-    ['', null],
-  ])('%s → %j', (search, expected) => {
-    expect(serverFromSearch(search)).toEqual(expected);
-  });
-});
-
 describe('browserDiscovery', () => {
-  it('anuncia el servidor indicado con lo que responde su /discovery', async () => {
-    const discovery = browserDiscovery(`?server=127.0.0.1:${port}`);
+  it('anuncia el origen con lo que responde su /discovery', async () => {
+    const discovery = browserDiscovery({ address: '127.0.0.1', port });
     const expected = [{ address: '127.0.0.1', port, serverId: 'id-1', caFingerprint: 'AA:BB', version: '1.0.0' }];
     expect([await discovery.browse(1000), await discovery.broadcast(1000)]).toEqual([expected, expected]);
   });
 
-  it('sin servidor indicado no encuentra nada, y una dirección que no responde da null', async () => {
-    const discovery = browserDiscovery('');
-    expect([await discovery.browse(200), await discovery.probe('127.0.0.1', 1, 300), await discovery.subnetAddresses()]).toEqual([
-      [],
-      null,
-      [],
-    ]);
+  it('si el origen no responde no encuentra nada, y una dirección que no responde da null', async () => {
+    const discovery = browserDiscovery({ address: '127.0.0.1', port: 1 });
+    expect([
+      await discovery.browse(200),
+      await discovery.probe('127.0.0.1', 1, 300),
+      await discovery.subnetAddresses(),
+    ]).toEqual([[], null, []]);
+  });
+
+  it('abierta en este equipo, el servidor de este equipo (127.0.0.1:8443) es el del origen', async () => {
+    const discovery = browserDiscovery({ address: '127.0.0.1', port });
+    expect(await discovery.probe('127.0.0.1', 8443, 1000)).toMatchObject({
+      address: '127.0.0.1',
+      port,
+      serverId: 'id-1',
+    });
+    expect(await browserDiscovery({ address: '192.168.1.10', port }).probe('127.0.0.1', 8443, 300)).toBeNull();
+  });
+});
+
+describe('createBrowserPlatform', () => {
+  it.each([
+    ['?device=phone', 'android'],
+    ['?x=1&device=tablet', 'android'],
+    ['?device=desktop', 'windows'],
+    ['?device=phonex', 'windows'],
+    ['', 'windows'],
+  ])('%s se comporta como %s', (search, platform) => {
+    const p = createBrowserPlatform({ hostname: '127.0.0.1', port: '5199', search }, '1.0.0');
+    expect(p.deviceInfo().platform).toBe(platform);
   });
 });

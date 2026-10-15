@@ -38,7 +38,12 @@ export function LoginForm({ model }: { model: LoginModel }) {
           />
         </div>
       </Field>
-      <Checkbox label="Mantener sesión (30 días)" checked={model.keepSignedIn} onChange={model.setKeepSignedIn} disabled={model.locked} />
+      <Checkbox
+        label="Mantener sesión (30 días)"
+        checked={model.keepSignedIn}
+        onChange={model.setKeepSignedIn}
+        disabled={model.locked}
+      />
       <Button type="submit" busy={model.busy} busyLabel="Entrando…" disabled={model.locked}>
         Entrar
       </Button>

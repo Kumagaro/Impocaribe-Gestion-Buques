@@ -26,7 +26,13 @@ export function RecoverForm({ model }: { model: RecoverModel }) {
         <TextField autoComplete="username" disabled={model.locked} {...model.username.control} />
       </Field>
       <Field label="Carné" exacting {...model.nationalId.state}>
-        <TextField inputMode="numeric" digitsOnly maxLength={11} disabled={model.locked} {...model.nationalId.control} />
+        <TextField
+          inputMode="numeric"
+          digitsOnly
+          maxLength={11}
+          disabled={model.locked}
+          {...model.nationalId.control}
+        />
       </Field>
       <Field label="Teléfono" {...model.phone.state}>
         <TextField inputMode="tel" mask={maskPhone} disabled={model.locked} {...model.phone.control} />

@@ -8,7 +8,12 @@ import { getSetupStatus, postLogin } from '../../api/endpoints/auth';
 import { LoginScreen } from './Login.screen';
 
 // T038 · P-03 Iniciar sesión (ui-spec), F-03, RF-AUT-01, 02 y 05, RF-VAL-02: el hook real y las tres presentaciones.
-const USER = sampleOf(userDtoSchema, { username: 'ilen.fernandez', role: 'apoderada', nationalId: '84011905548', phone: '52345678' });
+const USER = sampleOf(userDtoSchema, {
+  username: 'ilen.fernandez',
+  role: 'apoderada',
+  nationalId: '84011905548',
+  phone: '52345678',
+});
 const OK = { token: 'token-1', expiresAt: '2026-10-15T16:40:00.000Z', user: USER };
 
 async function open(options: Parameters<typeof renderScreen>[1] = {}, ready = true) {
@@ -72,7 +77,9 @@ describe('RF-AUT-01 y 02: lo que se envía', () => {
     await type('ilen.fernandez', 'contraseña1');
     await userEvent.click(screen.getByLabelText('Mantener sesión (30 días)'));
     await enter();
-    await waitFor(() => expect(t.server.calls.find((c) => c.path === '/auth/login')).toMatchObject({ body: { keepSignedIn: true } }));
+    await waitFor(() =>
+      expect(t.server.calls.find((c) => c.path === '/auth/login')).toMatchObject({ body: { keepSignedIn: true } }),
+    );
   });
 
   it('la contraseña se puede mostrar', async () => {
@@ -84,7 +91,9 @@ describe('RF-AUT-01 y 02: lo que se envía', () => {
   });
 
   it('quien debe cambiar la contraseña va a su perfil (RF-REC-06)', async () => {
-    const t = await open({ before: (s) => s.respond(postLogin, { ...OK, user: { ...USER, mustChangePassword: true } }) });
+    const t = await open({
+      before: (s) => s.respond(postLogin, { ...OK, user: { ...USER, mustChangePassword: true } }),
+    });
     await type('ilen.fernandez', 'temporal-1');
     await enter();
     await waitFor(() => expect(t.router.state.location.pathname).toBe('/perfil'));
@@ -109,7 +118,9 @@ describe('F-03 y RF-VAL-02: validación', () => {
 
 describe('RF-AUT-05: fallos y bloqueo', () => {
   it('una contraseña equivocada lo dice sin decir cuál dato falló', async () => {
-    await open({ before: (s) => s.respond(postLogin, { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.' }) });
+    await open({
+      before: (s) => s.respond(postLogin, { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.' }),
+    });
     await type('ilen.fernandez', 'mala');
     await enter();
     expect((await screen.findByRole('alert')).textContent).toContain('Usuario o contraseña incorrectos.');
@@ -120,7 +131,12 @@ describe('RF-AUT-05: fallos y bloqueo', () => {
     [1, 'Le queda 1 intento antes del bloqueo de 15 minutos'],
   ])('desde el 3.er fallo avisa en la contraseña: quedan %i', async (remainingAttempts, warning) => {
     await open({
-      before: (s) => s.respond(postLogin, { code: 'FORBIDDEN', message: 'Usuario o contraseña incorrectos.', details: { remainingAttempts } }),
+      before: (s) =>
+        s.respond(postLogin, {
+          code: 'FORBIDDEN',
+          message: 'Usuario o contraseña incorrectos.',
+          details: { remainingAttempts },
+        }),
     });
     await type('ilen.fernandez', 'mala');
     await enter();
@@ -161,10 +177,13 @@ describe('P-02: sistema sin configurar', () => {
   });
 
   it('en la PC servidor lleva al primer arranque', async () => {
-    const t = await open({
-      pairing: { ...TEST_PAIRING, isServerPc: true },
-      before: (s) => s.respond(getSetupStatus, { configured: false }),
-    }, false);
+    const t = await open(
+      {
+        pairing: { ...TEST_PAIRING, isServerPc: true },
+        before: (s) => s.respond(getSetupStatus, { configured: false }),
+      },
+      false,
+    );
     await waitFor(() => expect(t.router.state.location.pathname).toBe('/setup'));
   });
 });

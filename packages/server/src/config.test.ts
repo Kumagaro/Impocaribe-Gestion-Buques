@@ -86,6 +86,14 @@ describe('T033: carpeta de la identidad del servidor (plan §4.2)', () => {
     expect(c.identityDir).toBe(join('C:', 'Users', 'u', 'AppData', 'Local', 'Impocaribe', 'dev-identity'));
   });
 
+  it('HTTPS siempre, salvo IMPOCARIBE_TLS=off fuera de producción', () => {
+    expect(loadConfig({ DATABASE_URL: DEV_URL }).tls).toBe(true);
+    expect(loadConfig({ NODE_ENV: 'test', TEST_DATABASE_URL: TEST_URL, IMPOCARIBE_TLS: 'off' }).tls).toBe(false);
+    expect(() => loadConfig({ NODE_ENV: 'production', DATABASE_URL: DEV_URL, IMPOCARIBE_TLS: 'off' })).toThrow(
+      'En producción el servidor siempre usa HTTPS: IMPOCARIBE_TLS=off no se admite.',
+    );
+  });
+
   it('IMPOCARIBE_IDENTITY_DIR tiene prioridad', () => {
     expect(loadConfig({ DATABASE_URL: DEV_URL, IMPOCARIBE_IDENTITY_DIR: 'D:\\id' }).identityDir).toBe('D:\\id');
   });

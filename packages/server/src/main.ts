@@ -14,9 +14,10 @@ const app = await createApp(tls ?? undefined);
 await app.listen(cfg.port);
 console.log(`Servidor en ${await app.getUrl()}/api/v1/health${tls ? '' : ' (HTTP: sin identidad del servidor)'}`);
 
-// T034 · DT-20: con identidad, el servidor se anuncia por DNS-SD y responde a la difusión UDP 47800.
+// T034 · DT-20: con identidad, el servidor se anuncia por DNS-SD y responde a la difusión UDP 47800. Sin HTTPS (pruebas
+// de extremo a extremo) no se anuncia en la red: ningún dispositivo debe encontrarlo.
 const info = app.get<ServerInfo | null>(SERVER_INFO);
-if (info) {
+if (info && tls) {
   const announce = { ...info, port: cfg.port };
   const stopMdns = startMdnsAnnouncer(announce);
   const broadcast = await startBroadcastResponder(announce);

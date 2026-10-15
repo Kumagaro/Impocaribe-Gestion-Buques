@@ -13,7 +13,12 @@ import { SetupScreen } from './Setup.screen';
 vi.setConfig({ testTimeout: 20_000 });
 
 const SERVER_PC = { ...TEST_PAIRING, isServerPc: true };
-const USER = sampleOf(userDtoSchema, { username: 'ilen.fernandez', role: 'apoderada', nationalId: '84011905548', phone: '52345678' });
+const USER = sampleOf(userDtoSchema, {
+  username: 'ilen.fernandez',
+  role: 'apoderada',
+  nationalId: '84011905548',
+  phone: '52345678',
+});
 const CODES = ['K7QM-3XTP', 'R2HW-9CND', 'F4ZB-7MRK', 'T8JX-2QPV', 'W3NC-6HDF', 'P9KR-4TZM', 'H6VQ-8BXN', 'M2DT-5WJC'];
 const LOGIN = { token: 'token-1', expiresAt: '2026-10-15T16:40:00.000Z', user: USER };
 
@@ -48,33 +53,36 @@ async function stepTwo() {
 }
 
 describe('P-02 en las tres clases', () => {
-  it.each(['phone', 'tablet', 'desktop'] as const)('%s: crea la Apoderada, muestra los códigos y entra', async (device) => {
-    const t = await open({ device });
-    await stepOne();
-    await stepTwo();
-    const list = await screen.findByRole('list', { name: 'Códigos de recuperación' });
-    expect(list.textContent).toContain('K7QM-3XTP');
-    expect(list.textContent).toContain('M2DT-5WJC');
-    // El rol siempre es Apoderada; la confirmación viaja porque el contrato la valida.
-    expect(t.server.calls.find((c) => c.path === '/setup')!.body).toEqual({
-      fullName: 'Ilen Fernández Ruiz',
-      username: 'ilen.fernandez',
-      nationalId: '84011905548',
-      phone: '52345678',
-      password: 'contraseña1',
-      confirm: 'contraseña1',
-      role: 'apoderada',
-    });
-    await userEvent.click(screen.getByLabelText('Los copié a mano'));
-    await userEvent.click(screen.getByRole('button', { name: 'Terminar y entrar' }));
-    await waitFor(() => expect(t.router.state.location.pathname).toBe('/'));
-    expect(t.server.calls.find((c) => c.path === '/auth/login')!.body).toMatchObject({
-      username: 'ilen.fernandez',
-      password: 'contraseña1',
-      deviceId: SERVER_PC.deviceId,
-    });
-    expect(t.session.getState().status).toBe('signedIn');
-  });
+  it.each(['phone', 'tablet', 'desktop'] as const)(
+    '%s: crea la Apoderada, muestra los códigos y entra',
+    async (device) => {
+      const t = await open({ device });
+      await stepOne();
+      await stepTwo();
+      const list = await screen.findByRole('list', { name: 'Códigos de recuperación' });
+      expect(list.textContent).toContain('K7QM-3XTP');
+      expect(list.textContent).toContain('M2DT-5WJC');
+      // El rol siempre es Apoderada; la confirmación viaja porque el contrato la valida.
+      expect(t.server.calls.find((c) => c.path === '/setup')!.body).toEqual({
+        fullName: 'Ilen Fernández Ruiz',
+        username: 'ilen.fernandez',
+        nationalId: '84011905548',
+        phone: '52345678',
+        password: 'contraseña1',
+        confirm: 'contraseña1',
+        role: 'apoderada',
+      });
+      await userEvent.click(screen.getByLabelText('Los copié a mano'));
+      await userEvent.click(screen.getByRole('button', { name: 'Terminar y entrar' }));
+      await waitFor(() => expect(t.router.state.location.pathname).toBe('/'));
+      expect(t.server.calls.find((c) => c.path === '/auth/login')!.body).toMatchObject({
+        username: 'ilen.fernandez',
+        password: 'contraseña1',
+        deviceId: SERVER_PC.deviceId,
+      });
+      expect(t.session.getState().status).toBe('signedIn');
+    },
+  );
 
   it('TAB y ESC muestran los pasos a la izquierda con el actual marcado; TEL, "Paso n de 3"', async () => {
     await open({ device: 'desktop' });
@@ -124,7 +132,9 @@ describe('F-02: validación por paso', () => {
     await stepOne();
     await stepTwo();
     await screen.findByLabelText('Usuario');
-    expect(document.getElementById(screen.getByLabelText('Usuario').id + '-msg')!.textContent).toBe('Ya existe el usuario ilen.fernandez: elija otro nombre.');
+    expect(document.getElementById(screen.getByLabelText('Usuario').id + '-msg')!.textContent).toBe(
+      'Ya existe el usuario ilen.fernandez: elija otro nombre.',
+    );
     expect(screen.getByLabelText('Usuario')).not.toBeNull();
   });
 });

@@ -69,7 +69,9 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
     return (
       <>
         <h1 className="auth-title">Buscando el servidor</h1>
-        <p className="auth-text">Conecte este dispositivo a la misma red que la PC servidor. No hace falta escribir nada.</p>
+        <p className="auth-text">
+          Conecte este dispositivo a la misma red que la PC servidor. No hace falta escribir nada.
+        </p>
         {notice}
         <div className="auth-search" data-reduced={reduced || undefined} aria-hidden="true" />
         <ul className="auth-methods" aria-label="Métodos de búsqueda">

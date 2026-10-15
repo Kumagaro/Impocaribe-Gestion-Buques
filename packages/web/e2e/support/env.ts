@@ -1,6 +1,6 @@
 // T026 · Entorno de las pruebas de extremo a extremo y visuales: navegador fijo, puertos y base propia.
 import { existsSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 try {
@@ -43,3 +43,14 @@ export function e2eDatabaseUrl(): string {
   url.pathname = '/impocaribe_e2e_test';
   return url.toString();
 }
+
+/** Identidad pública del servidor de la prueba (sin claves: sirve HTTP, IMPOCARIBE_TLS=off). */
+export const E2E_IDENTITY = {
+  serverId: '0e2e0000-0000-4000-8000-000000000001',
+  name: 'IMPOCARIBE-0E2E',
+  caFingerprint: 'E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2:E2',
+};
+export const E2E_IDENTITY_DIR = join(tmpdir(), 'impocaribe-e2e-identity');
+
+/** Lo que el primer arranque deja para las demás pruebas: usuarios por clase de dispositivo y sus códigos. */
+export const E2E_STATE_FILE = join(tmpdir(), 'impocaribe-e2e-state.json');

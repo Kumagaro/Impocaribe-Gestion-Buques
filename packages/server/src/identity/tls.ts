@@ -11,9 +11,11 @@ export interface TlsOptions {
 }
 
 export async function serverTls(
-  cfg: { env: Environment; identityDir: string },
+  cfg: { env: Environment; identityDir: string; tls?: boolean },
   protector: SecretProtector,
 ): Promise<TlsOptions | null> {
+  // Apagado a propósito (pruebas de extremo a extremo en el navegador): loadConfig ya lo prohíbe en producción.
+  if (cfg.tls === false) return null;
   const present = await stat(join(cfg.identityDir, 'identity.json')).then(
     () => true,
     () => false,

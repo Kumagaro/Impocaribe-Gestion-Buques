@@ -149,8 +149,8 @@ describe('lo aprendido al emparejarse se guarda en el almacenamiento seguro', ()
     const record = {
       serverId: SERVER.serverId,
       serverName: 'IMPOCARIBE-7F3A',
-  deviceName: 'Teléfono de patio',
-  isServerPc: false,
+      deviceName: 'Teléfono de patio',
+      isServerPc: false,
       caFingerprint: REAL_FP,
       lastAddress: { address: '192.168.1.10', port: 8443 },
       deviceId: 'dev-1',

@@ -8,7 +8,7 @@ type DeviceClass = 'phone' | 'tablet' | 'desktop';
 
 interface Fixtures {
   device: DeviceClass;
-  /** Abre una ruta de la app con la clase de dispositivo del proyecto (?device=, plan §7.3). */
+  /** Abre una ruta de la app (router por hash) con la clase de dispositivo del proyecto (?device=, plan §7.3). */
   openApp: (path?: string, page?: Page) => Promise<Page>;
   /** Página de otro usuario, en su propio contexto (cookies y almacenamiento aparte). */
   otherUser: Page;
@@ -25,8 +25,9 @@ export const test = base.extend<Fixtures>({
   },
   openApp: async ({ page, device, baseURL }, use) => {
     await use(async (path = '/', target = page) => {
-      const url = new URL(path, baseURL);
+      const url = new URL('/', baseURL);
       url.searchParams.set('device', device);
+      url.hash = path;
       await target.goto(url.toString());
       return target;
     });

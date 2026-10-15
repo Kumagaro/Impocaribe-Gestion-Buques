@@ -11,6 +11,8 @@ export interface Config {
   dataDir: string;
   /** Identidad del servidor (T033): UUID, CA y certificado, con las claves protegidas por Windows. */
   identityDir: string;
+  /** HTTPS con la identidad. Solo las pruebas de extremo a extremo lo apagan (IMPOCARIBE_TLS=off); producción, nunca. */
+  tls: boolean;
   minAppVersion: string;
 }
 
@@ -35,12 +37,17 @@ export function loadConfig(env: Env): Config {
     );
   }
 
+  const tls = env.IMPOCARIBE_TLS !== 'off';
+  if (!tls && envName === 'production')
+    throw new Error('En producción el servidor siempre usa HTTPS: IMPOCARIBE_TLS=off no se admite.');
+
   return {
     env: envName,
     port: Number(env.PORT ?? 8443),
     databaseUrl,
     dataDir: env.IMPOCARIBE_DATA_DIR ?? defaultDataDir(envName, env),
     identityDir: env.IMPOCARIBE_IDENTITY_DIR ?? defaultIdentityDir(envName, env),
+    tls,
     // shortcut: hasta T113 la mínima sale de la configuración; luego, de app_releases.is_min_supported (plan §4.4).
     minAppVersion: env.MIN_APP_VERSION ?? '0.0.0',
   };

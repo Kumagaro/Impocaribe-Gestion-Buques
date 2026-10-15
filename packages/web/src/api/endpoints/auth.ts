@@ -15,7 +15,12 @@ import { defineEndpoint } from '../client';
 
 const ALL = ['apoderada', 'operador', 'lectura'] as const;
 
-export const getSetupStatus = defineEndpoint({ method: 'GET', path: '/setup/status', output: setupStatusSchema, roles: 'public' });
+export const getSetupStatus = defineEndpoint({
+  method: 'GET',
+  path: '/setup/status',
+  output: setupStatusSchema,
+  roles: 'public',
+});
 export const postSetup = defineEndpoint({
   method: 'POST',
   path: '/setup',
@@ -33,7 +38,12 @@ export const postLogin = defineEndpoint({
 });
 export const postLogout = defineEndpoint({ method: 'POST', path: '/auth/logout', roles: ALL });
 export const getMe = defineEndpoint({ method: 'GET', path: '/auth/me', output: meResponseSchema, roles: ALL });
-export const getSessions = defineEndpoint({ method: 'GET', path: '/auth/sessions', output: sessionsResponseSchema, roles: ALL });
+export const getSessions = defineEndpoint({
+  method: 'GET',
+  path: '/auth/sessions',
+  output: sessionsResponseSchema,
+  roles: ALL,
+});
 export const deleteSession = defineEndpoint({ method: 'DELETE', path: '/auth/sessions/:id', roles: ALL });
 export const deleteOtherSessions = defineEndpoint({ method: 'DELETE', path: '/auth/sessions', roles: ALL });
 export const postChangePassword = defineEndpoint({

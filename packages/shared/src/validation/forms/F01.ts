@@ -6,7 +6,8 @@ export const DEFAULT_SERVER_PORT = 8443;
 const IPV4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
 // Nombre de equipo: etiquetas DNS de letras, dígitos y guiones, separadas por puntos.
 const HOST = /^(?=.{1,253}$)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
-const ADDRESS_MESSAGE = 'Escriba una dirección IPv4 o el nombre del equipo, por ejemplo 192.168.1.10 o 192.168.1.10:8443.';
+const ADDRESS_MESSAGE =
+  'Escriba una dirección IPv4 o el nombre del equipo, por ejemplo 192.168.1.10 o 192.168.1.10:8443.';
 
 export const serverAddressSchema = z
   .string()

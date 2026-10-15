@@ -38,4 +38,9 @@ describe('serverTls', () => {
   it.each(['development', 'test'] as const)('en %s, sin identidad, sirve HTTP', async (env) => {
     expect(await serverTls({ env, identityDir: dir }, protector)).toBeNull();
   });
+
+  it('con la identidad pero HTTPS apagado (pruebas de extremo a extremo), sirve HTTP', async () => {
+    await createIdentity(dir, { protector, clock });
+    expect(await serverTls({ env: 'test', identityDir: dir, tls: false }, protector)).toBeNull();
+  });
 });

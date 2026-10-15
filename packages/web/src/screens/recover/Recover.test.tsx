@@ -49,7 +49,11 @@ describe('P-04 en las tres clases', () => {
 describe('RF-REC-02 a 04: errores', () => {
   it('datos que no coinciden: el mensaje del servidor, sin decir cuál falló', async () => {
     await open({
-      before: (s) => s.respond(postRecover, { code: 'RECOVERY_FAILED', message: 'Los datos no coinciden. Revíselos e inténtelo de nuevo.' }),
+      before: (s) =>
+        s.respond(postRecover, {
+          code: 'RECOVERY_FAILED',
+          message: 'Los datos no coinciden. Revíselos e inténtelo de nuevo.',
+        }),
     });
     await fill();
     await send();
@@ -62,13 +66,16 @@ describe('RF-REC-02 a 04: errores', () => {
       before: (s) =>
         s.respond(postRecover, {
           code: 'RECOVERY_LOCKED',
-          message: 'La recuperación de este usuario quedó bloqueada 1 hora por 3 intentos fallidos. Podrá intentarlo de nuevo en 60 minutos.',
+          message:
+            'La recuperación de este usuario quedó bloqueada 1 hora por 3 intentos fallidos. Podrá intentarlo de nuevo en 60 minutos.',
         }),
     });
     await fill();
     await send();
     expect((await screen.findByRole('alert')).textContent).toContain('Podrá intentarlo de nuevo en 60 minutos.');
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Cambiar contraseña' }).hasAttribute('disabled')).toBe(true));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Cambiar contraseña' }).hasAttribute('disabled')).toBe(true),
+    );
   });
 
   it('F-04: valida antes de enviar y no llama al servidor', async () => {
