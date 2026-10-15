@@ -16,6 +16,10 @@ export type QrPayload = z.infer<typeof qrPayloadSchema>;
 
 export interface PairingRecord extends PairedServer {
   serverName: string;
+  /** El nombre que se le dio a este dispositivo al emparejarlo: identifica sus sesiones (P-05). */
+  deviceName: string;
+  /** Emparejado por /local: es la app de la propia PC servidor (primer arranque, P-02). */
+  isServerPc: boolean;
   deviceId: string;
   deviceSecret: string;
 }

@@ -1,5 +1,5 @@
 // T023 · Piezas de presentación (plan §7.2) y los estados obligatorios de ui-spec §2 (EST-01 a EST-06).
-import { Inbox, TriangleAlert, X } from 'lucide-react';
+import { Inbox, Info, TriangleAlert, X } from 'lucide-react';
 import { m } from 'motion/react';
 import { createContext, useCallback, useContext, useEffect, useId, useState, type ReactNode } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
@@ -256,5 +256,16 @@ function Toast({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: number)
         <IconButton label="Cerrar aviso" icon={<X aria-hidden="true" />} onClick={() => onDismiss(toast.id)} />
       )}
     </m.div>
+  );
+}
+
+/** Aviso en recuadro (maquetas T037): error como alerta (RF-VAL-11), advertencia o información como estado. */
+export function Notice({ tone, children }: { tone: 'bad' | 'warn' | 'info'; children: ReactNode }) {
+  const Icon = tone === 'info' ? Info : TriangleAlert;
+  return (
+    <div role={tone === 'bad' ? 'alert' : 'status'} className="ui-notice" data-tone={tone}>
+      <Icon aria-hidden="true" className="ui-notice__icon" />
+      <div>{children}</div>
+    </div>
   );
 }

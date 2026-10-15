@@ -64,6 +64,8 @@ export interface PlatformDiscovery {
 }
 
 export interface Platform {
+  /** Cómo se habla con el servidor: https en las apps (DT-18); http solo en el navegador de pruebas. */
+  serverScheme?: 'http' | 'https';
   /** Todas las peticiones al servidor pasan por aquí, nunca por el fetch del WebView (DT-19). */
   http: HttpTransport;
   ws(url: string): PlatformSocket;

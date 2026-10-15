@@ -158,7 +158,8 @@ export function createFakeServer({ baseUrl = 'https://servidor.test/api/v1' } = 
       }
     }
     const reply = replies.get(endpoint);
-    const value = typeof reply === 'function' ? (reply as (c: FakeCall) => unknown)(call) : reply;
+    // Una respuesta puede ser una promesa: así una prueba retiene la llamada en curso (MOV-07).
+    const value: unknown = await (typeof reply === 'function' ? (reply as (c: FakeCall) => unknown)(call) : reply);
     if (isReplyError(value)) return json(errorStatus(value.code), value);
     return json(value === undefined ? 204 : 200, value);
   };

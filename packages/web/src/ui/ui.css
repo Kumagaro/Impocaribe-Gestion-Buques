@@ -1010,3 +1010,33 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ---------- aviso en recuadro (T037) ---------- */
+.ui-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+}
+.ui-notice__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+}
+.ui-notice[data-tone='bad'] {
+  background: var(--bad-soft);
+  color: var(--bad);
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+}
+.ui-notice[data-tone='warn'] {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+}
+.ui-notice[data-tone='info'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}

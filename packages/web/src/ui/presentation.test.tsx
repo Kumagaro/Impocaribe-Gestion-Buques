@@ -9,6 +9,7 @@ import {
   ErrorState,
   ListCard,
   LockedNotice,
+  Notice,
   OfflineBanner,
   PageHeader,
   ProgressBar,
@@ -236,5 +237,25 @@ describe('MOV-09 con la preferencia del sistema', () => {
     }));
     renderUi(<Skeleton lines={2} />);
     expect(screen.getByRole('status').getAttribute('data-motion')).toBe('static');
+  });
+});
+
+describe('Notice (T037: avisos de las pantallas de acceso)', () => {
+  it('un error se anuncia como alerta; una información, como estado', () => {
+    renderUi(
+      <>
+        <Notice tone="bad">Usuario o contraseña incorrectos.</Notice>
+        <Notice tone="info">El sistema aún no está configurado.</Notice>
+      </>,
+    );
+    expect([screen.getByRole('alert').textContent, screen.getByRole('status').textContent]).toEqual([
+      'Usuario o contraseña incorrectos.',
+      'El sistema aún no está configurado.',
+    ]);
+  });
+
+  it('lleva su tono para el color', () => {
+    renderUi(<Notice tone="warn">Se probaron los cuatro métodos sin respuesta.</Notice>);
+    expect(screen.getByRole('status').getAttribute('data-tone')).toBe('warn');
   });
 });
