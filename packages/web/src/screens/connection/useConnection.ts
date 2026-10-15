@@ -46,6 +46,8 @@ export function useConnection() {
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => session.now().getTime());
   const abort = useRef<AbortController | null>(null);
+  // Cada búsqueda tiene su número: una vieja (o de una pantalla ya cerrada) no empareja ni cambia la pantalla.
+  const searchRun = useRef(0);
   const deviceName = info.name ?? (info.platform === 'android' ? 'Dispositivo Android' : 'PC con Windows');
   const description = { deviceName, platform: info.platform };
 
@@ -68,14 +70,18 @@ export function useConnection() {
 
   const search = useCallback(async () => {
     abort.current?.abort();
+    const run = ++searchRun.current;
+    const current = () => run === searchRun.current;
     setNotice(null);
     setPhase({ kind: 'searching', method: null });
     // En Windows, primero la propia PC: si el servidor está en este equipo, se empareja solo (P-01).
     if (info.platform === 'windows') {
       const local = await probeServer(platform.discovery, '127.0.0.1', SERVER_PORT, DISCOVERY_TIMEOUTS.last);
+      if (!current()) return;
       if (local) {
         try {
           const ids = await session.apiFor(local.address, local.port).request(postPairSelf, { body: description });
+          if (!current()) return;
           await paired({ ...local, method: 'last' }, ids, true);
           return;
         } catch {
@@ -83,14 +89,22 @@ export function useConnection() {
         }
       }
     }
-    const found = await findServer(platform.discovery, null, (method) => setPhase({ kind: 'searching', method }));
+    const found = await findServer(
+      platform.discovery,
+      null,
+      (method) => current() && setPhase({ kind: 'searching', method }),
+    );
+    if (!current()) return;
     setPhase(found ? { kind: 'found', server: found } : { kind: 'notFound' });
     // description y paired cambian con cada render: la búsqueda solo se relanza a mano o si cambia la plataforma.
   }, [platform, session]);
 
   useEffect(() => {
     void search();
-    return () => abort.current?.abort();
+    return () => {
+      searchRun.current++;
+      abort.current?.abort();
+    };
   }, [search]);
 
   // La cuenta atrás de los 5 minutos del código.

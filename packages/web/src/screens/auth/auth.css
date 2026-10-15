@@ -62,7 +62,7 @@
   display: block;
   font-size: 17px;
 }
-.auth-brand span {
+.auth-brand div span {
   font-size: var(--t-xs);
   color: var(--ink-3);
   text-transform: uppercase;

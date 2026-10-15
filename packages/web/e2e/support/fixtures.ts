@@ -47,4 +47,7 @@ export const test = base.extend<Fixtures>({
   },
 });
 
+/** Consulta directa a la base de la prueba (fixture sql). */
+export type Sql = Fixtures['sql'];
+
 export { expect } from '@playwright/test';

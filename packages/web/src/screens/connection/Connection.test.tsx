@@ -182,6 +182,19 @@ describe('P-01: en la PC servidor', () => {
   });
 });
 
+describe('P-01: una sola búsqueda a la vez', () => {
+  it('con StrictMode (efectos montados dos veces) la PC servidor se empareja una sola vez', async () => {
+    const t = await open({
+      strict: true,
+      deviceInfo: { platform: 'windows', appVersion: '1.0.0', smallestWidthDp: 768, name: 'PC-SERVIDOR' },
+      discovery: createSimulatedNetwork({ servers: [{ ...SERVER, address: '127.0.0.1', port: 8443 }] }),
+      before: (s) => s.respond(postPairSelf, { deviceId: 'dev-local', deviceSecret: 'secreto-local' }),
+    });
+    await screen.findByRole('heading', { name: 'Emparejado con IMPOCARIBE-7F3C' });
+    expect(t.server.calls.filter((c) => c.path === '/local/pair-self')).toHaveLength(1);
+  });
+});
+
 describe('RF-RED-02 y F-01: sin servidor en la red', () => {
   it('prueba los métodos en orden, explica qué revisar y deja escribir la dirección', async () => {
     const net = createSimulatedNetwork({

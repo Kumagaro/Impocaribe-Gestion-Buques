@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import { ApiError } from '../../api/client';
 import { getSetupStatus, postLogin } from '../../api/endpoints/auth';
 import { useAppSession } from '../../session/SessionProvider';
+import type { FieldState } from '../../ui/form';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
 export type LoginPhase = 'checking' | 'notConfigured' | 'ready';
@@ -71,11 +72,13 @@ export function useLogin() {
 
   const username = form.field('username');
   const password = form.field('password');
+  // F-03: tras 3 fallos, el aviso de los intentos que quedan va en la contraseña.
+  const passwordState: FieldState = { ...password.state, warning: password.state.warning ?? warning ?? undefined };
   return {
     phase,
     serverName: pairing.serverName,
     username,
-    password: { ...password, state: { ...password.state, warning: password.state.warning ?? warning ?? undefined } },
+    password: { ...password, state: passwordState },
     keepSignedIn: form.form.watch('keepSignedIn') as boolean,
     setKeepSignedIn: (v: boolean) => form.form.setValue('keepSignedIn', v),
     showPassword,

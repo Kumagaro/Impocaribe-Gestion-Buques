@@ -32,7 +32,8 @@ export function chromePath(): string {
 
 export const SERVER_PORT = 8444;
 export const WEB_PORT = 5199;
-export const STORYBOOK_PORT = 6106;
+// Fuera de los intervalos que Windows reserva para Hyper-V (6094-6193 en este equipo; cambian al reiniciar).
+export const STORYBOOK_PORT = 5198;
 export const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/api/v1`;
 
 /** Base propia de las pruebas de extremo a extremo: se borra y se migra en cada ejecución. */

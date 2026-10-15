@@ -1,7 +1,7 @@
 // T038 · Pruebas de componente de una pantalla (plan §11.2): su hook real y sus tres presentaciones, con la plataforma
 // de prueba (copia local en sql.js), el servidor falso que responde desde los esquemas compartidos y un router en memoria.
 import { act, type RenderResult } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import { StrictMode, type ReactElement } from 'react';
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router';
 import type { PairingRecord } from '../src/connection/pairing';
 import type { DeviceInfo, PlatformDiscovery } from '../src/platform/platform';
@@ -47,6 +47,8 @@ export async function renderScreen(
     deviceInfo?: DeviceInfo;
     scanQr?: () => Promise<string | null>;
     otherRoutes?: string[];
+    /** Como main.tsx: StrictMode monta dos veces los efectos en desarrollo. */
+    strict?: boolean;
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -73,9 +75,17 @@ export async function renderScreen(
   let view!: RenderResult;
   await act(async () => {
     view = renderUi(
-      <SessionProvider session={session}>
-        <RouterProvider router={router} />
-      </SessionProvider>,
+      options.strict ? (
+        <StrictMode>
+          <SessionProvider session={session}>
+            <RouterProvider router={router} />
+          </SessionProvider>
+        </StrictMode>
+      ) : (
+        <SessionProvider session={session}>
+          <RouterProvider router={router} />
+        </SessionProvider>
+      ),
       { device: options.device ?? 'desktop', reduceMotion: options.reduceMotion ?? false },
     );
   });

@@ -15,7 +15,11 @@ const DEVICE_USERS = [
   { device: 'desktop', nationalId: '87030312345', phone: '52345673' },
 ] as const;
 
-test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y entra', async ({ openApp, page }) => {
+test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y entra', async ({
+  openApp,
+  page,
+  sql,
+}) => {
   await openApp('/');
   await pairApp(page, 'desktop');
 
@@ -36,6 +40,20 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   await page.getByLabel('Los copié a mano').check();
   await page.getByRole('button', { name: 'Terminar y entrar' }).click();
   await expect(page.getByRole('heading', { name: 'Tablero' }).first()).toBeVisible();
+
+  // En la base: una sola Apoderada, sin cambio de contraseña pendiente, con 8 códigos sin usar y su alta en la bitácora.
+  expect(await sql('SELECT username, role, active, must_change_password FROM users ORDER BY created_at')).toEqual([
+    { username: APODERADA.username, role: 'apoderada', active: true, must_change_password: false },
+  ]);
+  expect(
+    await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM recovery_codes rc JOIN users u ON u.id = rc.user_id
+       WHERE u.username = $1 AND rc.used_at IS NULL AND rc.invalidated_at IS NULL`,
+      [APODERADA.username],
+    ),
+  ).toEqual([{ n: 8 }]);
+  expect(await sql("SELECT ok FROM audit_log WHERE action = 'setup.first_apoderada'")).toEqual([{ ok: true }]);
+  expect(await sql('SELECT paired_method FROM devices WHERE revoked_at IS NULL')).toEqual([{ paired_method: 'local' }]);
 
   // Un usuario por clase, para que las pruebas de cada una no se pisen (bloqueos, recuperación).
   const api = await signedInDevice(APODERADA.username, APODERADA.password);

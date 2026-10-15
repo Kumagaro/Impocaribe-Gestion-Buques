@@ -1,13 +1,15 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { userDtoSchema } from '@impocaribe/shared/validation';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { sampleOf } from '../../../test/fake-server';
 import { renderScreen, TEST_PAIRING } from '../../../test/screen';
 import { getSetupStatus, postLogin } from '../../api/endpoints/auth';
 import { LoginScreen } from './Login.screen';
 
 // T038 · P-03 Iniciar sesión (ui-spec), F-03, RF-AUT-01, 02 y 05, RF-VAL-02: el hook real y las tres presentaciones.
+// Escribir tecla a tecla supera los 5 s por defecto en una máquina cargada, como en P-02 y P-04.
+vi.setConfig({ testTimeout: 20_000 });
 const USER = sampleOf(userDtoSchema, {
   username: 'ilen.fernandez',
   role: 'apoderada',

@@ -4,7 +4,7 @@ import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 
-const [dir = 'storybook-static', port = '6106'] = process.argv.slice(2);
+const [dir = 'storybook-static', port = '5198'] = process.argv.slice(2);
 const root = resolve(dir);
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
