@@ -1,7 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import { MotionProvider } from './motion/MotionProvider';
 import pkg from '../package.json';
 import { createBrowserPlatform } from './platform/browser-platform';
 import { findPlatform } from './platform/platform';
@@ -12,6 +11,7 @@ import { installTokens } from './ui/theme';
 import './ui/ui.css';
 import './app/app.css';
 import './screens/auth/auth.css';
+import './screens/profile/profile.css';
 
 installTokens();
 
@@ -26,10 +26,7 @@ document.documentElement.dataset.deviceClass = deviceClass;
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DeviceClassProvider value={deviceClass}>
-      {/* shortcut: "Reducir animaciones" del perfil (P-05) llega con F1; hasta entonces manda el sistema. */}
-      <MotionProvider reduceMotion={false}>
-        <App session={session} />
-      </MotionProvider>
+      <App session={session} />
     </DeviceClassProvider>
   </StrictMode>,
 );

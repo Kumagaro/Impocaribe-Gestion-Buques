@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ComponentType } from 'react';
-import { MemoryRouter } from 'react-router';
 import type { FoundServer } from '../../connection/discovery';
-import type { FieldState } from '../../ui/form';
-import { useDeviceClass } from '../../ui/device';
-import type { FieldControl } from '../../validation/useValidatedForm';
+import { asyncNoop, field, inDevice, noop } from '../story-helpers';
 import { ConnectionDesktop } from '../connection/Connection.desktop';
 import { ConnectionPhone } from '../connection/Connection.phone';
 import { ConnectionTablet } from '../connection/Connection.tablet';
@@ -26,43 +22,6 @@ import type { SetupModel, SetupStep } from '../setup/useSetup';
 // dispositivo y el tema en la barra superior; las referencias visuales los recorren todos.
 const meta: Meta = { title: 'Pantallas/Acceso' };
 export default meta;
-
-const noop = () => undefined;
-const asyncNoop = async () => undefined;
-
-/** Un campo como lo da useValidatedForm, con su valor y su mensaje. */
-function field(
-  name: string,
-  value = '',
-  state: Omit<FieldState, 'id'> = {},
-): { state: FieldState; control: FieldControl } {
-  const id = `historia-${name}`;
-  return {
-    state: { id, ...state },
-    control: {
-      id,
-      name,
-      value,
-      invalid: state.error !== undefined,
-      'aria-describedby': `${id}-msg`,
-      ref: noop,
-      onBlur: noop,
-      onValueChange: noop,
-    },
-  };
-}
-
-function inDevice<M>(views: Record<'phone' | 'tablet' | 'desktop', ComponentType<{ model: M }>>, model: M) {
-  function Story() {
-    const View = views[useDeviceClass()];
-    return (
-      <MemoryRouter>
-        <View model={model} />
-      </MemoryRouter>
-    );
-  }
-  return Story;
-}
 
 // ---------- P-01 ----------
 const SERVER: FoundServer = {

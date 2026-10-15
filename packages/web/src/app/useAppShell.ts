@@ -24,7 +24,20 @@ function isTyping(target: EventTarget | null): boolean {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
-export function useAppShell({ user, alerts, isServerPc }: { user: ShellUser; alerts: number; isServerPc: boolean }) {
+export function useAppShell({
+  user,
+  alerts,
+  isServerPc,
+  theme: savedTheme,
+  onThemeChange,
+}: {
+  user: ShellUser;
+  alerts: number;
+  isServerPc: boolean;
+  /** La preferencia de este dispositivo (P-05); sin ella, el tema solo dura lo que la pantalla. */
+  theme?: ThemePreference;
+  onThemeChange?: (theme: ThemePreference) => void;
+}) {
   const device = useDeviceClass();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -33,8 +46,8 @@ export function useAppShell({ user, alerts, isServerPc }: { user: ShellUser; ale
   const newOrder = sections.find((s) => s.id === NEW_ORDER_ID);
   const current = sectionForPath(sections, pathname)?.id ?? '';
   const handle = matches.at(-1)?.handle as { title?: string; subtitle?: string } | undefined;
-  // shortcut: el tema vive en la sesión; el perfil (P-05, F1) lo guardará por dispositivo.
-  const [theme, setTheme] = useState<ThemePreference>('system');
+  const [localTheme, setLocalTheme] = useState<ThemePreference>('system');
+  const theme = savedTheme ?? localTheme;
 
   const toItem = (s: Section): NavItem => ({
     id: s.id,
@@ -87,11 +100,14 @@ export function useAppShell({ user, alerts, isServerPc }: { user: ShellUser; ale
     goSearch: () => void navigate('/buscar'),
     goAlerts: () => void navigate('/alertas'),
     goDiagnostics: () => void navigate('/diagnostico'),
+    /** P-05: sesiones, contraseña, códigos y apariencia. */
+    goProfile: () => void navigate('/perfil'),
     theme,
     cycleTheme: () => {
       const next = THEME_NEXT[theme];
       applyTheme(document.documentElement, next);
-      setTheme(next);
+      setLocalTheme(next);
+      onThemeChange?.(next);
     },
   };
 }

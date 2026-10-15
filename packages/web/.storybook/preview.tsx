@@ -3,6 +3,7 @@ import '../src/ui/base.css';
 import '../src/ui/ui.css';
 import '../src/app/app.css';
 import '../src/screens/auth/auth.css';
+import '../src/screens/profile/profile.css';
 import { MotionProvider } from '../src/motion/MotionProvider';
 import { DeviceClassProvider } from '../src/ui/device';
 import { installTokens } from '../src/ui/theme';

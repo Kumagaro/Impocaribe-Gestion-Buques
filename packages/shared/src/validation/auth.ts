@@ -35,6 +35,7 @@ export const sessionDtoSchema = z.object({
   lastSeenAt: z.iso.datetime(),
   current: z.boolean(),
 });
+export type SessionDto = z.infer<typeof sessionDtoSchema>;
 export const sessionsResponseSchema = z.array(sessionDtoSchema);
 
 /** DT-05: token de alertas del servicio nativo de Android. */

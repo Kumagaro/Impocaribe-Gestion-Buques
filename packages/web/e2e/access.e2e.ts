@@ -24,7 +24,7 @@ test('P-01 y P-03: encuentra el servidor sin escribir nada, se empareja y entra 
   device,
   sql,
 }) => {
-  const user = readState().users[device];
+  const user = readState().users.acceso[device];
   await openApp('/');
   await pairApp(page, device);
   await fillLogin(page, user.username, user.password);
@@ -46,7 +46,7 @@ test('P-01 y P-03: encuentra el servidor sin escribir nada, se empareja y entra 
 });
 
 test('P-04: con un código válido cambia la contraseña y entra con la nueva', async ({ openApp, page, device, sql }) => {
-  const user = readState().users[device];
+  const user = readState().users.acceso[device];
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
@@ -73,7 +73,7 @@ test('P-04: con un código válido cambia la contraseña y entra con la nueva', 
 });
 
 test('P-04: un código ya usado no sirve, y el error no dice qué dato falló', async ({ openApp, page, device, sql }) => {
-  const user = readState().users[device];
+  const user = readState().users.acceso[device];
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
@@ -94,7 +94,7 @@ test('P-03: tras 3 fallos avisa de los intentos; tras 5, explica cuánto falta y
   device,
   sql,
 }) => {
-  const user = readState().users[device];
+  const user = readState().users.acceso[device];
   await openApp('/');
   await pairApp(page, device);
   for (let i = 1; i <= 3; i++) await fillLogin(page, user.username, `mala-${i}`);

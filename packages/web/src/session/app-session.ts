@@ -5,8 +5,17 @@ import type { UserDto } from '@impocaribe/shared/validation';
 import { createApiClient } from '../api/client';
 import { loadPairing, savePairing, type PairingRecord } from '../connection/pairing';
 import type { Platform } from '../platform/platform';
+import type { ThemePreference } from '../ui/tokens';
 
 export const SESSION_KEY = 'impocaribe.session';
+export const PREFERENCES_KEY = 'impocaribe.preferences';
+
+/** P-05 y RF-UI-06: preferencias de este dispositivo, no del usuario. */
+export interface DevicePreferences {
+  theme: ThemePreference;
+  reduceMotion: boolean;
+}
+export const DEFAULT_PREFERENCES: DevicePreferences = { theme: 'system', reduceMotion: false };
 
 export interface StoredSession {
   token: string;
@@ -20,10 +29,11 @@ export interface SessionState {
   status: SessionStatus;
   pairing: PairingRecord | null;
   session: StoredSession | null;
+  preferences: DevicePreferences;
 }
 
 export class AppSession {
-  private state: SessionState = { status: 'loading', pairing: null, session: null };
+  private state: SessionState = { status: 'loading', pairing: null, session: null, preferences: DEFAULT_PREFERENCES };
   private readonly listeners = new Set<() => void>();
 
   constructor(
@@ -39,16 +49,22 @@ export class AppSession {
     return () => this.listeners.delete(listener);
   };
 
-  private set(next: Omit<SessionState, 'status'>): void {
-    const status: SessionStatus = !next.pairing ? 'unpaired' : next.session ? 'signedIn' : 'signedOut';
-    this.state = { status, ...next };
+  private set(next: Partial<Omit<SessionState, 'status'>>): void {
+    const merged = { ...this.state, ...next };
+    const status: SessionStatus = !merged.pairing ? 'unpaired' : merged.session ? 'signedIn' : 'signedOut';
+    this.state = { ...merged, status };
     for (const listener of this.listeners) listener();
   }
 
   async load(): Promise<void> {
     const pairing = await loadPairing(this.platform.secureStorage);
     const raw = pairing ? await this.platform.secureStorage.get(SESSION_KEY) : null;
-    this.set({ pairing, session: raw ? (JSON.parse(raw) as StoredSession) : null });
+    const prefs = await this.platform.secureStorage.get(PREFERENCES_KEY);
+    this.set({
+      pairing,
+      session: raw ? (JSON.parse(raw) as StoredSession) : null,
+      preferences: { ...DEFAULT_PREFERENCES, ...(prefs ? (JSON.parse(prefs) as Partial<DevicePreferences>) : {}) },
+    });
   }
 
   async paired(record: PairingRecord): Promise<void> {
@@ -58,13 +74,20 @@ export class AppSession {
 
   async signedIn(session: StoredSession): Promise<void> {
     await this.platform.secureStorage.set(SESSION_KEY, JSON.stringify(session));
-    this.set({ pairing: this.state.pairing, session });
+    this.set({ session });
   }
 
   /** RF-AUT-08: borra la credencial. La copia local se borra con ella cuando exista (F2). */
   async signOut(): Promise<void> {
     await this.platform.secureStorage.remove(SESSION_KEY);
-    this.set({ pairing: this.state.pairing, session: null });
+    this.set({ session: null });
+  }
+
+  /** P-05: tema y "Reducir animaciones" de este dispositivo. */
+  async setPreferences(change: Partial<DevicePreferences>): Promise<void> {
+    const preferences = { ...this.state.preferences, ...change };
+    await this.platform.secureStorage.set(PREFERENCES_KEY, JSON.stringify(preferences));
+    this.set({ preferences });
   }
 
   /** Plataforma de este dispositivo (Windows o Android), para las sesiones (P-05). */

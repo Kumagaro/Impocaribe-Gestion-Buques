@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { havanaDate, isClockSkewed, ManualClock, systemClock } from './clock.ts';
+import { havanaDate, havanaDateTime, isClockSkewed, ManualClock, systemClock } from './clock.ts';
 
 // T010 · plan §11.4 (reloj controlado), Const. §6.3 (zona America/Havana) y RF-CON-10 (desfase de más de 5 minutos).
 
@@ -57,5 +57,18 @@ describe('systemClock', () => {
     const before = Date.now();
     const t = systemClock.now().getTime();
     expect(t >= before && t <= Date.now()).toBe(true);
+  });
+});
+
+describe('havanaDateTime: fecha y hora para las personas en America/Havana', () => {
+  it.each([
+    // Octubre: horario de verano de Cuba (UTC-4).
+    ['2026-10-14T12:12:00.000Z', '14/10/2026 08:12'],
+    // 04:00Z es la medianoche en La Habana: ya es el día siguiente.
+    ['2026-10-15T04:00:00.000Z', '15/10/2026 00:00'],
+    // Enero: horario normal (UTC-5).
+    ['2026-01-05T04:59:00.000Z', '04/01/2026 23:59'],
+  ])('%s → %s', (instant, text) => {
+    expect(havanaDateTime(new Date(instant))).toBe(text);
   });
 });

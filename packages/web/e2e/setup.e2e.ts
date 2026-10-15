@@ -9,11 +9,9 @@ import { E2E_STATE_FILE } from './support/env';
 import { expect, test } from './support/fixtures';
 
 const APODERADA = { username: 'ilen.fernandez', password: 'apoderada-e2e-1' };
-const DEVICE_USERS = [
-  { device: 'phone', nationalId: '85010112345', phone: '52345671' },
-  { device: 'tablet', nationalId: '86020212345', phone: '52345672' },
-  { device: 'desktop', nationalId: '87030312345', phone: '52345673' },
-] as const;
+const DEVICES = ['phone', 'tablet', 'desktop'] as const;
+/** Cada archivo de pruebas tiene sus usuarios: corren a la vez y unos bloquean o cambian contraseñas. */
+const PURPOSES = ['acceso', 'perfil'] as const;
 
 test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y entra', async ({
   openApp,
@@ -55,30 +53,31 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   expect(await sql("SELECT ok FROM audit_log WHERE action = 'setup.first_apoderada'")).toEqual([{ ok: true }]);
   expect(await sql('SELECT paired_method FROM devices WHERE revoked_at IS NULL')).toEqual([{ paired_method: 'local' }]);
 
-  // Un usuario por clase, para que las pruebas de cada una no se pisen (bloqueos, recuperación).
+  // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen.
   const api = await signedInDevice(APODERADA.username, APODERADA.password);
-  const users = {} as E2EState['users'];
-  for (const u of DEVICE_USERS) {
-    const password = `clave-${u.device}-1`;
-    const username = `e2e.${u.device}`;
-    const res = await api.request(postUser, {
-      body: {
-        fullName: `Prueba ${u.device}`,
-        username,
-        nationalId: u.nationalId,
-        phone: u.phone,
-        role: 'operador',
-        password,
-        confirm: password,
-      },
-    });
-    users[u.device] = {
-      username,
-      password,
-      nationalId: u.nationalId,
-      phone: u.phone,
-      recoveryCodes: res.recoveryCodes,
-    };
+  const users = { acceso: {}, perfil: {} } as E2EState['users'];
+  let n = 0;
+  for (const purpose of PURPOSES) {
+    for (const device of DEVICES) {
+      const password = `clave-${device}-1`;
+      const username = `${purpose}.${device}`;
+      // Carné con fecha válida (85-01-01, 86-01-01…) y teléfono distintos para cada uno.
+      const nationalId = `${85 + n}0101123${String(n).padStart(2, '0')}`;
+      const phone = `5234567${n}`;
+      n++;
+      const res = await api.request(postUser, {
+        body: {
+          fullName: `Prueba ${purpose} ${device}`,
+          username,
+          nationalId,
+          phone,
+          role: 'operador',
+          password,
+          confirm: password,
+        },
+      });
+      users[purpose][device] = { username, password, nationalId, phone, recoveryCodes: res.recoveryCodes };
+    }
   }
   writeFileSync(E2E_STATE_FILE, JSON.stringify({ apoderada: APODERADA, users } satisfies E2EState));
 });

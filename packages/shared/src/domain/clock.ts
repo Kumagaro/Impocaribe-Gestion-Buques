@@ -38,3 +38,20 @@ const MAX_SKEW_MS = 5 * 60_000;
 export function isClockSkewed(deviceTime: Date, serverTime: Date): boolean {
   return Math.abs(deviceTime.getTime() - serverTime.getTime()) > MAX_SKEW_MS;
 }
+
+/** Fecha y hora para las personas, `DD/MM/AAAA HH:mm` en America/Havana (sesiones de P-05, ui-spec §1). */
+export function havanaDateTime(instant: Date): string {
+  const format = {
+    timeZone: 'America/Havana',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  } as const;
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', format).formatToParts(instant).map((p) => [p.type, p.value]),
+  );
+  return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}`;
+}

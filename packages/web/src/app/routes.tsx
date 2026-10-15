@@ -3,6 +3,7 @@
 import type { RouteObject } from 'react-router';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
+import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
 import { SetupScreen } from '../screens/setup/Setup.screen';
 import { SessionGate } from '../session/SessionGate';
@@ -15,10 +16,16 @@ import { AppShell, type ShellStatus } from './AppShell.screen';
 const STATUS: ShellStatus = { online: true, asOf: '', pendingDrafts: 0, syncing: false, power: null, alerts: 0 };
 
 function SignedIn() {
-  const { state } = useAppSession();
+  const { session, state } = useAppSession();
   const user = state.session!.user;
   return (
-    <AppShell user={{ name: user.fullName, role: user.role }} status={STATUS} isServerPc={state.pairing!.isServerPc} />
+    <AppShell
+      user={{ name: user.fullName, role: user.role }}
+      status={STATUS}
+      isServerPc={state.pairing!.isServerPc}
+      theme={state.preferences.theme}
+      onThemeChange={(theme) => void session.setPreferences({ theme })}
+    />
   );
 }
 
@@ -38,6 +45,7 @@ export const appRoutes: RouteObject[] = [
         element: <SignedIn />,
         children: [
           { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
+          { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
           {
             path: '*',
             handle: { title: 'Órdenes de Carga' },

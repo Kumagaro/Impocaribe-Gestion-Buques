@@ -3,7 +3,7 @@
 import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { NavRail } from '../ui/structure';
-import { AlertsButton, SearchButton, ShellBands, SyncIndicator, type ShellStatus } from './ShellParts';
+import { AlertsButton, ProfileButton, SearchButton, ShellBands, SyncIndicator, type ShellStatus } from './ShellParts';
 import type { AppShellModel } from './useAppShell';
 
 export function AppShellTablet({
@@ -29,6 +29,7 @@ export function AppShellTablet({
           <SyncIndicator syncing={status.syncing} onClick={model.goDiagnostics} />
           <SearchButton onClick={model.goSearch} />
           <AlertsButton count={status.alerts} onClick={model.goAlerts} />
+          <ProfileButton name={model.user.name} onClick={model.goProfile} />
         </header>
         <ShellBands status={status} />
         <main className="app-main">{children}</main>

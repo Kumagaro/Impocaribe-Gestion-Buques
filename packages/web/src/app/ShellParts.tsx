@@ -1,5 +1,5 @@
 // T025 · Elementos globales de ui-spec §1.2, compartidos por las tres presentaciones de AppShell.
-import { Monitor, Moon, Search, Sun } from 'lucide-react';
+import { CircleUserRound, Monitor, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { IconButton } from '../ui/controls';
@@ -66,6 +66,13 @@ export function AlertsButton({ count, onClick }: { count: number; onClick: () =>
         </span>
       )}
     </span>
+  );
+}
+
+/** TAB: el perfil (P-05), con el nombre de quien entró como etiqueta accesible. */
+export function ProfileButton({ name, onClick }: { name: string; onClick: () => void }) {
+  return (
+    <IconButton label={`Perfil de ${name}`} icon={<CircleUserRound size={20} aria-hidden="true" />} onClick={onClick} />
   );
 }
 

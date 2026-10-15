@@ -73,9 +73,19 @@
   pointer-events: none;
 }
 .app-user {
+  min-height: var(--touch);
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
   font-size: var(--t-sm);
   color: var(--ink-2);
   white-space: nowrap;
+  cursor: pointer;
+}
+.app-user:hover {
+  background: var(--surface-2);
 }
 .app-brand {
   display: flex;

@@ -12,6 +12,7 @@ export function SessionGate() {
   if (state.status === 'loading') return <Skeleton lines={4} />;
   if (state.status === 'unpaired') return pathname === '/conexion' ? <Outlet /> : <Navigate to="/conexion" replace />;
   if (state.status === 'signedOut') return ACCESS.includes(pathname) ? <Outlet /> : <Navigate to="/login" replace />;
-  if (state.session?.user.mustChangePassword && pathname !== '/perfil') return <Navigate to="/perfil" replace />;
+  if (state.session?.user.mustChangePassword && !pathname.startsWith('/perfil'))
+    return <Navigate to="/perfil" replace />;
   return ACCESS.includes(pathname) ? <Navigate to="/" replace /> : <Outlet />;
 }

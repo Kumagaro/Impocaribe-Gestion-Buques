@@ -36,7 +36,14 @@ export function AppShellDesktop({
           <SearchButton onClick={model.goSearch} />
           <SyncIndicator syncing={status.syncing} onClick={model.goDiagnostics} />
           <AlertsButton count={status.alerts} onClick={model.goAlerts} />
-          <span className="app-user">{`${model.user.name} · ${model.user.role}`}</span>
+          <button
+            type="button"
+            className="app-user"
+            onClick={model.goProfile}
+            aria-label={`Perfil de ${model.user.name}`}
+          >
+            {`${model.user.name} · ${model.user.role}`}
+          </button>
           <ThemeButton theme={model.theme} onClick={model.cycleTheme} />
         </header>
         <ShellBands status={status} />

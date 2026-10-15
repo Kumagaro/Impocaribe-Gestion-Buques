@@ -53,6 +53,17 @@ export function AppShellPhone({
                 {item.label}
               </button>
             ))}
+            <button
+              type="button"
+              className="app-more__item"
+              data-touch="true"
+              onClick={() => {
+                setMoreOpen(false);
+                model.goProfile();
+              }}
+            >
+              Perfil
+            </button>
           </div>
         </Sheet>
       )}

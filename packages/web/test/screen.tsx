@@ -39,6 +39,8 @@ export async function renderScreen(
   element: ReactElement,
   options: {
     path?: string;
+    /** El patrón de la ruta si tiene parámetros (por ejemplo `/perfil/:seccion?`); `path` es donde se abre. */
+    route?: string;
     device?: DeviceClass;
     reduceMotion?: boolean;
     pairing?: PairingRecord | null;
@@ -68,7 +70,7 @@ export async function renderScreen(
   if (options.session) await session.signedIn(options.session);
   const path = options.path ?? '/';
   const routes: RouteObject[] = [
-    { path, element },
+    { path: options.route ?? path, element },
     ...(options.otherRoutes ?? []).map((p) => ({ path: p, element: <p>Pantalla {p}</p> })),
   ];
   const router = createMemoryRouter(routes, { initialEntries: [path] });

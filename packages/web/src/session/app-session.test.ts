@@ -4,7 +4,7 @@ import { FIXED_TIME, sampleOf } from '../../test/fake-server';
 import { getMe } from '../api/endpoints/auth';
 import { savePairing, type PairingRecord } from '../connection/pairing';
 import { createTestPlatform } from '../platform/test-platform';
-import { AppSession, SESSION_KEY } from './app-session';
+import { AppSession, DEFAULT_PREFERENCES, PREFERENCES_KEY, SESSION_KEY } from './app-session';
 import { meResponseSchema, userDtoSchema } from '@impocaribe/shared/validation';
 
 // T038 · Estado de la app: emparejamiento (RF-RED-04), sesión (RF-AUT-02, 08) y el cliente de API que firma con el
@@ -38,7 +38,12 @@ describe('AppSession.load', () => {
   it('sin emparejar, el estado es "sin emparejar"', async () => {
     const { session } = await setup();
     await session.load();
-    expect(session.getState()).toEqual({ status: 'unpaired', pairing: null, session: null });
+    expect(session.getState()).toEqual({
+      status: 'unpaired',
+      pairing: null,
+      session: null,
+      preferences: DEFAULT_PREFERENCES,
+    });
   });
 
   it('emparejado y sin sesión, pide iniciar sesión; con sesión guardada, entra', async () => {
@@ -55,6 +60,7 @@ describe('AppSession.load', () => {
       status: 'signedIn',
       pairing: PAIRING,
       session: { token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER },
+      preferences: DEFAULT_PREFERENCES,
     });
   });
 });
@@ -119,6 +125,29 @@ describe('cambios de estado', () => {
     const { session } = await setup();
     await session.load();
     await session.paired(PAIRING);
-    expect(session.getState()).toEqual({ status: 'signedOut', pairing: PAIRING, session: null });
+    expect(session.getState()).toEqual({
+      status: 'signedOut',
+      pairing: PAIRING,
+      session: null,
+      preferences: DEFAULT_PREFERENCES,
+    });
+  });
+});
+
+describe('P-05 y RF-UI-06: preferencias de este dispositivo', () => {
+  it('tema y "Reducir animaciones" se guardan en el dispositivo, sobreviven al cierre de sesión y se recargan', async () => {
+    const { session, platform } = await setup();
+    await session.load();
+    expect(session.getState().preferences).toEqual({ theme: 'system', reduceMotion: false });
+    await session.setPreferences({ theme: 'dark' });
+    await session.setPreferences({ reduceMotion: true });
+    await session.signOut();
+    expect(JSON.parse((await platform.secureStorage.get(PREFERENCES_KEY))!)).toEqual({
+      theme: 'dark',
+      reduceMotion: true,
+    });
+    const again = new AppSession(platform, '1.0.0');
+    await again.load();
+    expect(again.getState().preferences).toEqual({ theme: 'dark', reduceMotion: true });
   });
 });

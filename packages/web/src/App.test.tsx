@@ -19,6 +19,8 @@ const USER = sampleOf(userDtoSchema, {
 });
 const SIGNED_IN: StoredSession = { token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER };
 
+let started: AppSession;
+
 async function start(hash: string, { paired = true, session = null as StoredSession | null } = {}) {
   const server = createFakeServer({ baseUrl: 'https://servidor.test:443/api/v1' });
   server.respond(getSetupStatus, { configured: true });
@@ -27,6 +29,7 @@ async function start(hash: string, { paired = true, session = null as StoredSess
   await app.load();
   if (paired) await app.paired(TEST_PAIRING);
   if (session) await app.signedIn(session);
+  started = app;
   window.location.hash = hash;
   await act(async () => {
     renderUi(<App session={app} />, { device: 'desktop' });
@@ -35,6 +38,7 @@ async function start(hash: string, { paired = true, session = null as StoredSess
 
 afterEach(() => {
   window.location.hash = '';
+  document.documentElement.removeAttribute('data-theme');
 });
 
 describe('rutas según la sesión', () => {
@@ -60,5 +64,15 @@ describe('rutas según la sesión', () => {
   it('quien debe cambiar la contraseña solo puede ir a su perfil (RF-REC-06)', async () => {
     await start('#/', { session: { ...SIGNED_IN, user: { ...USER, mustChangePassword: true } } });
     await waitFor(() => expect(window.location.hash).toBe('#/perfil'));
+  });
+});
+
+describe('P-05 y RF-UI-06: preferencias de este dispositivo en toda la app', () => {
+  it('el tema elegido se aplica al documento y vuelve al del sistema', async () => {
+    await start('#/', { session: SIGNED_IN });
+    await act(async () => started.setPreferences({ theme: 'dark' }));
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    await act(async () => started.setPreferences({ theme: 'system' }));
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
 });
