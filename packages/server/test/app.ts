@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { networkInterfaces } from 'node:os';
 import { AppModule } from '../src/app.module.ts';
 import { configureApp } from '../src/app.ts';
-import { CLOCK, DB, MIN_APP_VERSION } from '../src/tokens.ts';
+import { CLOCK, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
 import { listenForTests } from './listen.ts';
 import type { SuiteDb } from './suite-db.ts';
 
@@ -35,6 +35,14 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     .useValue(clock)
     .overrideProvider(MIN_APP_VERSION)
     .useValue('1.0.0')
+    // Identidad fija de las pruebas: la real se lee de identity.json (T033).
+    .overrideProvider(SERVER_INFO)
+    .useValue({
+      serverId: '7f3c2a10-1b2c-4d5e-8f90-abcdef123456',
+      name: 'IMPOCARIBE-7F3C',
+      version: '1.0.0-test',
+      caFingerprint: 'AA:BB',
+    })
     .overrideProvider(DB)
     .useValue(drizzle(suite.app))
     .compile();

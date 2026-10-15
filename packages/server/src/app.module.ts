@@ -7,16 +7,26 @@ import { createAppPool } from './db/db.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
 import { SessionGuard } from './auth/session.guard.ts';
+import { DiscoveryController } from './discovery/discovery.controller.ts';
+import { readServerInfo } from './discovery/server-info.ts';
 import { HealthController } from './health.controller.ts';
 import { SetupController } from './users/setup.controller.ts';
 import { UsersController } from './users/users.controller.ts';
 import { DeviceGuard } from './http/device.guard.ts';
-import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION } from './tokens.ts';
+import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
 
 @Module({
-  controllers: [HealthController, SetupController, AuthController, RecoveryController, UsersController],
+  controllers: [
+    HealthController,
+    DiscoveryController,
+    SetupController,
+    AuthController,
+    RecoveryController,
+    UsersController,
+  ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
+    { provide: SERVER_INFO, useFactory: () => readServerInfo(config().identityDir) },
     { provide: MIN_APP_VERSION, useFactory: () => config().minAppVersion },
     { provide: DB, useFactory: () => drizzle(createAppPool(config().databaseUrl)) },
     // DT-24: la guarda se activa con el emparejamiento (T035), que también aporta el registro de dispositivos.

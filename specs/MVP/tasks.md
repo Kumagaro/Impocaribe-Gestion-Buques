@@ -317,10 +317,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Pruebas:* el certificado no contiene ninguna IP; regenerar la identidad sin borrar la anterior es imposible sin la acción explícita del ayudante.
   - *Estado (2026-10-15):* `server/src/identity/`: CA y certificado ECDSA P-256 con `@peculiar/x509` (DT-26), claves protegidas con DPAPI de la máquina (PowerShell, sin dependencias nativas); el servidor sirve HTTPS con ella y en producción no arranca sin ella. `pnpm --filter @impocaribe/server identity:create` crea la de desarrollo.
 
-- [ ] **T034. Descubrimiento: anuncio del servidor.** Servicio DNS-SD `_impocaribe._tcp`, respuesta a difusión UDP 47800 y `GET /discovery`.
+- [x] **T034. Descubrimiento: anuncio del servidor.** Servicio DNS-SD `_impocaribe._tcp`, respuesta a difusión UDP 47800 y `GET /discovery`.
   - *Cubre:* RF-RED-02, DT-20 
   - *Depende:* T033
   - *Pruebas:* el anuncio incluye identidad, versión y huella; la respuesta a difusión no revela nada más.
+  - *Estado (2026-10-15):* `server/src/discovery/`: DNS-SD con `multicast-dns` (DT-27) en cada interfaz IPv4 de la red local (con varias tarjetas, Windows envía la multidifusión por una sola), revisadas cada 10 s; difusión UDP 47800 que solo responde a su sonda; `GET /discovery`.
 
 - [ ] **T035. Emparejamiento: servidor.** Tablas `devices` y `pairing_requests`, código de comparación, token de QR, caducidad a los 5 min, endpoints `/local/*` solo desde `127.0.0.1`, revocación y secreto por dispositivo exigido junto a la sesión. Activa la guarda de dispositivo de DT-24 en todos los endpoints; la app de la PC servidor se empareja sola por `/local`.
   - *Cubre:* RF-RED-04, 05

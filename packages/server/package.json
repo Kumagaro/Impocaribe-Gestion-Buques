@@ -25,6 +25,7 @@
     "@peculiar/x509": "^2.1.0",
     "drizzle-orm": "^0.45.4",
     "helmet": "^8.3.0",
+    "multicast-dns": "^7.2.5",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
@@ -36,6 +37,7 @@
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/express": "^5.0.6",
+    "@types/multicast-dns": "^7.2.4",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.11"
   }

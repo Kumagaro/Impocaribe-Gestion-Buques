@@ -4,3 +4,4 @@ export const MIN_APP_VERSION = Symbol('MIN_APP_VERSION');
 export const DB = Symbol('DB');
 export const DEVICE_GUARD_ENABLED = Symbol('DEVICE_GUARD_ENABLED');
 export const DEVICE_REGISTRY = Symbol('DEVICE_REGISTRY');
+export const SERVER_INFO = Symbol('SERVER_INFO');
