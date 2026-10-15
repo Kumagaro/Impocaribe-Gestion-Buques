@@ -6,10 +6,12 @@ import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
 import { SetupScreen } from '../screens/setup/Setup.screen';
+import { UsersScreen } from '../screens/users/Users.screen';
 import { SessionGate } from '../session/SessionGate';
 import { useAppSession } from '../session/SessionProvider';
 import { EmptyState } from '../ui/presentation';
 import { AppShell, type ShellStatus } from './AppShell.screen';
+import { SectionGuard } from './SectionGuard';
 
 // shortcut: la conexión, la copia local y las alertas llegan con la sincronización (T046); hasta entonces, en línea y
 // sin pendientes.
@@ -44,12 +46,19 @@ export const appRoutes: RouteObject[] = [
       {
         element: <SignedIn />,
         children: [
-          { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
-          { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
           {
-            path: '*',
-            handle: { title: 'Órdenes de Carga' },
-            element: <EmptyState title="No se encontró la página" />,
+            // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla.
+            element: <SectionGuard />,
+            children: [
+              { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
+              { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
+              { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
+              {
+                path: '*',
+                handle: { title: 'Órdenes de Carga' },
+                element: <EmptyState title="No se encontró la página" />,
+              },
+            ],
           },
         ],
       },

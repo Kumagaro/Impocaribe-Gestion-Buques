@@ -12,6 +12,7 @@ import './ui/ui.css';
 import './app/app.css';
 import './screens/auth/auth.css';
 import './screens/profile/profile.css';
+import './screens/users/users.css';
 
 installTokens();
 

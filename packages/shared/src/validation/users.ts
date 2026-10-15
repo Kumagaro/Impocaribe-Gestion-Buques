@@ -25,4 +25,5 @@ export const recoveryCodesResponseSchema = z.object({ recoveryCodes: recoveryCod
 
 /** P-21: la lista añade el último acceso (la última actividad de cualquiera de sus sesiones). */
 export const userListItemSchema = userDtoSchema.extend({ lastAccessAt: z.iso.datetime().nullable() });
+export type UserListItem = z.infer<typeof userListItemSchema>;
 export const userListSchema = z.array(userListItemSchema);

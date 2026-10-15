@@ -14,7 +14,7 @@ export interface E2EUser {
 }
 export interface E2EState {
   apoderada: { username: string; password: string };
-  users: Record<'acceso' | 'perfil', Record<'phone' | 'tablet' | 'desktop', E2EUser>>;
+  users: Record<'acceso' | 'perfil' | 'rol' | 'operador' | 'lectura', Record<'phone' | 'tablet' | 'desktop', E2EUser>>;
 }
 
 export const readState = (): E2EState => JSON.parse(readFileSync(E2E_STATE_FILE, 'utf8')) as E2EState;

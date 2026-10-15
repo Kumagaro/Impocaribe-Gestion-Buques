@@ -1,5 +1,6 @@
 // T038 · P-02 (ui-spec): "crea la Apoderada en el servidor real y entra". Corre una vez, en la PC servidor, antes que
 // las demás pruebas (proyecto primer-arranque), y deja un usuario por clase de dispositivo con sus códigos.
+import type { Role } from '@impocaribe/shared';
 import { writeFileSync } from 'node:fs';
 import { postUser } from '../src/api/endpoints/users';
 import type { E2EState } from './support/access';
@@ -11,7 +12,14 @@ import { expect, test } from './support/fixtures';
 const APODERADA = { username: 'ilen.fernandez', password: 'apoderada-e2e-1' };
 const DEVICES = ['phone', 'tablet', 'desktop'] as const;
 /** Cada archivo de pruebas tiene sus usuarios: corren a la vez y unos bloquean o cambian contraseñas. */
-const PURPOSES = ['acceso', 'perfil'] as const;
+// rol: a quien P-21 le cambia el rol; operador y lectura: los roles de las guardas (T041).
+const PURPOSES = {
+  acceso: 'operador',
+  perfil: 'operador',
+  rol: 'operador',
+  operador: 'operador',
+  lectura: 'lectura',
+} as const;
 
 test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y entra', async ({
   openApp,
@@ -55,15 +63,15 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
 
   // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen.
   const api = await signedInDevice(APODERADA.username, APODERADA.password);
-  const users = { acceso: {}, perfil: {} } as E2EState['users'];
+  const users = { acceso: {}, perfil: {}, rol: {}, operador: {}, lectura: {} } as E2EState['users'];
   let n = 0;
-  for (const purpose of PURPOSES) {
+  for (const [purpose, role] of Object.entries(PURPOSES) as [keyof typeof PURPOSES, Role][]) {
     for (const device of DEVICES) {
       const password = `clave-${device}-1`;
       const username = `${purpose}.${device}`;
       // Carné con fecha válida (85-01-01, 86-01-01…) y teléfono distintos para cada uno.
       const nationalId = `${85 + n}0101123${String(n).padStart(2, '0')}`;
-      const phone = `5234567${n}`;
+      const phone = `523456${String(n).padStart(2, '0')}`;
       n++;
       const res = await api.request(postUser, {
         body: {
@@ -71,7 +79,7 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
           username,
           nationalId,
           phone,
-          role: 'operador',
+          role,
           password,
           confirm: password,
         },

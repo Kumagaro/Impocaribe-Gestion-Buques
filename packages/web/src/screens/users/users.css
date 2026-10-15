@@ -1,0 +1,63 @@
+/* T040 · P-21 Usuarios, de la maqueta aprobada en T037 (docs/maquetas/T037-acceso.html). */
+.users {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.users-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.users-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  align-items: start;
+}
+.users-grid--panel {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+.users-table {
+  min-width: 0;
+}
+.users-panel {
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.users-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+.users-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.users-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.users-text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.users-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.users-cards span {
+  display: block;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
