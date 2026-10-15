@@ -296,3 +296,13 @@
   flex-direction: column;
   gap: 14px;
 }
+@media (max-width: 640px) {
+  .auth-wizard {
+    grid-template-columns: 1fr;
+  }
+  .auth-steps {
+    padding: 0 0 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}

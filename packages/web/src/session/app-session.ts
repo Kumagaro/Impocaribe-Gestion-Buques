@@ -72,6 +72,11 @@ export class AppSession {
     return this.platform.deviceInfo();
   }
 
+  /** RNF-09: bloquea las capturas mientras se muestran secretos, como los códigos de recuperación. */
+  secureScreen(enabled: boolean): Promise<void> {
+    return this.platform.secureScreen(enabled);
+  }
+
   /** El cliente de API del servidor emparejado, por su última dirección conocida. */
   api() {
     const pairing = this.state.pairing;

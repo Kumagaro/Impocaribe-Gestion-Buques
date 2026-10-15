@@ -17,7 +17,16 @@ export function Brand() {
 }
 
 /** Teléfono: pantalla completa con la marca arriba. Tablet y escritorio: tarjeta centrada. */
-export function AuthFrame({ layout, children }: { layout: 'fullscreen' | 'card'; children: ReactNode }) {
+export function AuthFrame({
+  layout,
+  wide = false,
+  children,
+}: {
+  layout: 'fullscreen' | 'card';
+  /** Tarjeta ancha para los asistentes con los pasos a la izquierda (P-02). */
+  wide?: boolean;
+  children: ReactNode;
+}) {
   return (
     <main className={`auth auth--${layout}`} data-layout={layout}>
       {layout === 'fullscreen' ? (
@@ -28,7 +37,7 @@ export function AuthFrame({ layout, children }: { layout: 'fullscreen' | 'card';
           <div className="auth__body">{children}</div>
         </div>
       ) : (
-        <div className="auth__card">
+        <div className={wide ? 'auth__card auth__card--wide' : 'auth__card'}>
           <Brand />
           {children}
         </div>
