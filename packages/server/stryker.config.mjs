@@ -19,6 +19,9 @@ export default {
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.
   concurrency: 2,
   timeoutMS: 30_000,
+  // La ejecución inicial pasa toda la suite con la cobertura por prueba; las de autenticación hacen a propósito muchas
+  // comprobaciones argon2id de 64 MB (T029, T030) y, con dos procesos, superan los 5 minutos por defecto.
+  dryRunTimeoutMinutes: 20,
   thresholds: { high: 95, low: 90, break: 90 },
   incremental: true,
   incrementalFile: 'reports/stryker-incremental.json',
