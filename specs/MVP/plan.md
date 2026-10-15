@@ -61,6 +61,8 @@ Este documento describe **cómo** se construye lo que pide la spec. Cada decisi�
 | DT-24 | **Dispositivo obligatorio:** salvo `/health`, `/discovery` y `/pairing/*`, toda petición exige `X-Device-Id`, `X-Device-Time` y una firma HMAC-SHA256 con el secreto del dispositivo sobre método, ruta, tiempo y hash del cuerpo. El tiempo se compara con la hora del servidor **corregida por el desfase medido** en `/sync/state`, con una ventana de ±5 min, y el servidor rechaza firmas repetidas dentro de esa ventana. `/setup` y `/local/*` solo desde `127.0.0.1` | RF-RED-04, RF-USR-05 |
 | DT-21 | **Energía:** proveedor inyectable de estado de energía (en Windows, consulta del estado de energía del sistema cada 30 s), con modo protegido de solo lectura y parada ordenada | RF-ENE |
 | DT-15 | **WebView mínimo: Chromium 87.** La interfaz se compila para `chrome87`. La app Android comprueba la versión al iniciar; el paquete de instalación incluye el proveedor de WebView en su última versión compatible con Android 7 | RF-UI-11 |
+| DT-26 | **Certificados con `@peculiar/x509`:** la CA de la instalación y el certificado del servidor (DT-18) se generan con esta librería JavaScript pura sobre WebCrypto, sin binarios nativos. Node no trae cómo crear certificados X.509 | Menos código propio en una pieza de seguridad (aprobado por el responsable el 2026-10-15) |
+| DT-27 | **Anuncio mDNS con `multicast-dns`:** paquete pequeño, sin binarios nativos, que envía y recibe los paquetes mDNS; el anuncio DNS-SD de DT-20 se arma encima | RF-RED-02 (aprobado por el responsable el 2026-10-15) |
 
 ## 3. Arquitectura
 

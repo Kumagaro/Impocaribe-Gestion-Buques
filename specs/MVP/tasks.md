@@ -329,10 +329,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T021, T034, T035
   - *Pruebas:* con multidifusión bloqueada cae a difusión y luego a la subred; tras cambiar la IP del servidor, lo vuelve a encontrar en menos de 10 s; un intermediario produce códigos distintos en cada extremo.
 
-- [ ] **T037. Maquetas de P-01 a P-05, P-21 y P-30.**
+- [x] **T037. Maquetas de P-01 a P-05, P-21 y P-30.**
   - *Cubre:* RF-UI-09
   - *Depende:* T017
   - *Terminado:* aprobadas.
+  - *Estado (2026-10-15):* `docs/maquetas/T037-acceso.html`, aprobadas por el responsable.
 
 - [ ] **T038. (PP) Pantallas P-01 a P-04:** Conexión y emparejamiento, Primer arranque, Login y Recuperar.
   - *Cubre:* HU-05, RF-AUT, RF-REC, RF-RED-02 a 04, RNF-09, HU-15
