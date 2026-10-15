@@ -329,10 +329,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Pruebas:* `/local/*` desde otra IP responde 403; un código caducado no se puede confirmar; un QR no sirve dos veces; un dispositivo revocado recibe `DEVICE_REVOKED` y `device.revoked`.
   - *Estado (2026-10-15):* guarda de dispositivo activa en toda la API (salvo health, discovery, pairing y /local, que solo atiende a 127.0.0.1); la sesión solo vale desde su dispositivo; `device.revoked` sale por el bus interno `ServerEvents`, que el WebSocket (T043) reenviará. Las pruebas de integración firman cada petición como un dispositivo emparejado (`t.fetch`).
 
-- [ ] **T036. Descubrimiento y emparejamiento: cliente.** Lógica de los métodos en orden (última dirección, DNS-SD, difusión, subred, QR o manual), redescubrimiento tras cambio de IP, cálculo del código y almacenamiento de la identidad y la huella. Interfaz `platform.discovery` con implementación de prueba.
+- [x] **T036. Descubrimiento y emparejamiento: cliente.** Lógica de los métodos en orden (última dirección, DNS-SD, difusión, subred, QR o manual), redescubrimiento tras cambio de IP, cálculo del código y almacenamiento de la identidad y la huella. Interfaz `platform.discovery` con implementación de prueba.
   - *Cubre:* RF-RED-02 a 04, RNF-17
   - *Depende:* T021, T034, T035
   - *Pruebas:* con multidifusión bloqueada cae a difusión y luego a la subred; tras cambiar la IP del servidor, lo vuelve a encontrar en menos de 10 s; un intermediario produce códigos distintos en cada extremo.
+  - *Estado (2026-10-15):* `web/src/connection/`: búsqueda en orden con presupuesto de 9,2 s, solo la identidad emparejada; emparejamiento por código (calculado en el dispositivo con `shared/domain/pairingCode`) y por QR; lo aprendido en el almacenamiento seguro. `platform.discovery` con red simulada para las pruebas (la nativa llega con T115 y T118). El cliente de API firma cada petición con el secreto del dispositivo (DT-24), con hora estrictamente creciente.
 
 - [x] **T037. Maquetas de P-01 a P-05, P-21 y P-30.**
   - *Cubre:* RF-UI-09

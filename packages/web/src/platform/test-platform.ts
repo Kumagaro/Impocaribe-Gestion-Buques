@@ -1,11 +1,13 @@
 // T019 · Implementación de prueba de `platform` (DT-03): SQLite real en memoria con sql.js, almacenamiento seguro en
 // memoria y registro de las llamadas al sistema para que las pruebas de componente las comprueben.
+import { createSimulatedNetwork } from './test-discovery';
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
 import type {
   DeviceInfo,
   HttpTransport,
   LocalDatabase,
   Platform,
+  PlatformDiscovery,
   PlatformSocket,
   SqlExecutor,
   SqlValue,
@@ -53,7 +55,12 @@ function localDatabase(db: Database): LocalDatabase {
 }
 
 export async function createTestPlatform(
-  options: { deviceInfo?: DeviceInfo; http?: HttpTransport; ws?: (url: string) => PlatformSocket } = {},
+  options: {
+    deviceInfo?: DeviceInfo;
+    http?: HttpTransport;
+    ws?: (url: string) => PlatformSocket;
+    discovery?: PlatformDiscovery;
+  } = {},
 ): Promise<TestPlatform> {
   sqlJs ??= initSqlJs();
   const SQL = await sqlJs;
@@ -79,6 +86,8 @@ export async function createTestPlatform(
       (() => {
         throw new Error('La plataforma de prueba no tiene WebSocket: pase uno en createTestPlatform({ ws }).');
       }),
+    // La red simulada de test-discovery.ts, o una vacía.
+    discovery: options.discovery ?? createSimulatedNetwork(),
     secureStorage: {
       get: async (key) => secrets.get(key) ?? null,
       set: async (key, value) => {

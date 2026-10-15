@@ -1,6 +1,6 @@
 // T020 · Cliente de la API del servidor (plan §6): cabeceras de sesión, versión, hora e idempotencia; errores del §6.1;
 // y el registro de llamadas que la prueba de contrato (T026) compara con las rutas del servidor.
-import type { ErrorCode, Role } from '@impocaribe/shared';
+import { signRequest, type ErrorCode, type Role } from '@impocaribe/shared';
 import type { z, ZodType } from 'zod';
 import type { HttpTransport } from '../platform/platform';
 
@@ -51,6 +51,8 @@ export interface ApiClientOptions {
   baseUrl: string;
   appVersion: string;
   getToken(): Promise<string | null>;
+  /** El dispositivo emparejado y su secreto (DT-24); null mientras no está emparejado. */
+  getDevice?(): Promise<{ id: string; secret: string } | null>;
   now(): Date;
   transport: Transport;
   onSessionExpired?(): void;
@@ -76,17 +78,36 @@ const BAD_SHAPE_MESSAGE =
   'La respuesta del servidor no tiene el formato esperado. Actualice la app o avise al responsable.';
 
 export function createApiClient(options: ApiClientOptions) {
+  // DT-24: el servidor rechaza una firma repetida; la hora de cada petición es estrictamente creciente.
+  let lastTime = 0;
+  const nextTime = () => (lastTime = Math.max(options.now().getTime(), lastTime + 1));
+
   function url(endpoint: Endpoint, req: RequestOptions<unknown>): string {
     const path = endpoint.path.replace(/:(\w+)/g, (_, name: string) => encodeURIComponent(req.params?.[name] ?? ''));
     const query = req.query ? `?${new URLSearchParams(req.query).toString()}` : '';
     return `${options.baseUrl}${path}${query}`;
   }
 
-  async function headers(endpoint: Endpoint, req: RequestOptions<unknown>): Promise<Record<string, string>> {
+  async function headers(
+    endpoint: Endpoint,
+    req: RequestOptions<unknown>,
+    target: string,
+    body: string,
+  ): Promise<Record<string, string>> {
+    const time = String(nextTime());
     const h: Record<string, string> = {
       'X-App-Version': options.appVersion,
-      'X-Device-Time': String(options.now().getTime()),
+      'X-Device-Time': time,
     };
+    const device = await options.getDevice?.();
+    if (device) {
+      const u = new URL(target);
+      h['X-Device-Id'] = device.id;
+      h['X-Device-Signature'] = await signRequest(
+        { method: endpoint.method, path: u.pathname + u.search, time, body },
+        device.secret,
+      );
+    }
     const token = await options.getToken();
     if (token) h.Authorization = `Bearer ${token}`;
     if (req.body !== undefined) h['Content-Type'] = 'application/json';
@@ -110,11 +131,15 @@ export function createApiClient(options: ApiClientOptions) {
   return {
     async request<E extends Endpoint>(endpoint: E, req: RequestOptions<Input<E>> = {}): Promise<Output<E>> {
       let res: Response;
+      // El cuerpo se serializa una sola vez: la firma (DT-24) cubre exactamente lo que se envía.
+      const target = url(endpoint, req);
+      const body = req.body !== undefined ? JSON.stringify(req.body) : '';
+      const sent = await headers(endpoint, req, target, body);
       try {
-        res = await options.transport(url(endpoint, req), {
+        res = await options.transport(target, {
           method: endpoint.method,
-          headers: await headers(endpoint, req),
-          ...(req.body !== undefined ? { body: JSON.stringify(req.body) } : {}),
+          headers: sent,
+          ...(req.body !== undefined ? { body } : {}),
         });
       } catch {
         throw new ApiError(0, 'OFFLINE', OFFLINE_MESSAGE);

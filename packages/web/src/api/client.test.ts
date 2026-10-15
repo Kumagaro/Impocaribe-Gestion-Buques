@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { signRequest } from '@impocaribe/shared';
 import { z } from 'zod';
 import { ApiError, apiRegistry, createApiClient, defineEndpoint, type Transport } from './client';
 
@@ -196,5 +197,69 @@ describe('registro de llamadas para la prueba de contrato (T026)', () => {
     expect(() => defineEndpoint({ method: 'POST', path: '/orders' })).toThrow(
       'El endpoint POST /orders ya está declarado: use la declaración existente.',
     );
+  });
+});
+
+describe('DT-24: firma del dispositivo emparejado', () => {
+  function signedSetup() {
+    const requests: { url: string; init: RequestInit }[] = [];
+    const client = createApiClient({
+      baseUrl: 'https://servidor:8443/api/v1',
+      appVersion: '1.2.0',
+      getToken: async () => null,
+      getDevice: async () => ({ id: 'dev-1', secret: 'secreto-del-dispositivo' }),
+      now: () => DEVICE_NOW,
+      transport: async (url, init) => {
+        requests.push({ url, init });
+        return respond(200, { number: 'EAGLE1-2026-V1-0042', balance: '593.050' });
+      },
+    });
+    return { client, requests };
+  }
+
+  it('cada petición lleva el dispositivo, su hora y la firma HMAC de método, ruta, hora y cuerpo', async () => {
+    const { client, requests } = signedSetup();
+    await client.request(issueOrder, {
+      body: { tons: '17.280' },
+      idempotencyKey: '0192a3b4-0000-7000-8000-0000000000aa',
+    });
+    const h = headers(requests[0]!.init);
+    const expected = await signRequest(
+      { method: 'POST', path: '/api/v1/orders', time: h['x-device-time']!, body: '{"tons":"17.280"}' },
+      'secreto-del-dispositivo',
+    );
+    expect([h['x-device-id'], h['x-device-time'], h['x-device-signature']]).toEqual([
+      'dev-1',
+      String(DEVICE_NOW.getTime()),
+      expected,
+    ]);
+  });
+
+  it('dos peticiones iguales en el mismo milisegundo llevan horas distintas: el servidor no las toma por repetición', async () => {
+    const { client, requests } = signedSetup();
+    await client.request(getDeclaration, { params: { id: 'x' } });
+    await client.request(getDeclaration, { params: { id: 'x' } });
+    const [a, b] = requests.map((r) => headers(r.init));
+    expect(Number(b!['x-device-time']) - Number(a!['x-device-time'])).toBe(1);
+    expect(a!['x-device-signature']).not.toBe(b!['x-device-signature']);
+  });
+
+  it('la firma cubre la consulta de la ruta', async () => {
+    const { client, requests } = signedSetup();
+    await client.request(getDeclaration, { params: { id: 'x' }, query: { verbose: '1' } });
+    const h = headers(requests[0]!.init);
+    const expected = await signRequest(
+      { method: 'GET', path: '/api/v1/declarations/x?verbose=1', time: h['x-device-time']!, body: '' },
+      'secreto-del-dispositivo',
+    );
+    expect(h['x-device-signature']).toBe(expected);
+  });
+
+  it('sin emparejar no hay firma (descubrimiento y emparejamiento)', async () => {
+    const { client, requests } = setup();
+    await client.request(getDeclaration, { params: { id: 'x' } });
+    expect(
+      Object.keys(headers(requests[0]!.init)).filter((k) => k.startsWith('x-device-') && k !== 'x-device-time'),
+    ).toEqual([]);
   });
 });

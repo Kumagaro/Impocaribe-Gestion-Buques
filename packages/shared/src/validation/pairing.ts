@@ -48,3 +48,15 @@ export const deviceDtoSchema = z.object({
   revokedAt: z.iso.datetime().nullable(),
 });
 export const devicesSchema = z.array(deviceDtoSchema);
+
+/**
+ * Contenido del QR que muestra la PC servidor (P-29, RF-RED-04): identidad, huella de la CA, token de un solo uso y la
+ * dirección actual, para emparejarse sin buscar.
+ */
+export const qrPayloadSchema = z.object({
+  serverId: z.uuid(),
+  caFingerprint: z.string().min(1),
+  qrToken: z.string().min(1),
+  address: z.string().min(1),
+  port: z.number().int().min(1).max(65535),
+});
