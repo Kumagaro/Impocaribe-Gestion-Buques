@@ -24,17 +24,19 @@ export function LoginForm({ model }: { model: LoginModel }) {
         <TextField autoComplete="username" disabled={model.locked} {...model.username.control} />
       </Field>
       <Field label="Contraseña" {...model.password.state}>
-        <TextField
-          type={model.showPassword ? 'text' : 'password'}
-          autoComplete="current-password"
-          disabled={model.locked}
-          {...model.password.control}
-        />
-        <IconButton
-          label={model.showPassword ? 'Ocultar la contraseña' : 'Mostrar la contraseña'}
-          icon={model.showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-          onClick={model.toggleShowPassword}
-        />
+        <div className="auth-password">
+          <TextField
+            type={model.showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            disabled={model.locked}
+            {...model.password.control}
+          />
+          <IconButton
+            label={model.showPassword ? 'Ocultar la contraseña' : 'Mostrar la contraseña'}
+            icon={model.showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            onClick={model.toggleShowPassword}
+          />
+        </div>
       </Field>
       <Checkbox label="Mantener sesión (30 días)" checked={model.keepSignedIn} onChange={model.setKeepSignedIn} disabled={model.locked} />
       <Button type="submit" busy={model.busy} busyLabel="Entrando…" disabled={model.locked}>

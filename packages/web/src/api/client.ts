@@ -69,7 +69,8 @@ export interface RequestOptions<In> {
 }
 
 type Output<E> = E extends Endpoint<ZodType, infer Out> ? z.infer<Out> : never;
-type Input<E> = E extends Endpoint<infer In, ZodType> ? z.infer<In> : never;
+// Lo que viaja es lo que el servidor valida con el esquema: su entrada (con la confirmación, sin valores por defecto).
+type Input<E> = E extends Endpoint<infer In, ZodType> ? z.input<In> : never;
 
 const WRITES = new Set<Method>(['POST', 'PATCH', 'PUT', 'DELETE']);
 const OFFLINE_MESSAGE = 'No hay conexión con el servidor. Inténtelo cuando vuelva la conexión.';

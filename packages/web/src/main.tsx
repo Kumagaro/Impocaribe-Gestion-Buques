@@ -8,6 +8,7 @@ import { deviceClassFor, DeviceClassProvider } from './ui/device';
 import { installTokens } from './ui/theme';
 import './ui/ui.css';
 import './app/app.css';
+import './screens/auth/auth.css';
 
 installTokens();
 
