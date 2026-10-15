@@ -283,31 +283,33 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
 
 ## F1. Autenticación y usuarios
 
-- [ ] **T027. Tablas de usuarios y sesiones.** Carné único de 11 dígitos y teléfono de 8 dígitos (se guarda sin `+53`).
+- [x] **T027. Tablas de usuarios y sesiones.** Carné único de 11 dígitos y teléfono de 8 dígitos (se guarda sin `+53`).
   - *Cubre:* RF-USR-01
   - *Depende:* T013
   - *Pruebas:* `+53 52345678` se guarda como `52345678`; 7 dígitos se rechazan.
 
-- [ ] **T028. Primer arranque**, solo desde `127.0.0.1` (la propia PC servidor).
+- [x] **T028. Primer arranque**, solo desde `127.0.0.1` (la propia PC servidor).
   - *Cubre:* RF-USR-05, RF-REC-01
   - *Depende:* T027
 
-- [ ] **T029. Login y sesiones absolutas.** Bloqueo, revocación por contraseña, desactivación y cambio de rol.
+- [x] **T029. Login y sesiones absolutas.** Bloqueo, revocación por contraseña, desactivación y cambio de rol.
   - *Cubre:* RF-AUT-01 a 07, 10
   - *Depende:* T028
   - *Pruebas:* expira a las 24:00 h exactas aunque haya actividad; el 5.º fallo bloquea y el 4.º no.
 
-- [ ] **T030. Recuperación de contraseña.**
+- [x] **T030. Recuperación de contraseña.**
   - *Cubre:* RF-REC-02 a 05
   - *Depende:* T029
+  - *Estado (2026-10-15):* recuperación con 8 comprobaciones argon2id siempre y el mismo error para cualquier dato, exista o no el usuario; la alerta AL-11 se emite con el motor de alertas (T093).
 
-- [ ] **T031. Gestión de usuarios.**
+- [x] **T031. Gestión de usuarios.**
   - *Cubre:* RF-USR-02 a 04, RF-REC-06
   - *Depende:* T029
 
-- [ ] **T032. Token de dispositivo.**
+- [x] **T032. Token de dispositivo.**
   - *Cubre:* DT-05
   - *Depende:* T029
+  - *Estado (2026-10-15):* T027 a T032 revisados por una auditoría adversarial; sus 10 hallazgos confirmados están corregidos con pruebas (bfaabbf).
 
 - [ ] **T033. Identidad del servidor y certificado.** UUID, nombre `IMPOCARIBE-XXXX`, CA de la instalación y certificado por identidad, guardados con la protección de datos de Windows; el servidor arranca con ellos.
   - *Cubre:* DT-18, RF-RED-03

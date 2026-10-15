@@ -21,6 +21,7 @@
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "@peculiar/x509": "^2.1.0",
     "drizzle-orm": "^0.45.4",
     "helmet": "^8.3.0",
     "pg": "^8.23.1",
