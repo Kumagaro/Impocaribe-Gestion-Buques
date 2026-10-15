@@ -20,7 +20,7 @@ const people = [
 ] as const;
 
 async function login(username: string, password = 'contraseña1', deviceId = `pc-${username}`) {
-  const res = await fetch(`${t.base}/auth/login`, {
+  const res = await t.fetch(`${t.base}/auth/login`, {
     method: 'POST',
     headers: appHeaders(),
     body: JSON.stringify({ username, password, deviceId, deviceLabel: deviceId, platform: 'windows' }),
@@ -28,9 +28,9 @@ async function login(username: string, password = 'contraseña1', deviceId = `pc
   return { status: res.status, json: (await res.json()) as { token: string; user: { mustChangePassword: boolean } } };
 }
 const call = (who: string, path: string, init: RequestInit = {}, extra: Record<string, string> = {}) =>
-  fetch(`${t.base}${path}`, { ...init, headers: appHeaders({ Authorization: `Bearer ${tokens[who]}`, ...extra }) });
+  t.fetch(`${t.base}${path}`, { ...init, headers: appHeaders({ Authorization: `Bearer ${tokens[who]}`, ...extra }) });
 const me = async (token: string) =>
-  (await fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) })).status;
+  (await t.fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) })).status;
 const version = async (id: string) =>
   (await suite.admin.query('SELECT row_version FROM users WHERE id = $1', [id])).rows[0].row_version as number;
 

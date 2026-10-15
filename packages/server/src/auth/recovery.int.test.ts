@@ -25,7 +25,7 @@ let userId: string;
 let codes: string[];
 
 const recover = (over: Record<string, string> = {}) =>
-  fetch(`${t.base}/auth/recover`, {
+  t.fetch(`${t.base}/auth/recover`, {
     method: 'POST',
     headers: appHeaders({ 'X-Device-Id': 'tel-patio' }),
     body: JSON.stringify({
@@ -39,7 +39,7 @@ const recover = (over: Record<string, string> = {}) =>
     }),
   });
 const login = (password: string) =>
-  fetch(`${t.base}/auth/login`, {
+  t.fetch(`${t.base}/auth/login`, {
     method: 'POST',
     headers: appHeaders(),
     body: JSON.stringify({ username: 'mario.delgado', password, ...DEVICE }),
@@ -96,7 +96,7 @@ describe('RF-REC-02: con usuario, carné, teléfono y un código sin usar, defin
     const token = ((await (await login('contraseña1')).json()) as { token: string }).token;
     for (let i = 0; i < 5; i++) await login('equivocada');
     expect((await recover()).status).toBe(204);
-    const me = await fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+    const me = await t.fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) });
     expect([me.status, (await login('clave-recuperada')).status]).toEqual([401, 200]);
   });
 });
@@ -110,7 +110,7 @@ describe('RF-REC-03: cada código vale una sola vez; un juego nuevo invalida el 
 
   it('tras generar un juego nuevo, los códigos anteriores ya no valen', async () => {
     const token = ((await (await login('contraseña1')).json()) as { token: string }).token;
-    const res = await fetch(`${t.base}/auth/recovery-codes`, {
+    const res = await t.fetch(`${t.base}/auth/recovery-codes`, {
       method: 'POST',
       headers: appHeaders({ Authorization: `Bearer ${token}` }),
     });

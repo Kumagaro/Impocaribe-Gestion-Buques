@@ -10,6 +10,7 @@ import type { z } from 'zod';
 import { auditedTransaction, recordAudit, recordRejected, type Tx } from '../audit/audit-log.ts';
 import { recoveryAttempts, recoveryCodes, users } from '../db/schema/users.ts';
 import { Contract } from '../http/contract.ts';
+import type { DeviceRequest } from '../http/device.guard.ts';
 import { idempotencyRequest, withIdempotency, type WriteResult } from '../http/idempotency.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
 import { recordChanges } from '../sync/change-log.ts';
@@ -59,7 +60,7 @@ export class RecoveryController {
     @Res() res: Response,
     @Body(new ZodValidationPipe(recoverSchema)) input: RecoverInput,
   ): Promise<void> {
-    const deviceId = req.header('x-device-id') ?? null;
+    const deviceId = (req as DeviceRequest).device?.id ?? null;
     const result = await withIdempotency(this.db, this.clock, idempotencyRequest(req), (tx) =>
       this.attempt(tx, input, deviceId),
     );

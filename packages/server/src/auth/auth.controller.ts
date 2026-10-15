@@ -16,6 +16,7 @@ import type { z } from 'zod';
 import { auditedTransaction, recordAudit, recordRejected, type Tx } from '../audit/audit-log.ts';
 import { sessions, users } from '../db/schema/users.ts';
 import { auditedWrite } from '../http/audited-write.ts';
+import type { DeviceRequest } from '../http/device.guard.ts';
 import { Contract } from '../http/contract.ts';
 import { idempotencyRequest, withIdempotency, type WriteResult } from '../http/idempotency.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
@@ -58,7 +59,12 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   @Contract({ input: loginRequestSchema, output: loginResponseSchema, roles: 'public' })
-  async login(@Body(new ZodValidationPipe(loginRequestSchema)) input: LoginRequest): Promise<LoginResponse> {
+  async login(
+    @Req() req: DeviceRequest,
+    @Body(new ZodValidationPipe(loginRequestSchema)) body: LoginRequest,
+  ): Promise<LoginResponse> {
+    // La sesión queda ligada al dispositivo verificado por su firma (DT-24), no al que diga el cuerpo.
+    const input = { ...body, deviceId: req.device?.id ?? body.deviceId };
     const outcome = await this.db.transaction((tx) => this.attempt(tx, input));
     if (outcome.ok) return outcome.value;
     if (!outcome.audited) {

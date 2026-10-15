@@ -11,7 +11,7 @@ import { listenForTests } from '../../test/listen.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
-import { CLOCK, DB } from '../tokens.ts';
+import { CLOCK, DEVICE_GUARD_ENABLED, DB } from '../tokens.ts';
 import { idempotencyRequest, purgeExpiredIdempotencyKeys, withIdempotency } from './idempotency.ts';
 
 // T015 · DT-22, RF-ORD-23, D15: una misma escritura enviada varias veces produce como máximo un efecto.
@@ -72,6 +72,9 @@ beforeAll(async () => {
   );
   db = drizzle(suite.app);
   const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers: [EffectController] })
+    // Aquí se prueba otra cosa: la guarda de dispositivo (DT-24) tiene sus propias pruebas en device.guard.test.ts.
+    .overrideProvider(DEVICE_GUARD_ENABLED)
+    .useValue(false)
     .overrideProvider(CLOCK)
     .useValue(clock)
     .overrideProvider(DB)

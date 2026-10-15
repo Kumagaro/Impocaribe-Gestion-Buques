@@ -12,10 +12,16 @@ export interface DeviceRecord {
 
 export interface DeviceRegistry {
   find(deviceId: string): Promise<DeviceRecord | null>;
+  /** Anota la última conexión del dispositivo (RF-RED-05). */
+  seen?(deviceId: string): Promise<void>;
 }
 
-// Públicas sin dispositivo: estado, descubrimiento y emparejamiento (DT-24).
-const EXEMPT = /^\/api\/v1\/(health|discovery|pairing)(\/|$)/;
+/** El dispositivo ya verificado de la petición, para la sesión, la bitácora y la idempotencia. */
+export type DeviceRequest = Request & { device?: { id: string } };
+
+// Públicas sin dispositivo: estado, descubrimiento y emparejamiento (DT-24). /local/* tampoco lo pide: solo atiende a
+// 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola.
+const EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local)(\/|$)/;
 const WINDOW_MS = 5 * 60_000;
 
 const notPaired = () =>
@@ -66,6 +72,8 @@ export class DeviceGuard implements CanActivate {
       throw new AppError('DEVICE_NOT_PAIRED', 'Esta petición ya se recibió antes: no se procesa dos veces.');
     }
     this.seen.set(signature, now.getTime() + 2 * WINDOW_MS);
+    (req as DeviceRequest).device = { id: deviceId };
+    await this.registry.seen?.(deviceId);
     return true;
   }
 

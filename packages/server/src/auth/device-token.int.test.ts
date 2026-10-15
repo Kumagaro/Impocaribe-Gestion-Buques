@@ -15,7 +15,7 @@ let userId: string;
 const clock = new ManualClock('2026-10-14T12:00:00.000Z');
 
 async function appToken(keepSignedIn = false) {
-  const res = await fetch(`${t.base}/auth/login`, {
+  const res = await t.fetch(`${t.base}/auth/login`, {
     method: 'POST',
     headers: appHeaders(),
     body: JSON.stringify({
@@ -30,7 +30,7 @@ async function appToken(keepSignedIn = false) {
   return ((await res.json()) as { token: string }).token;
 }
 const issue = (token: string) =>
-  fetch(`${t.base}/auth/device-token`, { method: 'POST', headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+  t.fetch(`${t.base}/auth/device-token`, { method: 'POST', headers: appHeaders({ Authorization: `Bearer ${token}` }) });
 const deviceSessions = async () =>
   (
     await suite.admin.query(
@@ -92,7 +92,7 @@ describe('POST /auth/device-token', () => {
 
   it('no sirve para la API de la app', async () => {
     const { token } = (await (await issue(await appToken())).json()) as { token: string };
-    const me = await fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+    const me = await t.fetch(`${t.base}/auth/me`, { headers: appHeaders({ Authorization: `Bearer ${token}` }) });
     expect(me.status).toBe(401);
   });
 
@@ -114,7 +114,7 @@ describe('POST /auth/device-token', () => {
   });
 
   it('sin sesión no se emite', async () => {
-    const res = await fetch(`${t.base}/auth/device-token`, { method: 'POST', headers: appHeaders() });
+    const res = await t.fetch(`${t.base}/auth/device-token`, { method: 'POST', headers: appHeaders() });
     expect(res.status).toBe(401);
   });
 });
@@ -122,7 +122,7 @@ describe('POST /auth/device-token', () => {
 describe('DT-05: el token de alertas vive y muere con la sesión de su dispositivo', () => {
   const live = async (token: string) => (await findDeviceTokenSession(drizzle(suite.app), clock, token)) !== null;
   const call = (token: string, path: string, method: string) =>
-    fetch(`${t.base}${path}`, { method, headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+    t.fetch(`${t.base}${path}`, { method, headers: appHeaders({ Authorization: `Bearer ${token}` }) });
 
   it('al cerrar la sesión (logout) deja de valer', async () => {
     const app = await appToken();
@@ -156,7 +156,7 @@ describe('DT-05: el token de alertas vive y muere con la sesión de su dispositi
 });
 
 async function appTokenFrom(deviceId: string) {
-  const res = await fetch(`${t.base}/auth/login`, {
+  const res = await t.fetch(`${t.base}/auth/login`, {
     method: 'POST',
     headers: appHeaders(),
     body: JSON.stringify({

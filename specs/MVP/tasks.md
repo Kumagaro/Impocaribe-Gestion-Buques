@@ -323,10 +323,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Pruebas:* el anuncio incluye identidad, versión y huella; la respuesta a difusión no revela nada más.
   - *Estado (2026-10-15):* `server/src/discovery/`: DNS-SD con `multicast-dns` (DT-27) en cada interfaz IPv4 de la red local (con varias tarjetas, Windows envía la multidifusión por una sola), revisadas cada 10 s; difusión UDP 47800 que solo responde a su sonda; `GET /discovery`.
 
-- [ ] **T035. Emparejamiento: servidor.** Tablas `devices` y `pairing_requests`, código de comparación, token de QR, caducidad a los 5 min, endpoints `/local/*` solo desde `127.0.0.1`, revocación y secreto por dispositivo exigido junto a la sesión. Activa la guarda de dispositivo de DT-24 en todos los endpoints; la app de la PC servidor se empareja sola por `/local`.
+- [x] **T035. Emparejamiento: servidor.** Tablas `devices` y `pairing_requests`, código de comparación, token de QR, caducidad a los 5 min, endpoints `/local/*` solo desde `127.0.0.1`, revocación y secreto por dispositivo exigido junto a la sesión. Activa la guarda de dispositivo de DT-24 en todos los endpoints; la app de la PC servidor se empareja sola por `/local`.
   - *Cubre:* RF-RED-04, 05
   - *Depende:* T033, T029
   - *Pruebas:* `/local/*` desde otra IP responde 403; un código caducado no se puede confirmar; un QR no sirve dos veces; un dispositivo revocado recibe `DEVICE_REVOKED` y `device.revoked`.
+  - *Estado (2026-10-15):* guarda de dispositivo activa en toda la API (salvo health, discovery, pairing y /local, que solo atiende a 127.0.0.1); la sesión solo vale desde su dispositivo; `device.revoked` sale por el bus interno `ServerEvents`, que el WebSocket (T043) reenviará. Las pruebas de integración firman cada petición como un dispositivo emparejado (`t.fetch`).
 
 - [ ] **T036. Descubrimiento y emparejamiento: cliente.** Lógica de los métodos en orden (última dirección, DNS-SD, difusión, subred, QR o manual), redescubrimiento tras cambio de IP, cálculo del código y almacenamiento de la identidad y la huella. Interfaz `platform.discovery` con implementación de prueba.
   - *Cubre:* RF-RED-02 a 04, RNF-17

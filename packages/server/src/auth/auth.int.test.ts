@@ -58,7 +58,7 @@ async function addUser(username: string, role: 'apoderada' | 'operador' | 'lectu
 }
 
 const login = (username: string, password: string, extra: Record<string, unknown> = {}) =>
-  fetch(`${t.base}/auth/login`, {
+  t.fetch(`${t.base}/auth/login`, {
     method: 'POST',
     headers: appHeaders(),
     body: JSON.stringify({ username, password, ...DEVICE, ...extra }),
@@ -67,7 +67,7 @@ async function tokenOf(username: string, extra: Record<string, unknown> = {}) {
   return ((await (await login(username, 'contraseña1', extra)).json()) as { token: string }).token;
 }
 const authed = (token: string, path: string, init: RequestInit = {}) =>
-  fetch(`${t.base}${path}`, { ...init, headers: appHeaders({ Authorization: `Bearer ${token}` }) });
+  t.fetch(`${t.base}${path}`, { ...init, headers: appHeaders({ Authorization: `Bearer ${token}` }) });
 
 beforeAll(async () => {
   suite = await createSuiteDb();
@@ -230,7 +230,7 @@ describe('RF-AUT-02: la sesión vence a las 24 h exactas, sin importar la activi
 
 describe('guarda de sesión y roles', () => {
   it('sin token, o con uno desconocido, pide iniciar sesión', async () => {
-    const none = await fetch(`${t.base}/auth/me`, { headers: appHeaders() });
+    const none = await t.fetch(`${t.base}/auth/me`, { headers: appHeaders() });
     const bad = await authed('x'.repeat(43), '/auth/me');
     expect([none.status, bad.status, ((await bad.json()) as { code: string }).code]).toEqual([
       401,
@@ -418,8 +418,8 @@ describe('DT-22: las escrituras de la sesión son idempotentes', () => {
       'Idempotency-Key': '0192a3b4-0000-7000-8000-00000000e001',
     });
     const body = JSON.stringify({ current: 'contraseña1', password: 'clave-nueva', confirm: 'clave-nueva' });
-    const first = await fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
-    const second = await fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
+    const first = await t.fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
+    const second = await t.fetch(`${t.base}/auth/change-password`, { method: 'POST', headers, body });
     expect([first.status, second.status]).toEqual([204, 204]);
     const { rows } = await suite.admin.query(
       "SELECT count(*)::int AS n FROM audit_log WHERE action = 'auth.change_password'",
@@ -432,7 +432,7 @@ describe('DT-22: las escrituras de la sesión son idempotentes', () => {
     const token = await tokenOf('mario.delgado');
     const key = '0192a3b4-0000-7000-8000-00000000e002';
     const body = JSON.stringify({ current: 'contraseña1', password: 'clave-nueva', confirm: 'clave-nueva' });
-    await fetch(`${t.base}/auth/change-password`, {
+    await t.fetch(`${t.base}/auth/change-password`, {
       method: 'POST',
       headers: appHeaders({ Authorization: `Bearer ${token}`, 'Idempotency-Key': key }),
       body,

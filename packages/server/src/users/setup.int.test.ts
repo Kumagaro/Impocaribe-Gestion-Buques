@@ -20,8 +20,8 @@ const body = {
   confirm: 'contraseña1',
 };
 const post = (base: string, data: unknown = body) =>
-  fetch(`${base}/setup`, { method: 'POST', headers: appHeaders(), body: JSON.stringify(data) });
-const status = async () => (await fetch(`${t.base}/setup/status`, { headers: appHeaders() })).json();
+  t.fetch(`${base}/setup`, { method: 'POST', headers: appHeaders(), body: JSON.stringify(data) });
+const status = async () => (await t.fetch(`${t.base}/setup/status`, { headers: appHeaders() })).json();
 
 beforeAll(async () => {
   suite = await createSuiteDb();

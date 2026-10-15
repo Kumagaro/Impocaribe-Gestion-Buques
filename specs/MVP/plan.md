@@ -262,9 +262,11 @@ erDiagram
 
 #### Dispositivos y emparejamiento
 
-**`devices`**: id, name, platform, app_version, paired_at, paired_method (`code`, `qr`), last_seen_at, revoked_at, revoked_by.
+**`devices`**: id (texto; el servidor lo genera como uuid v7 y viaja en `X-Device-Id`), name, platform, app_version, secret (HMAC, DT-24), paired_at, paired_method (`code`, `qr` o `local` para la app de la propia PC servidor), last_seen_at, clock_offset_ms (desfase medido en `/sync/state`), revoked_at, revoked_by.
 
 **`pairing_requests`**: id, device_name, platform, client_nonce, server_nonce, code (6 dígitos derivados de un hash de la huella de la CA y ambos nonces), status (`pending`, `confirmed`, `rejected`, `expired`), created_at, expires_at (5 min), resolved_at.
+
+**`pairing_qr_tokens`**: token_hash (SHA-256 del token del QR), created_at, expires_at (5 min), used_at, device_id. Un solo uso (RF-RED-04).
 
 Las sesiones (`sessions`) pasan a referenciar `device_id`.
 

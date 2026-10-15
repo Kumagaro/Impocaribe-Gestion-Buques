@@ -7,7 +7,7 @@ import { Contract } from './http/contract.ts';
 import { listenForTests } from '../test/listen.ts';
 import { AppModule } from './app.module.ts';
 import { configureApp } from './app.ts';
-import { CLOCK, MIN_APP_VERSION } from './tokens.ts';
+import { CLOCK, DEVICE_GUARD_ENABLED, MIN_APP_VERSION } from './tokens.ts';
 import { ZodValidationPipe } from './http/zod-validation.pipe.ts';
 
 // T011 · plan §6 (convenciones, §6.1 formato de error), DT-11 (426), §9 (helmet y CSP estricta) y CORS de §6.
@@ -50,6 +50,9 @@ const APP = { 'X-App-Version': '1.2.0', 'Idempotency-Key': '0192a3b4-0000-7000-8
 
 beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers: [ExampleController] })
+    // Aquí se prueba otra cosa: la guarda de dispositivo (DT-24) tiene sus propias pruebas en device.guard.test.ts.
+    .overrideProvider(DEVICE_GUARD_ENABLED)
+    .useValue(false)
     .overrideProvider(CLOCK)
     .useValue(new ManualClock('2026-10-14T12:00:00.000Z'))
     .overrideProvider(MIN_APP_VERSION)

@@ -9,6 +9,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Request } from 'express';
 import { sessions, users } from '../db/schema/users.ts';
 import { CONTRACT, type RouteContract } from '../http/contract.ts';
+import type { DeviceRequest } from '../http/device.guard.ts';
 import { CLOCK, DB } from '../tokens.ts';
 import { hashToken } from './sessions.ts';
 
@@ -56,6 +57,9 @@ export class SessionGuard implements CanActivate {
       .innerJoin(users, eq(users.id, sessions.userId))
       .where(and(eq(sessions.tokenHash, hashToken(header.slice(7))), eq(sessions.kind, 'app')));
     if (!row || row.revokedAt || row.expiresAt <= now || !row.active) throw expired();
+    // Plan §9: la sesión solo vale desde el dispositivo que la abrió, con su secreto (DT-24).
+    const device = (req as DeviceRequest).device;
+    if (device && device.id !== row.deviceId) throw expired();
     if (now.getTime() - row.lastSeenAt.getTime() >= SEEN_EVERY_MS)
       await this.db.update(sessions).set({ lastSeenAt: now }).where(eq(sessions.id, row.sessionId));
     req.auth = { sessionId: row.sessionId, userId: row.userId, role: row.role, deviceId: row.deviceId };
