@@ -17,7 +17,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
       // Puntos de entrada de proceso (arranque y CLI de desarrollo): se verifican al ejecutarlos, no con pruebas unitarias.
-      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/db/cli.ts'],
+      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/db/cli.ts', 'src/identity/cli.ts'],
       thresholds: { lines: 85 },
     },
   },

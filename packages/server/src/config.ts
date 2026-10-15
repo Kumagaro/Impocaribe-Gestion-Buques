@@ -9,6 +9,8 @@ export interface Config {
   port: number;
   databaseUrl: string;
   dataDir: string;
+  /** Identidad del servidor (T033): UUID, CA y certificado, con las claves protegidas por Windows. */
+  identityDir: string;
   minAppVersion: string;
 }
 
@@ -38,9 +40,16 @@ export function loadConfig(env: Env): Config {
     port: Number(env.PORT ?? 8443),
     databaseUrl,
     dataDir: env.IMPOCARIBE_DATA_DIR ?? defaultDataDir(envName, env),
+    identityDir: env.IMPOCARIBE_IDENTITY_DIR ?? defaultIdentityDir(envName, env),
     // shortcut: hasta T113 la mínima sale de la configuración; luego, de app_releases.is_min_supported (plan §4.4).
     minAppVersion: env.MIN_APP_VERSION ?? '0.0.0',
   };
+}
+
+function defaultIdentityDir(name: Environment, env: Env): string {
+  if (name === 'production') return join(env.ProgramData ?? 'C:\\ProgramData', 'Impocaribe', 'identity');
+  if (name === 'test') return join(tmpdir(), 'impocaribe-test-identity');
+  return join(env.LOCALAPPDATA ?? homedir(), 'Impocaribe', 'dev-identity');
 }
 
 function defaultDataDir(name: Environment, env: Env): string {

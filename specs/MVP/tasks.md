@@ -311,10 +311,11 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Depende:* T029
   - *Estado (2026-10-15):* T027 a T032 revisados por una auditoría adversarial; sus 10 hallazgos confirmados están corregidos con pruebas (bfaabbf).
 
-- [ ] **T033. Identidad del servidor y certificado.** UUID, nombre `IMPOCARIBE-XXXX`, CA de la instalación y certificado por identidad, guardados con la protección de datos de Windows; el servidor arranca con ellos.
+- [x] **T033. Identidad del servidor y certificado.** UUID, nombre `IMPOCARIBE-XXXX`, CA de la instalación y certificado por identidad, guardados con la protección de datos de Windows; el servidor arranca con ellos.
   - *Cubre:* DT-18, RF-RED-03
   - *Depende:* T011
   - *Pruebas:* el certificado no contiene ninguna IP; regenerar la identidad sin borrar la anterior es imposible sin la acción explícita del ayudante.
+  - *Estado (2026-10-15):* `server/src/identity/`: CA y certificado ECDSA P-256 con `@peculiar/x509` (DT-26), claves protegidas con DPAPI de la máquina (PowerShell, sin dependencias nativas); el servidor sirve HTTPS con ella y en producción no arranca sin ella. `pnpm --filter @impocaribe/server identity:create` crea la de desarrollo.
 
 - [ ] **T034. Descubrimiento: anuncio del servidor.** Servicio DNS-SD `_impocaribe._tcp`, respuesta a difusión UDP 47800 y `GET /discovery`.
   - *Cubre:* RF-RED-02, DT-20 

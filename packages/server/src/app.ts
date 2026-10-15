@@ -48,7 +48,14 @@ export function configureApp(app: INestApplication): INestApplication {
   return app;
 }
 
-export async function createApp() {
+/** Con `httpsOptions` sirve HTTPS con la identidad del servidor (T033, DT-18). */
+export async function createApp(httpsOptions?: { key: string; cert: string }) {
   // rawBody: la firma del dispositivo (DT-24) y la idempotencia (DT-22) usan el cuerpo tal como llegó.
-  return configureApp(await NestFactory.create(AppModule, { logger: ['error', 'warn'], rawBody: true }));
+  return configureApp(
+    await NestFactory.create(AppModule, {
+      logger: ['error', 'warn'],
+      rawBody: true,
+      ...(httpsOptions ? { httpsOptions } : {}),
+    }),
+  );
 }

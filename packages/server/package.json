@@ -14,7 +14,8 @@
     "db:reset": "node src/db/cli.ts reset",
     "db:seed": "node src/db/cli.ts seed",
     "db:generate": "drizzle-kit generate",
-    "mutation": "stryker run"
+    "mutation": "stryker run",
+    "identity:create": "node src/identity/cli.ts"
   },
   "dependencies": {
     "@impocaribe/shared": "workspace:*",
