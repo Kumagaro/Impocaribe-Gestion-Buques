@@ -56,11 +56,13 @@ Este documento describe **cómo** se construye lo que pide la spec. Cada decisi�
 | DT-19 | **Transporte nativo:** todas las peticiones HTTP y WebSocket de las apps pasan por `platform.http` y `platform.ws`, implementados en nativo (red de Electron y OkHttp en Android), porque el WebView no permite verificar la identidad del servidor de forma propia | DT-18 |
 | DT-20 | **Descubrimiento:** servicio DNS-SD `_impocaribe._tcp` (con identidad, puerto, versión y huella de la CA), respuesta a difusión UDP en el puerto 47800, búsqueda en la subred `/24` contra `/api/v1/discovery`, y QR o dirección manual | RF-RED-02 |
 | DT-25 | **Validación compartida por campo:** el catálogo de campos (`ui-spec.md` §6) se implementa una sola vez en `shared/validation` como esquemas Zod con mensajes en español, más funciones puras de advertencia. El servidor y la interfaz usan exactamente los mismos | RF-VAL-04, Art. XIV.9 |
-| DT-22 | **Idempotencia:** toda escritura lleva el header `Idempotency-Key` (UUID generado por la app por intento de usuario). El servidor guarda la clave con el resultado durante 24 h dentro de la misma transacción; una repetición devuelve el mismo resultado, y la misma clave con otro contenido responde `IDEMPOTENCY_MISMATCH` | RF-ORD-23 |
+| DT-22 | **Idempotencia:** toda escritura lleva el header `Idempotency-Key` (UUID generado por la app por intento de usuario). El servidor guarda la clave con el resultado durante 24 h dentro de la misma transacción; una repetición devuelve el mismo resultado, y la misma clave con otro contenido responde `IDEMPOTENCY_MISMATCH`. Los secretos del cuerpo (contraseñas y códigos) no entran al hash guardado. **Excepción:** las respuestas que llevan un secreto (token de sesión o de dispositivo, códigos de recuperación: login, primer arranque, alta de usuario, juego nuevo de códigos y token de dispositivo) no se guardan; repetirlas es seguro porque solo abren otra sesión, reemplazan el token o los códigos, o chocan con la unicidad | RF-ORD-23 |
 | DT-23 | **Concurrencia optimista en ediciones:** cada registro editable tiene `row_version`; toda edición envía `expectedVersion`, y si no coincide responde `STALE_RECORD` con la versión actual | RF-DM-12 |
 | DT-24 | **Dispositivo obligatorio:** salvo `/health`, `/discovery` y `/pairing/*`, toda petición exige `X-Device-Id`, `X-Device-Time` y una firma HMAC-SHA256 con el secreto del dispositivo sobre método, ruta, tiempo y hash del cuerpo. El tiempo se compara con la hora del servidor **corregida por el desfase medido** en `/sync/state`, con una ventana de ±5 min, y el servidor rechaza firmas repetidas dentro de esa ventana. `/setup` y `/local/*` solo desde `127.0.0.1` | RF-RED-04, RF-USR-05 |
 | DT-21 | **Energía:** proveedor inyectable de estado de energía (en Windows, consulta del estado de energía del sistema cada 30 s), con modo protegido de solo lectura y parada ordenada | RF-ENE |
 | DT-15 | **WebView mínimo: Chromium 87.** La interfaz se compila para `chrome87`. La app Android comprueba la versión al iniciar; el paquete de instalación incluye el proveedor de WebView en su última versión compatible con Android 7 | RF-UI-11 |
+| DT-26 | **Certificados con `@peculiar/x509`:** la CA de la instalación y el certificado del servidor (DT-18) se generan con esta librería JavaScript pura sobre WebCrypto, sin binarios nativos. Node no trae cómo crear certificados X.509 | Menos código propio en una pieza de seguridad (aprobado por el responsable el 2026-10-15) |
+| DT-27 | **Anuncio mDNS con `multicast-dns`:** paquete pequeño, sin binarios nativos, que envía y recibe los paquetes mDNS; el anuncio DNS-SD de DT-20 se arma encima | RF-RED-02 (aprobado por el responsable el 2026-10-15) |
 
 ## 3. Arquitectura
 
@@ -98,8 +100,8 @@ flowchart LR
 
 ```
 impocaribe-ordenes/
-├─ Constitution.md
-├─ specs/001-mvp/{spec.md, plan.md, tasks.md}
+├─ docs/Constitution.md
+├─ specs/MVP/{spec.md, ui-spec.md, plan.md, tasks.md}
 ├─ packages/
 │  ├─ shared/        # Esquemas Zod, tipos, DTO de sincronización, códigos de error, permisos y dominio puro
 │  ├─ server/        # NestJS: módulos por dominio, Drizzle, change_log, plantillas PDF, tareas
@@ -260,9 +262,11 @@ erDiagram
 
 #### Dispositivos y emparejamiento
 
-**`devices`**: id, name, platform, app_version, paired_at, paired_method (`code`, `qr`), last_seen_at, revoked_at, revoked_by.
+**`devices`**: id (texto; el servidor lo genera como uuid v7 y viaja en `X-Device-Id`), name, platform, app_version, secret (HMAC, DT-24), paired_at, paired_method (`code`, `qr` o `local` para la app de la propia PC servidor), last_seen_at, clock_offset_ms (desfase medido en `/sync/state`), revoked_at, revoked_by.
 
 **`pairing_requests`**: id, device_name, platform, client_nonce, server_nonce, code (6 dígitos derivados de un hash de la huella de la CA y ambos nonces), status (`pending`, `confirmed`, `rejected`, `expired`), created_at, expires_at (5 min), resolved_at.
+
+**`pairing_qr_tokens`**: token_hash (SHA-256 del token del QR), created_at, expires_at (5 min), used_at, device_id. Un solo uso (RF-RED-04).
 
 Las sesiones (`sessions`) pasan a referenciar `device_id`.
 
@@ -829,6 +833,24 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 | `BACKUP_PASSWORD_INVALID` · `RESTORE_IN_PROGRESS` | Respaldo |
 | `UPGRADE_REQUIRED` | La app está por debajo de la versión mínima |
 | `RESYNC_REQUIRED` | La copia local debe reconstruirse |
+| `NOT_FOUND` | La ruta o el recurso no existe |
+| `INTERNAL_ERROR` | Fallo inesperado del servidor; el detalle técnico va al registro, nunca al usuario |
+
+**Estado HTTP de cada código** (`shared/src/errors.ts`):
+
+| Estado | Códigos |
+|---|---|
+| 400 | `VALIDATION_ERROR` |
+| 401 | `SESSION_EXPIRED` |
+| 403 | `FORBIDDEN`, `DEVICE_NOT_PAIRED`, `DEVICE_REVOKED`, `PAIRING_REJECTED`, `INSTALL_CODE_INVALID` |
+| 404 | `NOT_FOUND` |
+| 409 | `STALE_RECORD`, `IDEMPOTENCY_MISMATCH`, `DRAFT_LOCKED`, `DUPLICATE_DM_NUMBER`, `DUPLICATE_PLATE`, `DUPLICATE_NATIONAL_ID`, `SERVER_ALREADY_EXISTS` |
+| 410 | `RESYNC_REQUIRED`, `PAIRING_EXPIRED` |
+| 423 | `ACCOUNT_LOCKED`, `RECOVERY_LOCKED` |
+| 426 | `UPGRADE_REQUIRED` |
+| 500 | `INTERNAL_ERROR` |
+| 503 | `PDF_RENDER_FAILED`, `SERVER_PROTECTED_MODE`, `RESTORE_IN_PROGRESS` |
+| 422 | Todos los demás: reglas de negocio |
 
 ### 6.4 WebSocket
 
@@ -856,7 +878,7 @@ Después de una escritura propia, la app no edita su copia a mano: espera el cam
 
 | Tema | Decisión |
 |---|---|
-| Base | React 18 + Vite + TypeScript, React Router y TanStack Query. Compilación con objetivo `chrome87` (DT-15) |
+| Base | React 19 + Vite + TypeScript, React Router y TanStack Query. Compilación con objetivo `chrome87` (DT-15) |
 | Empaquetado | Se compila una vez (`web/dist`) y se copia dentro de cada app. No hay Service Worker ni carga remota |
 | Repositorio local | `web/src/local/`: esquema SQLite local con migraciones propias, tablas por entidad, `drafts_local` y `sync_meta` |
 | Lecturas | Hooks de TanStack Query que leen del repositorio local; el motor de sincronización invalida las consultas afectadas |
@@ -1083,7 +1105,7 @@ El servidor debe funcionar en una PC de 4 GB de RAM que además ejecuta la app d
 |---|---|---|
 | PostgreSQL | 400 MB | `shared_buffers` 128 MB, `work_mem` 4 MB, `maintenance_work_mem` 64 MB, `max_connections` 20, `effective_cache_size` 512 MB. Pool de conexiones de la aplicación limitado a 10 |
 | Servidor Node | 300 MB | `--max-old-space-size=256`; sin cachés en memoria de datos de negocio (la base de datos ya cachea); registros rotados en disco |
-| Chromium (PDF) | 300 MB mientras está abierto | Una sola instancia y una sola página a la vez (cola); se abre con la primera emisión y se cierra tras 10 minutos sin emisiones; opciones de bajo consumo (sin GPU, sin extensiones, caché mínima) |
+| Chromium (PDF) | 300 MB mientras está abierto | Una sola instancia y una sola página a la vez (cola); se abre con la primera emisión y se cierra tras 10 minutos sin emisiones; variante `chrome-headless-shell` (Puppeteer `headless: 'shell'`), no el Chrome completo, que en la prueba de concepto (T006) ocupó 481 MB frente a 180 MB; opciones de bajo consumo (sin GPU, sin extensiones, caché mínima, un solo proceso de renderizado) |
 | Respaldos | Puntual | `pg_dump` con prioridad baja; nunca dos respaldos a la vez |
 | App de escritorio (Electron) | 350 MB | Un solo proceso de renderizado; la copia local en SQLite, no en memoria; listas virtualizadas; sin Storybook ni herramientas de desarrollo en el instalador |
 | **Total del servidor en reposo** | **600 MB** | Chromium cerrado |
@@ -1193,18 +1215,18 @@ El código empieza desde cero. Esta sección fija cómo se crea el proyecto y c�
 | Máquinas virtuales | Windows 10 y Windows 11 limpias, una con 4 GB de RAM | Pruebas de instalación y de consumo |
 | Editor | VS Code con las extensiones recomendadas del repositorio | Uniformidad |
 
-El script `pnpm doctor` comprueba todo lo anterior y explica qué falta.
+El script `pnpm run doctor` comprueba todo lo anterior y explica qué falta.
 
 ### 13.2 Repositorio
 
 ```
 impocaribe-ordenes/
-├─ Constitution.md
 ├─ README.md                 # Qué es, cómo arrancar, enlaces a specs y a docs/
 ├─ docs/
+│  ├─ Constitution.md
 │  ├─ desarrollo.md          # Entorno, comandos y flujo de trabajo
 │  └─ referencia/            # Prototipo HTML aprobado (solo lectura)
-├─ specs/001-mvp/            # spec, ui-spec, plan, tasks
+├─ specs/MVP/                # spec, ui-spec, plan, tasks
 ├─ packages/                 # shared, server, web, desktop, android
 ├─ setup/  build/            # Ayudante de instalación y generación de instaladores
 ├─ fixtures/                 # Escenario del Excel (T de la fase F0)

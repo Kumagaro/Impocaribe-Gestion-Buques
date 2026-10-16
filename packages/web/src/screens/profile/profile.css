@@ -1,0 +1,201 @@
+/* T039 · P-05 Perfil, de la maqueta aprobada en T037 (docs/maquetas/T037-acceso.html). */
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.profile--columns {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.profile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 16px;
+  border-right: 1px solid var(--line);
+}
+.profile-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-nav li button {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--t-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.profile-nav li button[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+.profile-nav li button:disabled {
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+.profile-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.profile-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+}
+.profile-user b {
+  display: block;
+  font-size: 16px;
+}
+.profile-user span {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.profile-text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.profile-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.profile-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.profile-list li + li {
+  border-top: 1px solid var(--line-2);
+}
+.profile-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+button.profile-row {
+  cursor: pointer;
+}
+.profile-row > :first-child {
+  flex: 1;
+}
+.profile-row__aside {
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+}
+.profile-data {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+.profile-data dt {
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+}
+.profile-data dd {
+  margin: 0;
+}
+.profile-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-sessions li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.profile-sessions li > svg {
+  flex: none;
+  color: var(--ink-3);
+}
+.profile-sessions li > div {
+  flex: 1;
+  min-width: 0;
+}
+.profile-sessions b {
+  display: block;
+}
+.profile-sessions span {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 440px;
+}
+.profile-actions {
+  display: flex;
+  gap: 10px;
+}
+.profile-themes {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  align-self: flex-start;
+}
+.profile-themes button {
+  min-height: var(--touch);
+  padding: 0 14px;
+  border: 0;
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.profile-themes button + button {
+  border-left: 1px solid var(--line);
+}
+.profile-themes button[aria-checked='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 650;
+}

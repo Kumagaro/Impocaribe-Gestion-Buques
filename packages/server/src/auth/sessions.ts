@@ -1,0 +1,95 @@
+// T029 · plan §9: token aleatorio de 256 bits guardado como hash; duración absoluta de 24 h o 30 días (RF-AUT-02).
+import type { Clock } from '@impocaribe/shared';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { and, eq, gt, isNull, ne, not } from 'drizzle-orm';
+import { createHash, randomBytes } from 'node:crypto';
+import type { Tx } from '../audit/audit-log.ts';
+import { sessions, users } from '../db/schema/users.ts';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const sessionDuration = (keepSignedIn: boolean) => (keepSignedIn ? 30 : 1) * DAY_MS;
+export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
+
+export interface NewSession {
+  userId: string;
+  kind: 'app' | 'device';
+  deviceId: string;
+  deviceLabel: string;
+  platform: 'windows' | 'android';
+  keepSignedIn: boolean;
+}
+
+/** Abre una sesión y devuelve el token en claro: es la única vez que existe fuera del dispositivo. */
+export async function createSession(tx: Tx, clock: Clock, input: NewSession, expiresAt?: Date) {
+  const now = clock.now();
+  const token = randomBytes(32).toString('base64url');
+  expiresAt ??= new Date(now.getTime() + sessionDuration(input.keepSignedIn));
+  const [row] = await tx
+    .insert(sessions)
+    .values({ ...input, tokenHash: hashToken(token), createdAt: now, expiresAt, lastSeenAt: now })
+    .returning({ id: sessions.id });
+  return { id: row!.id, token, expiresAt };
+}
+
+/**
+ * RF-AUT-04 y 10: cierra todas las sesiones vigentes de un usuario, de la app y de alertas (al cambiar el rol o la
+ * contraseña, al desactivarlo o al revocar su dispositivo). Con `keep`, conserva esa sesión y el token de alertas de su
+ * dispositivo, que vive con ella (DT-05). Devuelve las sesiones cerradas.
+ */
+export async function revokeUserSessions(
+  tx: Tx,
+  clock: Clock,
+  userId: string,
+  keep?: { sessionId: string; deviceId: string },
+) {
+  const now = clock.now();
+  return tx
+    .update(sessions)
+    .set({ revokedAt: now })
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, now),
+        keep ? ne(sessions.id, keep.sessionId) : undefined,
+        keep ? not(and(eq(sessions.kind, 'device'), eq(sessions.deviceId, keep.deviceId))!) : undefined,
+      ),
+    )
+    .returning({ id: sessions.id });
+}
+
+/** DT-05: el token de alertas de un dispositivo se cierra con la sesión de la app de ese dispositivo. */
+export function revokeDeviceTokens(tx: Tx, clock: Clock, userId: string, deviceId: string) {
+  return tx
+    .update(sessions)
+    .set({ revokedAt: clock.now() })
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        eq(sessions.deviceId, deviceId),
+        eq(sessions.kind, 'device'),
+        isNull(sessions.revokedAt),
+      ),
+    );
+}
+
+/**
+ * DT-05: el servicio de alertas (WebSocket, T043) acepta un token de dispositivo vigente, no revocado y de un usuario
+ * activo. Devuelve a quién pertenece, o null.
+ */
+export async function findDeviceTokenSession(db: NodePgDatabase | Tx, clock: Clock, token: string) {
+  const [row] = await db
+    .select({ userId: sessions.userId, deviceId: sessions.deviceId })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(
+      and(
+        eq(sessions.tokenHash, hashToken(token)),
+        eq(sessions.kind, 'device'),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, clock.now()),
+        eq(users.active, true),
+      ),
+    );
+  return row ?? null;
+}

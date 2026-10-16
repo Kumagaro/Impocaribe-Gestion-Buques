@@ -1,0 +1,117 @@
+# T005 · plan §13.4: verificación, escritorio, Android y nocturno.
+# La integración en main exige estos trabajos en verde (regla de protección de la rama main en GitHub).
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nocturno: repite todos los trabajos y añade la mutación completa.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+jobs:
+  verify:
+    name: Verificación (Linux + PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/impocaribe_test
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # la mutación del servidor compara la rama con main
+      - run: git fetch origin main:main || true
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:reset
+      - run: pnpm verify:core
+      # T026: extremo a extremo con el mismo Chrome for Testing que en Windows. La regresión visual corre en el equipo de
+      # desarrollo (pnpm verify): sus referencias son de Windows, la plataforma de las apps.
+      - run: npx --yes @puppeteer/browsers@3.2.5 install chrome-headless-shell@155.0.8059.39 --path ~/.cache/puppeteer
+      - run: pnpm e2e
+        env:
+          E2E_CHROME: /home/runner/.cache/puppeteer/chrome-headless-shell/linux-155.0.8059.39/chrome-headless-shell-linux64/chrome-headless-shell
+
+  nightly-mutation:
+    name: Mutación completa (nocturno)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/impocaribe_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:reset
+      # Plan §11.3: mutación completa de shared/domain y de los módulos críticos del servidor (>= 90 %).
+      - run: pnpm mutation:full
+
+  desktop:
+    name: Escritorio (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  android:
+    name: APK de depuración (Linux + Android SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @impocaribe/web build
+      - run: pnpm --filter @impocaribe/android apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: apk-debug
+          path: packages/android/android/app/build/outputs/apk/debug/*.apk

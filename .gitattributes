@@ -1,2 +1,20 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Finales de línea fijos (LF) en todo el repositorio, sea cual sea la configuración del equipo.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binarios: PDF de referencia, imágenes y capturas visuales (plan §13.2)
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.jar binary
+*.keystore binary

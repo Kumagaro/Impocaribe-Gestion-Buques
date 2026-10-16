@@ -1,0 +1,1882 @@
+{
+  "source": "Excel \"Orden De Carga puerto habana ULTIMO2\" (prototipo aprobado, docs/referencia). Anonimizado: personas físicas como PARTICULAR A..D y choferes como CHOFER 01..NN; empresas, marcas, DM, pesos y fechas sin cambios.",
+  "rules": [
+    "Las toneladas de cada orden son su peso de patio; sin peso, el intento se rechaza (VALIDATION_ERROR).",
+    "El total del buque Eagle 1 es la suma de los totales declarados de sus DM; cada DM con total se asigna completa al buque.",
+    "La DM sin total queda pendiente: sus órdenes se rechazan (DECLARATION_PENDING_TOTAL).",
+    "Cada orden se asocia a la DM por cliente y marca; si no coincide con ninguna, se rechaza (DM inexistente).",
+    "Orden de comprobación: DM inexistente, sin toneladas, DM pendiente de total, sobregiro.",
+    "Los números de DM se completan a 5 dígitos.",
+    "Cada orden se emite en su fecha del Excel (fecha de emisión = fecha de carga); las DM se crean el 2026-09-04, día del arribo real, así que el plazo de 30 días no interviene.",
+    "Las órdenes marcadas CANCELADA o CANCELADAS se emiten y se anulan enseguida con el motivo \"Cancelada en el Excel\"; si no tienen peso, quedan como intento rechazado.",
+    "Las órdenes emitidas se numeran EAGLE1-2026-V1-0001 en adelante, en el orden de las filas: la segunda 516 recibe el siguiente número y los 517 a 520, que no existen en el Excel, no dejan hueco.",
+    "El Excel no trae camiones: cada orden usa un camión sintético distinto con 34,000 t de capacidad, para que la capacidad (D4) y el camión repetido (D5) no intervengan."
+  ],
+  "vessel": {
+    "name": "Eagle 1",
+    "code": "EAGLE1",
+    "manifest": "0080/2026",
+    "bl": "B/L 1",
+    "port": "PUERTO HABANA — HAIPONG",
+    "internalBuyer": "Agencia Importadora CARIBE SURL",
+    "arrivalDate": "2026-09-04",
+    "voyage": "V1",
+    "total": "2700.500"
+  },
+  "declarations": [
+    {
+      "number": "00436",
+      "client": "PANNIS S.U.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "total": "123.750",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00435",
+      "client": "GA&A S.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "total": "19.750",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00437",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "total": null,
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00443",
+      "client": "PARTICULAR B",
+      "brand": "DELICIA DYD",
+      "total": "24.500",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00431",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "total": "900.250",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00442",
+      "client": "GRUPO COMERCIAL RB S.R.L.",
+      "brand": "DOST (DO)",
+      "total": "118.750",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00434",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "total": "631.500",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00433",
+      "client": "SLEO S.R.L.",
+      "brand": "PLANTIN 1 (p)",
+      "total": "24.750",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00432",
+      "client": "LOS SAAVEDRAS S.U.R.L.",
+      "brand": "PLANTIN 1 (p)",
+      "total": "24.750",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00439",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "total": "412.500",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00441",
+      "client": "PARTICULAR D",
+      "brand": "YIN DYD",
+      "total": "172.000",
+      "createdOn": "2026-09-04"
+    },
+    {
+      "number": "00440",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "total": "248.000",
+      "createdOn": "2026-09-04"
+    }
+  ],
+  "orders": [
+    {
+      "row": 2,
+      "excelNumber": 500,
+      "date": "2026-09-04",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 01",
+      "tons": "18.060",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 3,
+      "excelNumber": 501,
+      "date": "2026-09-04",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 02",
+      "tons": "17.320",
+      "note": "CANCELADAS",
+      "cancelled": true
+    },
+    {
+      "row": 4,
+      "excelNumber": 502,
+      "date": "2026-09-04",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 03",
+      "tons": "18.460",
+      "note": "OJO",
+      "cancelled": false
+    },
+    {
+      "row": 5,
+      "excelNumber": 503,
+      "date": "2026-09-05",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 04",
+      "tons": "17.240",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 6,
+      "excelNumber": 504,
+      "date": "2026-09-05",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 05",
+      "tons": "16.340",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 7,
+      "excelNumber": 505,
+      "date": "2026-09-05",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 06",
+      "tons": "17.180",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 8,
+      "excelNumber": 506,
+      "date": "2026-09-05",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 07",
+      "tons": "17.320",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 9,
+      "excelNumber": 507,
+      "date": "2026-09-05",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 08",
+      "tons": null,
+      "note": "CANCELADA",
+      "cancelled": true
+    },
+    {
+      "row": 10,
+      "excelNumber": 508,
+      "date": "2026-09-05",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 09",
+      "tons": "17.520",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 11,
+      "excelNumber": 509,
+      "date": "2026-09-05",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 10",
+      "tons": "17.100",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 12,
+      "excelNumber": 510,
+      "date": "2026-09-05",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 11",
+      "tons": "17.340",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 13,
+      "excelNumber": 511,
+      "date": "2026-09-05",
+      "client": "PARTICULAR D",
+      "brand": "ARMALIN ALMIRAL",
+      "driver": "CHOFER 12",
+      "tons": "17.600",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 14,
+      "excelNumber": 512,
+      "date": "2026-09-05",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 13",
+      "tons": "16.820",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 15,
+      "excelNumber": 513,
+      "date": "2026-09-05",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 13",
+      "tons": null,
+      "note": "CANCELADA",
+      "cancelled": true
+    },
+    {
+      "row": 16,
+      "excelNumber": 514,
+      "date": "2026-09-05",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 14",
+      "tons": "17.960",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 17,
+      "excelNumber": 515,
+      "date": "2026-09-05",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 15",
+      "tons": "12.220",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 18,
+      "excelNumber": 516,
+      "date": "2026-09-05",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 16",
+      "tons": "17.240",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 19,
+      "excelNumber": 516,
+      "date": "2026-09-05",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 17",
+      "tons": "17.640",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 20,
+      "excelNumber": 521,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 18",
+      "tons": "17.280",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 21,
+      "excelNumber": 522,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 19",
+      "tons": "18.060",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 22,
+      "excelNumber": 523,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 20",
+      "tons": "17.200",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 23,
+      "excelNumber": 524,
+      "date": "2026-09-06",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 21",
+      "tons": "17.820",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 24,
+      "excelNumber": 525,
+      "date": "2026-09-06",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 14",
+      "tons": "17.460",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 25,
+      "excelNumber": 526,
+      "date": "2026-09-06",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 15",
+      "tons": "13.980",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 26,
+      "excelNumber": 527,
+      "date": "2026-09-06",
+      "client": "PARTICULAR D",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 22",
+      "tons": "18.020",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 27,
+      "excelNumber": 528,
+      "date": "2026-09-06",
+      "client": "PARTICULAR D",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 23",
+      "tons": "18.040",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 28,
+      "excelNumber": 529,
+      "date": "2026-09-06",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 13",
+      "tons": "18.080",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 29,
+      "excelNumber": 530,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 24",
+      "tons": "17.180",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 30,
+      "excelNumber": 531,
+      "date": "2026-09-06",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 25",
+      "tons": "17.980",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 31,
+      "excelNumber": 532,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 26",
+      "tons": "16.420",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 32,
+      "excelNumber": 533,
+      "date": "2026-09-06",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 27",
+      "tons": "16.780",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 33,
+      "excelNumber": 534,
+      "date": "2026-09-06",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 09",
+      "tons": "16.800",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 34,
+      "excelNumber": 535,
+      "date": "2026-09-06",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 11",
+      "tons": "18.100",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 35,
+      "excelNumber": 536,
+      "date": "2026-09-06",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 28",
+      "tons": "16.800",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 36,
+      "excelNumber": 537,
+      "date": "2026-09-06",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 29",
+      "tons": "17.240",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 37,
+      "excelNumber": 538,
+      "date": "2026-09-06",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 30",
+      "tons": "17.440",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 38,
+      "excelNumber": 539,
+      "date": "2026-09-06",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 31",
+      "tons": "18.260",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 39,
+      "excelNumber": 540,
+      "date": "2026-09-06",
+      "client": "GA&A S.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "driver": "CHOFER 32",
+      "tons": "17.440",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 40,
+      "excelNumber": 541,
+      "date": "2026-09-06",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 33",
+      "tons": "18.420",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 41,
+      "excelNumber": 542,
+      "date": "2026-09-06",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 34",
+      "tons": "16.540",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 42,
+      "excelNumber": 543,
+      "date": "2026-09-06",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 35",
+      "tons": "17.200",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 43,
+      "excelNumber": 544,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 06",
+      "tons": "17.200",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 44,
+      "excelNumber": 545,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 05",
+      "tons": "16.700",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 45,
+      "excelNumber": 546,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 36",
+      "tons": "18.160",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 46,
+      "excelNumber": 547,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 37",
+      "tons": "16.660",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 47,
+      "excelNumber": 548,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 15",
+      "tons": "13.420",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 48,
+      "excelNumber": 549,
+      "date": "2026-09-07",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 13",
+      "tons": "17.480",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 49,
+      "excelNumber": 550,
+      "date": "2026-09-07",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 38",
+      "tons": "17.520",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 50,
+      "excelNumber": 551,
+      "date": "2026-09-07",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 39",
+      "tons": "17.340",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 51,
+      "excelNumber": 552,
+      "date": "2026-09-07",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 10",
+      "tons": "17.780",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 52,
+      "excelNumber": 553,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 40",
+      "tons": "16.600",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 53,
+      "excelNumber": 554,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 41",
+      "tons": "17.080",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 54,
+      "excelNumber": 555,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 42",
+      "tons": "16.640",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 55,
+      "excelNumber": 556,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 43",
+      "tons": "17.160",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 56,
+      "excelNumber": 557,
+      "date": "2026-09-07",
+      "client": "PANNIS S.U.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "driver": "CHOFER 44",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 57,
+      "excelNumber": 558,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 45",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 58,
+      "excelNumber": 559,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 21",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 59,
+      "excelNumber": 560,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 46",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 60,
+      "excelNumber": 561,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 47",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 61,
+      "excelNumber": 562,
+      "date": "2026-09-07",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 31",
+      "tons": "17.580",
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 62,
+      "excelNumber": 563,
+      "date": "2026-09-07",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 33",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 63,
+      "excelNumber": 564,
+      "date": "2026-09-07",
+      "client": "PANNIS S.U.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "driver": "CHOFER 12",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 64,
+      "excelNumber": 565,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 48",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 65,
+      "excelNumber": 566,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 49",
+      "tons": null,
+      "note": "CANCELADA",
+      "cancelled": true
+    },
+    {
+      "row": 66,
+      "excelNumber": 567,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 50",
+      "tons": null,
+      "note": "CANCELADA",
+      "cancelled": true
+    },
+    {
+      "row": 67,
+      "excelNumber": 568,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 51",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 68,
+      "excelNumber": 569,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 52",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 69,
+      "excelNumber": 570,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 53",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 70,
+      "excelNumber": 571,
+      "date": "2026-09-07",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 54",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 71,
+      "excelNumber": 572,
+      "date": "2026-09-07",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 55",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 72,
+      "excelNumber": 573,
+      "date": "2026-09-07",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 56",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 73,
+      "excelNumber": 574,
+      "date": "2026-09-07",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 57",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 74,
+      "excelNumber": 575,
+      "date": "2026-09-07",
+      "client": "GRUPO COMERCIAL RB S.R.L.",
+      "brand": "DOST (DO)",
+      "driver": "CHOFER 58",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 75,
+      "excelNumber": 576,
+      "date": "2026-09-07",
+      "client": "GRUPO COMERCIAL RB S.R.L.",
+      "brand": "DOST (DO)",
+      "driver": "CHOFER 59",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 76,
+      "excelNumber": 577,
+      "date": "2026-09-07",
+      "client": "GRUPO COMERCIAL RB S.R.L.",
+      "brand": "DOST (DO)",
+      "driver": "CHOFER 60",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 77,
+      "excelNumber": 578,
+      "date": "2026-09-07",
+      "client": "GRUPO COMERCIAL RB S.R.L.",
+      "brand": "DOST (DO)",
+      "driver": "CHOFER 61",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 78,
+      "excelNumber": 579,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 24",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 79,
+      "excelNumber": 580,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 06",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 80,
+      "excelNumber": 581,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 05",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 81,
+      "excelNumber": 582,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 37",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 82,
+      "excelNumber": 583,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 36",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 83,
+      "excelNumber": 584,
+      "date": "2026-09-07",
+      "client": "NUEVOS TIEMPOS S.R.L.",
+      "brand": "DOSEL",
+      "driver": "CHOFER 62",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 84,
+      "excelNumber": 585,
+      "date": "2026-09-08",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 13",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 85,
+      "excelNumber": 586,
+      "date": "2026-09-08",
+      "client": "PARTICULAR A",
+      "brand": "DELICIA DYD",
+      "driver": "CHOFER 34",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 86,
+      "excelNumber": 587,
+      "date": "2026-09-08",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 51",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 87,
+      "excelNumber": 588,
+      "date": "2026-09-08",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 02",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 88,
+      "excelNumber": 589,
+      "date": "2026-09-08",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 01",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 89,
+      "excelNumber": 590,
+      "date": "2026-09-08",
+      "client": "FUSION S.R.L.",
+      "brand": "KENLOQUIN POLACO",
+      "driver": "CHOFER 45",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 90,
+      "excelNumber": 591,
+      "date": "2026-09-08",
+      "client": "PARTICULAR C",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 59",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 91,
+      "excelNumber": 592,
+      "date": "2026-09-08",
+      "client": "BOSCARGO S.U.R.L",
+      "brand": "YIN DYD",
+      "driver": "CHOFER 63",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 92,
+      "excelNumber": 593,
+      "date": "2026-09-08",
+      "client": "PANNIS S.U.R.L.",
+      "brand": "ARMALIN ALMIRAL",
+      "driver": "CHOFER 64",
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    },
+    {
+      "row": 93,
+      "excelNumber": 594,
+      "date": "2026-09-08",
+      "client": "",
+      "brand": "",
+      "driver": null,
+      "tons": null,
+      "note": "",
+      "cancelled": false
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "row": 2,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0001",
+        "tons": "18.060"
+      },
+      {
+        "row": 3,
+        "dm": "00439",
+        "result": "issued_then_voided",
+        "number": "EAGLE1-2026-V1-0002",
+        "tons": "17.320",
+        "voidReason": "Cancelada en el Excel"
+      },
+      {
+        "row": 4,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0003",
+        "tons": "18.460"
+      },
+      {
+        "row": 5,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0004",
+        "tons": "17.240"
+      },
+      {
+        "row": 6,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0005",
+        "tons": "16.340"
+      },
+      {
+        "row": 7,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0006",
+        "tons": "17.180"
+      },
+      {
+        "row": 8,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0007",
+        "tons": "17.320"
+      },
+      {
+        "row": 9,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 10,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0008",
+        "tons": "17.520"
+      },
+      {
+        "row": 11,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0009",
+        "tons": "17.100"
+      },
+      {
+        "row": 12,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0010",
+        "tons": "17.340"
+      },
+      {
+        "row": 13,
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "DM inexistente"
+      },
+      {
+        "row": 14,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 15,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 16,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0011",
+        "tons": "17.960"
+      },
+      {
+        "row": 17,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0012",
+        "tons": "12.220"
+      },
+      {
+        "row": 18,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0013",
+        "tons": "17.240"
+      },
+      {
+        "row": 19,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0014",
+        "tons": "17.640"
+      },
+      {
+        "row": 20,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0015",
+        "tons": "17.280"
+      },
+      {
+        "row": 21,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0016",
+        "tons": "18.060"
+      },
+      {
+        "row": 22,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0017",
+        "tons": "17.200"
+      },
+      {
+        "row": 23,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0018",
+        "tons": "17.820"
+      },
+      {
+        "row": 24,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0019",
+        "tons": "17.460"
+      },
+      {
+        "row": 25,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0020",
+        "tons": "13.980"
+      },
+      {
+        "row": 26,
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "DM inexistente"
+      },
+      {
+        "row": 27,
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "DM inexistente"
+      },
+      {
+        "row": 28,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 29,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0021",
+        "tons": "17.180"
+      },
+      {
+        "row": 30,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0022",
+        "tons": "17.980"
+      },
+      {
+        "row": 31,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0023",
+        "tons": "16.420"
+      },
+      {
+        "row": 32,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0024",
+        "tons": "16.780"
+      },
+      {
+        "row": 33,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0025",
+        "tons": "16.800"
+      },
+      {
+        "row": 34,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0026",
+        "tons": "18.100"
+      },
+      {
+        "row": 35,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 36,
+        "dm": "00440",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0027",
+        "tons": "17.240"
+      },
+      {
+        "row": 37,
+        "dm": "00440",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0028",
+        "tons": "17.440"
+      },
+      {
+        "row": 38,
+        "dm": "00440",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0029",
+        "tons": "18.260"
+      },
+      {
+        "row": 39,
+        "dm": "00435",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0030",
+        "tons": "17.440"
+      },
+      {
+        "row": 40,
+        "dm": "00440",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0031",
+        "tons": "18.420"
+      },
+      {
+        "row": 41,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 42,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 43,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0032",
+        "tons": "17.200"
+      },
+      {
+        "row": 44,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0033",
+        "tons": "16.700"
+      },
+      {
+        "row": 45,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0034",
+        "tons": "18.160"
+      },
+      {
+        "row": 46,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0035",
+        "tons": "16.660"
+      },
+      {
+        "row": 47,
+        "dm": "00434",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0036",
+        "tons": "13.420"
+      },
+      {
+        "row": 48,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 49,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 50,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "DECLARATION_PENDING_TOTAL",
+        "reason": "DM pendiente de total"
+      },
+      {
+        "row": 51,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0037",
+        "tons": "17.780"
+      },
+      {
+        "row": 52,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0038",
+        "tons": "16.600"
+      },
+      {
+        "row": 53,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0039",
+        "tons": "17.080"
+      },
+      {
+        "row": 54,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0040",
+        "tons": "16.640"
+      },
+      {
+        "row": 55,
+        "dm": "00431",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0041",
+        "tons": "17.160"
+      },
+      {
+        "row": 56,
+        "dm": "00436",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 57,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 58,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 59,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 60,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 61,
+        "dm": "00439",
+        "result": "issued",
+        "number": "EAGLE1-2026-V1-0042",
+        "tons": "17.580"
+      },
+      {
+        "row": 62,
+        "dm": "00440",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 63,
+        "dm": "00436",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 64,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 65,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 66,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 67,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 68,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 69,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 70,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 71,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 72,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 73,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 74,
+        "dm": "00442",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 75,
+        "dm": "00442",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 76,
+        "dm": "00442",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 77,
+        "dm": "00442",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 78,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 79,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 80,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 81,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 82,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 83,
+        "dm": "00431",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 84,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 85,
+        "dm": "00437",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 86,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 87,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 88,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 89,
+        "dm": "00434",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 90,
+        "dm": "00439",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 91,
+        "dm": "00440",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 92,
+        "dm": "00436",
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "Intento sin toneladas"
+      },
+      {
+        "row": 93,
+        "result": "rejected",
+        "code": "VALIDATION_ERROR",
+        "reason": "DM inexistente"
+      }
+    ],
+    "declarations": [
+      {
+        "dm": "00436",
+        "total": "123.750",
+        "allocated": "123.750",
+        "loaded": "0.000",
+        "balance": "123.750",
+        "status": "allocated"
+      },
+      {
+        "dm": "00435",
+        "total": "19.750",
+        "allocated": "19.750",
+        "loaded": "17.440",
+        "balance": "2.310",
+        "status": "in_extraction"
+      },
+      {
+        "dm": "00437",
+        "total": null,
+        "allocated": null,
+        "loaded": "0.000",
+        "balance": null,
+        "status": "pending_total"
+      },
+      {
+        "dm": "00443",
+        "total": "24.500",
+        "allocated": "24.500",
+        "loaded": "0.000",
+        "balance": "24.500",
+        "status": "allocated"
+      },
+      {
+        "dm": "00431",
+        "total": "900.250",
+        "allocated": "900.250",
+        "loaded": "307.200",
+        "balance": "593.050",
+        "status": "in_extraction"
+      },
+      {
+        "dm": "00442",
+        "total": "118.750",
+        "allocated": "118.750",
+        "loaded": "0.000",
+        "balance": "118.750",
+        "status": "allocated"
+      },
+      {
+        "dm": "00434",
+        "total": "631.500",
+        "allocated": "631.500",
+        "loaded": "127.740",
+        "balance": "503.760",
+        "status": "in_extraction"
+      },
+      {
+        "dm": "00433",
+        "total": "24.750",
+        "allocated": "24.750",
+        "loaded": "0.000",
+        "balance": "24.750",
+        "status": "allocated"
+      },
+      {
+        "dm": "00432",
+        "total": "24.750",
+        "allocated": "24.750",
+        "loaded": "0.000",
+        "balance": "24.750",
+        "status": "allocated"
+      },
+      {
+        "dm": "00439",
+        "total": "412.500",
+        "allocated": "412.500",
+        "loaded": "176.720",
+        "balance": "235.780",
+        "status": "in_extraction"
+      },
+      {
+        "dm": "00441",
+        "total": "172.000",
+        "allocated": "172.000",
+        "loaded": "0.000",
+        "balance": "172.000",
+        "status": "allocated"
+      },
+      {
+        "dm": "00440",
+        "total": "248.000",
+        "allocated": "248.000",
+        "loaded": "71.360",
+        "balance": "176.640",
+        "status": "in_extraction"
+      }
+    ],
+    "vessel": {
+      "total": "2700.500",
+      "allocated": "2700.500",
+      "free": "0.000",
+      "loaded": "700.460",
+      "remaining": "2000.040"
+    },
+    "summary": {
+      "issued": 41,
+      "issuedThenVoided": 1,
+      "rejected": 50,
+      "lastNumber": "EAGLE1-2026-V1-0042"
+    }
+  }
+}

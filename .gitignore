@@ -1,0 +1,24 @@
+# Dependencias y compilados
+node_modules/
+dist/
+out/
+*.tsbuildinfo
+
+# Secretos: solo se sube .env.example (plan §13.2)
+.env
+.env.*
+!.env.example
+
+# Pruebas y reportes
+coverage/
+reports/
+test-results/
+playwright-report/
+.stryker-tmp/
+
+# Sistema y editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+storybook-static/
