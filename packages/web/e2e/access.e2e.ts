@@ -50,6 +50,8 @@ test('P-04: con un código válido cambia la contraseña y entra con la nueva', 
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
+  // El login también tiene un campo Usuario: se escribe cuando ya está la pantalla de recuperar.
+  await expect(page.getByRole('heading', { name: 'Recuperar la contraseña' })).toBeVisible();
   await page.getByLabel('Usuario').fill(user.username);
   await page.getByLabel('Carné').fill(user.nationalId);
   await page.getByLabel('Teléfono').fill(user.phone);
@@ -77,6 +79,8 @@ test('P-04: un código ya usado no sirve, y el error no dice qué dato falló', 
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
+  // El login también tiene un campo Usuario: se escribe cuando ya está la pantalla de recuperar.
+  await expect(page.getByRole('heading', { name: 'Recuperar la contraseña' })).toBeVisible();
   await page.getByLabel('Usuario').fill(user.username);
   await page.getByLabel('Carné').fill(user.nationalId);
   await page.getByLabel('Teléfono').fill(user.phone);

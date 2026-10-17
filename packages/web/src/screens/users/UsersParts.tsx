@@ -2,7 +2,7 @@
 // abren (panel al lado de la tabla en ESC; hoja en TEL; diálogo en TAB).
 import type { UserListItem } from '@impocaribe/shared/validation';
 import { Lock } from 'lucide-react';
-import { Button, Checkbox, Select, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, Select, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { maskPhone } from '../../ui/masks';
 import { Dialog } from '../../ui/overlays';
@@ -67,10 +67,10 @@ export function NewUserForm({ model }: { model: UsersModel }) {
       <PersonFields fields={f} />
       <RoleField field={f.role} />
       <Field label="Contraseña" help="Mínimo 8 caracteres" {...f.password.state}>
-        <TextField type="password" autoComplete="new-password" {...f.password.control} />
+        <PasswordField autoComplete="new-password" {...f.password.control} />
       </Field>
       <Field label="Confirmar" {...f.confirm.state}>
-        <TextField type="password" autoComplete="new-password" {...f.confirm.control} />
+        <PasswordField autoComplete="new-password" {...f.confirm.control} />
       </Field>
       <div className="users-actions">
         <Button variant="ghost" onClick={model.close}>
@@ -200,10 +200,10 @@ export function UsersDialogs({ model }: { model: UsersModel }) {
         <form className="users-form" onSubmit={model.submitReset} noValidate>
           {model.resetError && <Notice tone="bad">{model.resetError}</Notice>}
           <Field label="Contraseña temporal" help="Mínimo 8 caracteres" {...f.password.state}>
-            <TextField type="password" autoComplete="new-password" {...f.password.control} />
+            <PasswordField autoComplete="new-password" {...f.password.control} />
           </Field>
           <Field label="Confirmar" {...f.confirm.state}>
-            <TextField type="password" autoComplete="new-password" {...f.confirm.control} />
+            <PasswordField autoComplete="new-password" {...f.confirm.control} />
           </Field>
           <div className="users-actions">
             <Button variant="ghost" onClick={model.close}>

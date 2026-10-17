@@ -25,7 +25,6 @@ export function useLogin() {
   const [notice, setNotice] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const check = useCallback(async () => {
     setPhase('checking');
@@ -81,8 +80,6 @@ export function useLogin() {
     password: { ...password, state: passwordState },
     keepSignedIn: form.form.watch('keepSignedIn') as boolean,
     setKeepSignedIn: (v: boolean) => form.form.setValue('keepSignedIn', v),
-    showPassword,
-    toggleShowPassword: () => setShowPassword((v) => !v),
     notice,
     locked,
     busy: form.form.formState.isSubmitting,

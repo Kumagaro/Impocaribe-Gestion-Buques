@@ -1,5 +1,6 @@
 // T023 · Controles base (plan §7.2): botones, campos y selección. Objetivos táctiles de 48 dp en teléfono y tablet
 // (RNF-16) y escala al pulsar con su variante reducida (MOV-06, MOV-07).
+import { Eye, EyeOff } from 'lucide-react';
 import { m } from 'motion/react';
 import {
   useId,
@@ -194,6 +195,25 @@ export function TextField({
         onValueChange?.(next);
       }}
     />
+  );
+}
+
+/** Contraseña con el botón de ojo dentro del campo, a la derecha, para verla u ocultarla. */
+export function PasswordField({
+  className,
+  ...rest
+}: Omit<TextFieldProps, 'type' | 'uppercase' | 'digitsOnly' | 'mask'>) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className={cx('ui-password', className)}>
+      <TextField {...rest} type={visible ? 'text' : 'password'} />
+      <IconButton
+        label={visible ? 'Ocultar la contraseña' : 'Mostrar la contraseña'}
+        icon={visible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+        disabled={rest.disabled}
+        onClick={() => setVisible((v) => !v)}
+      />
+    </div>
   );
 }
 

@@ -3,7 +3,18 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderUi } from '../../test/render';
-import { Button, Checkbox, Combobox, DateField, IconButton, Select, Switch, TextField, TonsInput } from './controls';
+import {
+  Button,
+  Checkbox,
+  Combobox,
+  DateField,
+  IconButton,
+  PasswordField,
+  Select,
+  Switch,
+  TextField,
+  TonsInput,
+} from './controls';
 
 // T023 · plan §7.2, RF-UI-03 a 08 y RNF-16: estados, teclado y foco, objetivos táctiles de 48 dp y movimiento.
 
@@ -123,6 +134,27 @@ describe('TextField', () => {
     renderUi(<Probe />);
     await userEvent.type(screen.getByRole('textbox', { name: 'Carné' }), '84a01-19b');
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('840119');
+  });
+});
+
+describe('PasswordField', () => {
+  it('el ojo, dentro del campo, muestra y oculta la contraseña', async () => {
+    const { container } = renderUi(<PasswordField aria-label="Contraseña" defaultValue="secreta-1" />);
+    const input = screen.getByLabelText('Contraseña');
+    expect(input.getAttribute('type')).toBe('password');
+    const eye = screen.getByRole('button', { name: 'Mostrar la contraseña' });
+    // Dentro del mismo contenedor que el campo (a la derecha, por CSS).
+    expect(eye.parentElement).toBe(input.parentElement);
+    expect(container.querySelector('.ui-password')).toBe(input.parentElement);
+    await userEvent.click(eye);
+    expect(input.getAttribute('type')).toBe('text');
+    await userEvent.click(screen.getByRole('button', { name: 'Ocultar la contraseña' }));
+    expect(input.getAttribute('type')).toBe('password');
+  });
+
+  it('desactivado, el ojo también', () => {
+    renderUi(<PasswordField aria-label="Contraseña" disabled />);
+    expect(screen.getByRole('button', { name: 'Mostrar la contraseña' }).hasAttribute('disabled')).toBe(true);
   });
 });
 

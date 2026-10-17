@@ -46,18 +46,6 @@
   align-items: center;
   gap: 10px;
 }
-.auth-brand__mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--on-accent);
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-}
 .auth-brand b {
   display: block;
   font-size: 17px;
@@ -115,16 +103,6 @@
   font-size: var(--t-xs);
   color: var(--ink-3);
 }
-.auth-password {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.auth-password > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
 /* P-01: búsqueda, identidad del servidor y código de emparejamiento. */
 .auth-search {
   width: 84px;

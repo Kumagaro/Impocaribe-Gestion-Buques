@@ -89,15 +89,21 @@
 }
 .app-brand {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   padding: 2px 8px 12px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--line-2);
 }
-.app-brand b {
+.app-brand div b {
   font-size: 15px;
 }
-.app-brand span {
+/* Solo el texto: el logo también es un span. */
+.app-brand div b,
+.app-brand div span {
+  display: block;
+}
+.app-brand div span {
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;

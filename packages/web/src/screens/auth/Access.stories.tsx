@@ -137,8 +137,6 @@ const login = (extra: Partial<LoginModel> = {}): LoginModel => ({
   password: field('password', 'contraseña'),
   keepSignedIn: false,
   setKeepSignedIn: noop,
-  showPassword: false,
-  toggleShowPassword: noop,
   notice: null,
   locked: false,
   busy: false,

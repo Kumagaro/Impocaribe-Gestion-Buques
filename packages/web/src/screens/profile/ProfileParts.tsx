@@ -2,7 +2,7 @@
 // ellas (lista en TEL; secciones a la izquierda en TAB y ESC).
 import { havanaDateTime } from '@impocaribe/shared';
 import { ChevronRight, Lock, LogOut, Monitor, Smartphone } from 'lucide-react';
-import { Button, Checkbox, Switch, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, Switch } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { Dialog } from '../../ui/overlays';
 import { Badge, EmptyState, ErrorState, Notice, Skeleton } from '../../ui/presentation';
@@ -167,13 +167,13 @@ function ChangePassword({ model }: { model: ProfileModel }) {
       {model.passwordError && <Notice tone="bad">{model.passwordError}</Notice>}
       <ErrorSummary errors={model.passwordSummary} />
       <Field label="Contraseña actual" {...model.current.state}>
-        <TextField type="password" autoComplete="current-password" {...model.current.control} />
+        <PasswordField autoComplete="current-password" {...model.current.control} />
       </Field>
       <Field label="Nueva contraseña" help="Mínimo 8 caracteres" {...model.password.state}>
-        <TextField type="password" autoComplete="new-password" {...model.password.control} />
+        <PasswordField autoComplete="new-password" {...model.password.control} />
       </Field>
       <Field label="Confirmar" {...model.confirm.state}>
-        <TextField type="password" autoComplete="new-password" {...model.confirm.control} />
+        <PasswordField autoComplete="new-password" {...model.confirm.control} />
       </Field>
       <div className="profile-actions">
         <Button type="submit" busy={model.changingPassword} busyLabel="Cambiando…">

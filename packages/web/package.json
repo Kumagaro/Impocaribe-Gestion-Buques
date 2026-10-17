@@ -12,7 +12,8 @@
     "e2e": "playwright test",
     "visual": "playwright test -c playwright.visual.config.ts",
     "visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots --grep-invert \"un píxel\"",
-    "storybook": "storybook dev --port 6006"
+    "storybook": "storybook dev --port 6006",
+    "brand-icons": "node scripts/brand-icons.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

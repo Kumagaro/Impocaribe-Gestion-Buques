@@ -1,6 +1,7 @@
 // T025 · Escritorio (ui-spec §1.1): menú lateral fijo por grupos, como el prototipo; cabecera con título y subtítulo,
 // búsqueda global, alertas, usuario y rol, y cambio de tema. Los atajos los atiende useAppShell.
 import type { ReactNode } from 'react';
+import { AppLogo } from '../ui/logo';
 import { Sidebar } from '../ui/structure';
 import { AlertsButton, SearchButton, ShellBands, SyncIndicator, ThemeButton, type ShellStatus } from './ShellParts';
 import type { AppShellModel } from './useAppShell';
@@ -22,8 +23,11 @@ export function AppShellDesktop({
         onNavigate={model.go}
         header={
           <div className="app-brand">
-            <b>Órdenes de Carga</b>
-            <span>IMPOCARIBE</span>
+            <AppLogo size={32} />
+            <div>
+              <b>Órdenes de Carga</b>
+              <span>IMPOCARIBE</span>
+            </div>
           </div>
         }
       />

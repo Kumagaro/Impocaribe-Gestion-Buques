@@ -1,6 +1,6 @@
 // T038 · P-04: el contenido de la pantalla, igual en las tres clases; cada presentación lo coloca en su marco.
 import { Link } from 'react-router';
-import { Button, TextField } from '../../ui/controls';
+import { Button, PasswordField, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { maskPhone } from '../../ui/masks';
 import { Notice } from '../../ui/presentation';
@@ -41,10 +41,10 @@ export function RecoverForm({ model }: { model: RecoverModel }) {
         <TextField autoComplete="off" uppercase maxLength={9} disabled={model.locked} {...model.code.control} />
       </Field>
       <Field label="Nueva contraseña" help="Mínimo 8 caracteres" {...model.password.state}>
-        <TextField type="password" autoComplete="new-password" disabled={model.locked} {...model.password.control} />
+        <PasswordField autoComplete="new-password" disabled={model.locked} {...model.password.control} />
       </Field>
       <Field label="Confirmar" {...model.confirm.state}>
-        <TextField type="password" autoComplete="new-password" disabled={model.locked} {...model.confirm.control} />
+        <PasswordField autoComplete="new-password" disabled={model.locked} {...model.confirm.control} />
       </Field>
       <div className="auth-actions">
         <Button type="submit" busy={model.busy} busyLabel="Cambiando…" disabled={model.locked}>
