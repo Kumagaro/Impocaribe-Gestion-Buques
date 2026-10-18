@@ -9,7 +9,6 @@ import { RecoveryController } from './auth/recovery.controller.ts';
 import { SessionGuard } from './auth/session.guard.ts';
 import { DiscoveryController } from './discovery/discovery.controller.ts';
 import { readServerInfo } from './discovery/server-info.ts';
-import { ServerEvents } from './events/server-events.ts';
 import { HealthController } from './health.controller.ts';
 import { DeviceGuard } from './http/device.guard.ts';
 import { DbDeviceRegistry } from './pairing/device-registry.ts';
@@ -18,6 +17,8 @@ import { LocalController } from './pairing/local.controller.ts';
 import { PairingController } from './pairing/pairing.controller.ts';
 import { SetupController } from './users/setup.controller.ts';
 import { UsersController } from './users/users.controller.ts';
+import { Realtime } from './sync/realtime.ts';
+import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
 
 @Module({
@@ -31,13 +32,15 @@ import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERV
     AuthController,
     RecoveryController,
     UsersController,
+    SyncController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
     { provide: SERVER_INFO, useFactory: () => readServerInfo(config().identityDir) },
     { provide: MIN_APP_VERSION, useFactory: () => config().minAppVersion },
     { provide: DB, useFactory: () => drizzle(createAppPool(config().databaseUrl)) },
-    ServerEvents,
+    Realtime,
+    ChangeLogPurge,
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).
     { provide: DEVICE_GUARD_ENABLED, useValue: true },
     {

@@ -1,0 +1,114 @@
+// T046 · Const. art. VII y plan §7.1: las pantallas leen de la copia local con TanStack Query; cada sincronización
+// invalida solo las consultas de las entidades que cambiaron y marca sus filas para el resaltado de MOV-02.
+import type { SyncEntity } from '@impocaribe/shared/validation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import type { LocalStore } from '../local/local-store';
+import { liveRowHighlight } from '../motion/presets';
+import { useAppSession } from '../session/SessionProvider';
+import type { SyncEngine, SyncStatus } from './engine';
+
+interface SyncContextValue {
+  engine: SyncEngine;
+  store: LocalStore;
+}
+const SyncContext = createContext<SyncContextValue | null>(null);
+
+const IDLE: SyncStatus = {
+  stage: 'idle',
+  online: false,
+  syncedAt: null,
+  hasData: false,
+  received: 0,
+  clockSkewMs: null,
+  syncing: false,
+};
+const noop = () => () => undefined;
+
+/** Con sesión: arranca la sincronización de la sesión y conecta sus avisos con las consultas locales. */
+export function SyncProvider({ children }: { children: ReactNode }) {
+  const { session } = useAppSession();
+  const queryClient = useQueryClient();
+  const [value, setValue] = useState<SyncContextValue | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const store = await session.localStore();
+      const engine = await session.startSync();
+      if (alive) setValue({ engine, store });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!value) return;
+    return value.engine.onChange(({ entities }) => {
+      for (const entity of entities) void queryClient.invalidateQueries({ queryKey: ['local', entity] });
+    });
+  }, [value, queryClient]);
+
+  return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
+}
+
+function useSync(): SyncContextValue | null {
+  return useContext(SyncContext);
+}
+
+/** El estado de la sincronización (banda de conexión, primera descarga, hora desfasada). */
+export function useSyncStatus(): SyncStatus {
+  const engine = useSync()?.engine;
+  return useSyncExternalStore(engine?.subscribe ?? noop, engine?.status ?? (() => IDLE));
+}
+
+/**
+ * RF-CON-06: sin conexión no se escribe nada de negocio. Hasta la primera respuesta del servidor no se sabe, y no se
+ * desactiva nada por una desconexión que quizá no existe.
+ */
+export function useOnline(): boolean {
+  const status = useSyncStatus();
+  return status.online || status.stage === 'idle';
+}
+
+/** Una entidad de la copia local, al día con cada sincronización (T046). */
+export function useLocalList<T>(entity: SyncEntity) {
+  const store = useSync()?.store;
+  return useQuery({
+    queryKey: ['local', entity],
+    queryFn: () => store!.list<T>(entity),
+    enabled: store !== undefined,
+  });
+}
+
+/** MOV-02: los ids de `entity` que cambió la sincronización en el último 1,5 s. */
+export function useRecentlyChanged(entity: SyncEntity): ReadonlySet<string> {
+  const engine = useSync()?.engine;
+  const [changed, setChanged] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    if (!engine) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const off = engine.onChange(({ entities, ids }) => {
+      if (!entities.includes(entity)) return;
+      setChanged((prev) => new Set([...prev, ...ids]));
+      timers.push(
+        setTimeout(
+          () => setChanged((prev) => new Set([...prev].filter((id) => !ids.includes(id)))),
+          liveRowHighlight(false).holdMs,
+        ),
+      );
+    });
+    return () => {
+      off();
+      for (const t of timers) clearTimeout(t);
+    };
+  }, [engine, entity]);
+  return changed;
+}
+
+/** Sincroniza ya (tras una escritura propia, plan §5.9); null mientras la sincronización no arrancó. */
+export function useSyncNow(): (() => Promise<void>) | null {
+  const engine = useSync()?.engine;
+  return engine ? () => engine.syncNow() : null;
+}

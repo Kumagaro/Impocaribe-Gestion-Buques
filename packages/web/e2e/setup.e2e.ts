@@ -26,6 +26,8 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   page,
   sql,
 }) => {
+  // Prepara 15 usuarios por la API, cada uno con 9 comprobaciones argon2id de 64 MB (contraseña y 8 códigos).
+  test.setTimeout(8 * 60_000);
   await openApp('/');
   await pairApp(page, 'desktop');
 

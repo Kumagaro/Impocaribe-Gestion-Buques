@@ -13,10 +13,9 @@ import { Contract } from '../http/contract.ts';
 import type { DeviceRequest } from '../http/device.guard.ts';
 import { idempotencyRequest, withIdempotency, type WriteResult } from '../http/idempotency.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
-import { recordChanges } from '../sync/change-log.ts';
 import { CLOCK, DB } from '../tokens.ts';
 import { issueRecoveryCodes, RECOVERY_CODE_COUNT } from '../users/recovery-codes.ts';
-import { userColumns } from '../users/users.repo.ts';
+import { recordUserChange, userColumns } from '../users/users.repo.ts';
 import { ALL_ROLES } from './auth.controller.ts';
 import { hashSecret, verifySecret } from './password.ts';
 import type { AuthedRequest } from './session.guard.ts';
@@ -149,9 +148,7 @@ export class RecoveryController {
     await tx.insert(recoveryAttempts).values({ userId: user.id, at: now, success: true, deviceId });
     // RF-AUT-04: con la contraseña nueva se cierran todas las sesiones.
     const closed = await revokeUserSessions(tx, this.clock, user.id);
-    await recordChanges(tx, this.clock, [
-      { entityType: 'user', entityId: user.id, op: 'upsert', audience: 'apoderada', payload: dto },
-    ]);
+    await recordUserChange(tx, this.clock, dto!);
     await recordAudit(tx, this.clock, {
       ...entry,
       userId: user.id,

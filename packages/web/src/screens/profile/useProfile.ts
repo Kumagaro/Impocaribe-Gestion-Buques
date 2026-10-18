@@ -15,6 +15,8 @@ import {
 } from '../../api/endpoints/auth';
 import type { DevicePreferences } from '../../session/app-session';
 import { useAppSession } from '../../session/SessionProvider';
+import { OFFLINE_REASON } from '../../sync/SyncGate';
+import { useOnline } from '../../sync/SyncProvider';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
 export const PROFILE_SECTIONS = [
@@ -36,6 +38,7 @@ const messageOf = (err: unknown) =>
 
 export function useProfile() {
   const { session, state } = useAppSession();
+  const online = useOnline();
   const navigate = useNavigate();
   const params = useParams();
   const stored = state.session!;
@@ -151,6 +154,9 @@ export function useProfile() {
     setTheme: (theme: DevicePreferences['theme']) => setPreference({ theme }),
     reduceMotion: state.preferences.reduceMotion,
     setReduceMotion: (reduceMotion: boolean) => setPreference({ reduceMotion }),
+
+    /** RF-CON-06 y EST-03: sin conexión, lo que escribe en el servidor se desactiva con el motivo. */
+    offlineReason: online ? undefined : OFFLINE_REASON,
 
     signOut: () =>
       void act('salir', async () => {

@@ -4,5 +4,6 @@ import './health';
 import './auth';
 import './pairing';
 import './users';
+import './sync';
 
 export { apiRegistry, type Endpoint } from '../client';

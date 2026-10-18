@@ -10,10 +10,9 @@ import { users } from '../db/schema/users.ts';
 import { Contract } from '../http/contract.ts';
 import { localOnlyGuard } from '../http/local-only.guard.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
-import { recordChanges } from '../sync/change-log.ts';
 import { CLOCK, DB } from '../tokens.ts';
 import { issueRecoveryCodes } from './recovery-codes.ts';
-import { createUser } from './users.repo.ts';
+import { createUser, recordUserChange } from './users.repo.ts';
 
 @Controller('setup')
 export class SetupController {
@@ -50,9 +49,7 @@ export class SetupController {
           throw new AppError('FORBIDDEN', 'El sistema ya está configurado: la primera Apoderada ya existe.');
         const user = await createUser(tx, this.clock, input);
         const recoveryCodes = await issueRecoveryCodes(tx, this.clock, user.id);
-        await recordChanges(tx, this.clock, [
-          { entityType: 'user', entityId: user.id, op: 'upsert', audience: 'apoderada', payload: user },
-        ]);
+        await recordUserChange(tx, this.clock, user);
         return { value: { user, recoveryCodes }, entityId: user.id, after: user, userId: user.id };
       },
     );

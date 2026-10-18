@@ -1,5 +1,7 @@
 // T038 · Las rutas de la app (ui-spec §4): las de acceso, a pantalla completa, y las demás dentro de la estructura
 // (T025). Cada pantalla se añade aquí con su tarea.
+import { havanaDateTime } from '@impocaribe/shared';
+import { useEffect } from 'react';
 import type { RouteObject } from 'react-router';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
@@ -9,21 +11,59 @@ import { SetupScreen } from '../screens/setup/Setup.screen';
 import { UsersScreen } from '../screens/users/Users.screen';
 import { SessionGate } from '../session/SessionGate';
 import { useAppSession } from '../session/SessionProvider';
+import { SyncGate } from '../sync/SyncGate';
+import { SyncProvider, useOnline, useSyncStatus } from '../sync/SyncProvider';
 import { EmptyState } from '../ui/presentation';
 import { AppShell, type ShellStatus } from './AppShell.screen';
 import { SectionGuard } from './SectionGuard';
 
-// shortcut: la conexión, la copia local y las alertas llegan con la sincronización (T046); hasta entonces, en línea y
-// sin pendientes.
-const STATUS: ShellStatus = { online: true, asOf: '', pendingDrafts: 0, syncing: false, power: null, alerts: 0 };
+/** RF-AUT-09: sin conexión, una sesión vencida deja consultar la copia local 72 horas más. */
+export const OFFLINE_GRACE_MS = 72 * 3_600_000;
+const SKEW_LIMIT_MS = 5 * 60_000;
 
 function SignedIn() {
+  return (
+    <SyncProvider>
+      <SignedInShell />
+    </SyncProvider>
+  );
+}
+
+function SignedInShell() {
   const { session, state } = useAppSession();
+  const sync = useSyncStatus();
+  const online = useOnline();
   const user = state.session!.user;
+  const expiresAt = Date.parse(state.session!.expiresAt);
+
+  // La hora que cuenta es la del servidor: la del dispositivo corregida por el desfase medido (plan §9).
+  useEffect(() => {
+    const check = () => {
+      const serverNow = session.now().getTime() - (sync.clockSkewMs ?? 0);
+      if (!online && serverNow > expiresAt + OFFLINE_GRACE_MS) void session.signOut();
+    };
+    check();
+    const timer = setInterval(check, 60_000);
+    return () => clearInterval(timer);
+  }, [session, online, sync.clockSkewMs, expiresAt]);
+
+  const status: ShellStatus = {
+    online,
+    asOf: sync.syncedAt ? havanaDateTime(new Date(sync.syncedAt)) : 'sin datos',
+    pendingDrafts: 0,
+    syncing: sync.syncing,
+    // shortcut: energía (F10) y alertas (F7) llegan con sus fases; hasta entonces, con corriente y sin alertas.
+    power: null,
+    alerts: 0,
+    clockSkewMinutes:
+      sync.clockSkewMs !== null && Math.abs(sync.clockSkewMs) > SKEW_LIMIT_MS
+        ? Math.round(Math.abs(sync.clockSkewMs) / 60_000)
+        : null,
+  };
   return (
     <AppShell
       user={{ name: user.fullName, role: user.role }}
-      status={STATUS}
+      status={status}
       isServerPc={state.pairing!.isServerPc}
       theme={state.preferences.theme}
       onThemeChange={(theme) => void session.setPreferences({ theme })}
@@ -47,8 +87,13 @@ export const appRoutes: RouteObject[] = [
         element: <SignedIn />,
         children: [
           {
-            // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla.
-            element: <SectionGuard />,
+            // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla. T045: hasta
+            // tener copia local, la primera descarga.
+            element: (
+              <SyncGate>
+                <SectionGuard />
+              </SyncGate>
+            ),
             children: [
               { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
               { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },

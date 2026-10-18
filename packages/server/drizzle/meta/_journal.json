@@ -43,6 +43,13 @@
       "when": 1792073432273,
       "tag": "0005_devices_pairing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792254311622,
+      "tag": "0006_sync_notify",
+      "breakpoints": true
     }
   ]
 }

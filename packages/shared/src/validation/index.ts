@@ -7,3 +7,4 @@ export * from './health.ts';
 export * from './users.ts';
 export * from './auth.ts';
 export * from './pairing.ts';
+export * from './sync.ts';

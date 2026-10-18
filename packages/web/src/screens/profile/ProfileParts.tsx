@@ -9,6 +9,9 @@ import { Badge, EmptyState, ErrorState, Notice, Skeleton } from '../../ui/presen
 import type { ThemePreference } from '../../ui/tokens';
 import { PROFILE_SECTIONS, type ProfileModel, type ProfileSection } from './useProfile';
 
+/** Un botón desactivado con su motivo (sin conexión, RF-CON-06). */
+const blocked = (reason: string | undefined) => (reason ? { disabledReason: reason } : {});
+
 const THEMES: { id: ThemePreference; label: string }[] = [
   { id: 'system', label: 'Del sistema' },
   { id: 'light', label: 'Claro' },
@@ -125,6 +128,7 @@ function Sessions({ model }: { model: ProfileModel }) {
             onClick={model.closeOthers}
             busy={model.busy === 'cerrar-demas'}
             busyLabel="Cerrando…"
+            {...blocked(model.offlineReason)}
           >
             Cerrar las demás sesiones
           </Button>
@@ -150,6 +154,7 @@ function Sessions({ model }: { model: ProfileModel }) {
                 onClick={() => model.closeSession(s.id)}
                 busy={model.busy === `cerrar-${s.id}`}
                 busyLabel="Cerrando…"
+                {...blocked(model.offlineReason)}
               >
                 Cerrar
               </Button>
@@ -176,7 +181,7 @@ function ChangePassword({ model }: { model: ProfileModel }) {
         <PasswordField autoComplete="new-password" {...model.confirm.control} />
       </Field>
       <div className="profile-actions">
-        <Button type="submit" busy={model.changingPassword} busyLabel="Cambiando…">
+        <Button type="submit" busy={model.changingPassword} busyLabel="Cambiando…" {...blocked(model.offlineReason)}>
           Cambiar contraseña
         </Button>
       </div>
@@ -223,6 +228,7 @@ function RecoveryCodes({ model }: { model: ProfileModel }) {
           onClick={model.askRegenerate}
           busy={model.busy === 'codigos'}
           busyLabel="Generando…"
+          {...blocked(model.offlineReason)}
         >
           Generar códigos nuevos
         </Button>

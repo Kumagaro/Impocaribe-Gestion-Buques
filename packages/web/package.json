@@ -18,6 +18,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@impocaribe/shared": "workspace:*",
+    "@tanstack/react-query": "^5.104.3",
     "lucide-react": "^1.56.0",
     "motion": "14.2.0",
     "react": "^19.3.0",

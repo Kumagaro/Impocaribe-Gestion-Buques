@@ -1,9 +1,11 @@
 // T027 · Usuarios (plan §4.2, RF-USR-01). Las reglas de formato vienen del esquema F-02 compartido; aquí, la unicidad,
 // que solo la base puede garantizar.
 import { AppError, type Clock, type Role } from '@impocaribe/shared';
+import { eq, sql } from 'drizzle-orm';
 import type { Tx } from '../audit/audit-log.ts';
 import { hashSecret } from '../auth/password.ts';
-import { users } from '../db/schema/users.ts';
+import { sessions, users } from '../db/schema/users.ts';
+import { recordChanges } from '../sync/change-log.ts';
 
 export interface NewUser {
   fullName: string;
@@ -78,4 +80,31 @@ export async function createUser(
   } catch (err) {
     return uniqueViolation(err, input);
   }
+}
+
+/**
+ * Plan §4.4: cada cambio de un usuario se replica dos veces: su entrada del directorio (nombre, rol y estado) para todos
+ * y su ficha completa, con el último acceso, solo para las Apoderadas (P-21). Devuelve el syncSeq.
+ */
+export async function recordUserChange(tx: Tx, clock: Clock, user: UserDto): Promise<number> {
+  const [row] = await tx
+    .select({ at: sql<Date | null>`max(${sessions.lastSeenAt})`.mapWith((v) => (v ? new Date(v) : null)) })
+    .from(sessions)
+    .where(eq(sessions.userId, user.id));
+  return recordChanges(tx, clock, [
+    {
+      entityType: 'user_directory',
+      entityId: user.id,
+      op: 'upsert',
+      audience: 'all',
+      payload: { id: user.id, fullName: user.fullName, role: user.role, active: user.active },
+    },
+    {
+      entityType: 'user_admin',
+      entityId: user.id,
+      op: 'upsert',
+      audience: 'apoderada',
+      payload: { ...user, lastAccessAt: row?.at ? row.at.toISOString() : null },
+    },
+  ]);
 }

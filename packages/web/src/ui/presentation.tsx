@@ -177,12 +177,15 @@ export function ListCard({
   title,
   aside,
   selected = false,
+  changed = false,
   onOpen,
   children,
 }: {
   title: ReactNode;
   aside?: ReactNode;
   selected?: boolean;
+  /** MOV-02: la acaba de cambiar otro usuario; se resalta 1,5 s. */
+  changed?: boolean;
   onOpen: () => void;
   children?: ReactNode;
 }) {
@@ -192,6 +195,8 @@ export function ListCard({
       className="ui-list-card"
       data-touch={useTouch() || undefined}
       aria-current={selected || undefined}
+      data-changed={changed || undefined}
+      data-reduced={useReducedMotionPreference() || undefined}
       onClick={onOpen}
     >
       <span className="ui-list-card__head">

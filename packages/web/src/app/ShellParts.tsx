@@ -15,6 +15,8 @@ export interface ShellStatus {
   /** Energía de la PC servidor (AL-20): null si va con corriente. */
   power: { battery: number; protected: boolean } | null;
   alerts: number;
+  /** RF-CON-10: minutos que la hora del dispositivo difiere de la del servidor, si son más de 5. */
+  clockSkewMinutes?: number | null;
 }
 
 /** Banda de conexión y aviso de energía del servidor. */
@@ -26,6 +28,12 @@ export function ShellBands({ status }: { status: ShellStatus }) {
   return (
     <>
       <OfflineBanner online={status.online} asOf={status.asOf} pendingDrafts={status.pendingDrafts} />
+      {status.clockSkewMinutes != null && (
+        <div role="status" className="ui-band" data-tone="warn">
+          La hora de este dispositivo difiere {status.clockSkewMinutes} min de la del servidor. Ajústela: las fechas y
+          plazos siempre usan la hora del servidor.
+        </div>
+      )}
       {powerText && (
         <div role="status" aria-label={powerText} className="ui-band" data-tone={power?.protected ? 'bad' : 'warn'}>
           {powerText}

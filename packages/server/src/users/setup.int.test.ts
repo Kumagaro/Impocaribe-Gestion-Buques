@@ -150,9 +150,26 @@ describe('POST /setup (RF-USR-05)', () => {
         ok: true,
       },
     ]);
-    const changes = await suite.admin.query('SELECT entity_type, entity_id, op, audience, payload FROM change_log');
+    // Plan §4.4: el directorio (nombre, rol y estado) para todos y la ficha completa solo para las Apoderadas.
+    const changes = await suite.admin.query(
+      'SELECT entity_type, entity_id, op, audience, payload FROM change_log ORDER BY seq',
+    );
+    const user = json.user as unknown as { fullName: string; role: string; active: boolean };
     expect(changes.rows).toEqual([
-      { entity_type: 'user', entity_id: json.user.id, op: 'upsert', audience: 'apoderada', payload: { ...json.user } },
+      {
+        entity_type: 'user_directory',
+        entity_id: json.user.id,
+        op: 'upsert',
+        audience: 'all',
+        payload: { id: json.user.id, fullName: user.fullName, role: user.role, active: user.active },
+      },
+      {
+        entity_type: 'user_admin',
+        entity_id: json.user.id,
+        op: 'upsert',
+        audience: 'apoderada',
+        payload: { ...json.user, lastAccessAt: null },
+      },
     ]);
     const all = JSON.stringify([audit.rows, changes.rows]);
     expect([all.includes('contraseña1'), all.includes(json.recoveryCodes[0]!)]).toEqual([false, false]);

@@ -4,9 +4,8 @@ import { userDtoSchema } from '@impocaribe/shared/validation';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createFakeServer, FIXED_TIME, sampleOf } from '../test/fake-server';
 import { renderUi } from '../test/render';
-import { TEST_PAIRING } from '../test/screen';
+import { syncResponses, TEST_PAIRING } from '../test/screen';
 import { getSetupStatus } from './api/endpoints/auth';
-import { getUsers } from './api/endpoints/users';
 import { App } from './App';
 import { createTestPlatform } from './platform/test-platform';
 import { AppSession, type StoredSession } from './session/app-session';
@@ -26,8 +25,11 @@ let started: AppSession;
 async function start(hash: string, { paired = true, session = null as StoredSession | null } = {}) {
   const server = createFakeServer({ baseUrl: 'https://servidor.test:443/api/v1' });
   server.respond(getSetupStatus, { configured: true });
-  server.respond(getUsers, []);
-  const platform = await createTestPlatform({ http: server.transport });
+  if (session) syncResponses(server, [], true);
+  const platform = await createTestPlatform({
+    http: server.transport,
+    ws: () => ({ send: () => undefined, close: () => undefined, on: () => undefined }),
+  });
   const app = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await app.load();
   if (paired) await app.paired(TEST_PAIRING);

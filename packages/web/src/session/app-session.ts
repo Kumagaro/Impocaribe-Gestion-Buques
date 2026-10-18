@@ -3,8 +3,10 @@
 // nunca en la base local ni en el almacenamiento del navegador.
 import type { UserDto } from '@impocaribe/shared/validation';
 import { createApiClient } from '../api/client';
-import { loadPairing, savePairing, type PairingRecord } from '../connection/pairing';
+import { loadPairing, PAIRING_KEY, savePairing, type PairingRecord } from '../connection/pairing';
+import { LocalStore } from '../local/local-store';
 import type { Platform } from '../platform/platform';
+import { SyncEngine } from '../sync/engine';
 import type { ThemePreference } from '../ui/tokens';
 
 export const SESSION_KEY = 'impocaribe.session';
@@ -35,6 +37,9 @@ export interface SessionState {
 export class AppSession {
   private state: SessionState = { status: 'loading', pairing: null, session: null, preferences: DEFAULT_PREFERENCES };
   private readonly listeners = new Set<() => void>();
+  // Promesas, no resultados: dos llamadas a la vez deben recibir la misma copia y el mismo motor.
+  private store: Promise<LocalStore> | null = null;
+  private engine: SyncEngine | null = null;
 
   constructor(
     private readonly platform: Platform,
@@ -77,10 +82,52 @@ export class AppSession {
     this.set({ session });
   }
 
-  /** RF-AUT-08: borra la credencial. La copia local se borra con ella cuando exista (F2). */
+  /** RF-AUT-08: al cerrar sesión, o cuando el servidor la revoca, se borran la credencial y la copia local. */
   async signOut(): Promise<void> {
+    this.engine?.stop();
+    this.engine = null;
+    await (await this.store)?.clear();
     await this.platform.secureStorage.remove(SESSION_KEY);
     this.set({ session: null });
+  }
+
+  /** RF-RED-05: un dispositivo revocado olvida también el emparejamiento; para volver a usarlo hay que emparejarlo. */
+  async forgetDevice(): Promise<void> {
+    await this.signOut();
+    await this.platform.secureStorage.remove(PAIRING_KEY);
+    this.set({ pairing: null });
+  }
+
+  /** La copia local de este dispositivo (T044). */
+  localStore(): Promise<LocalStore> {
+    this.store ??= LocalStore.open(this.platform);
+    return this.store;
+  }
+
+  /** Con sesión: arranca la sincronización (T045). Una sola por sesión. */
+  async startSync(): Promise<SyncEngine> {
+    const store = await this.localStore();
+    if (this.engine) return this.engine;
+    // Sin await entre la comprobación y la asignación: una segunda llamada ya ve este motor.
+    this.engine = new SyncEngine({
+      store,
+      api: () => this.api(),
+      socket: (url) => this.platform.ws(url),
+      wsUrl: () => {
+        const { address, port } = this.state.pairing!.lastAddress!;
+        return `${this.platform.serverScheme === 'http' ? 'ws' : 'wss'}://${address}:${port}/api/v1/ws`;
+      },
+      token: () => this.state.session?.token ?? null,
+      now: this.clock,
+      onRevoked: (kind) => void (kind === 'device' ? this.forgetDevice() : this.signOut()),
+    });
+    this.engine.start();
+    return this.engine;
+  }
+
+  /** El motor de la sesión en curso, si ya arrancó. */
+  syncEngine(): SyncEngine | null {
+    return this.engine;
   }
 
   /** P-05: tema y "Reducir animaciones" de este dispositivo. */
@@ -132,6 +179,7 @@ export class AppSession {
       now: this.clock,
       transport: this.platform.http,
       onSessionExpired: () => void this.signOut(),
+      onDeviceRevoked: () => void this.forgetDevice(),
     });
   }
 }

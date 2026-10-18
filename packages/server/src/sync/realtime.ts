@@ -1,0 +1,173 @@
+// T043 · plan §6.4 y RNF-04: WebSocket en /api/v1/ws, en el mismo servidor HTTPS. Los avisos salen de NOTIFY de la
+// base (migración 0006), que solo se entregan tras el COMMIT: la app nunca pide un cambio que aún no se ve.
+import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
+import type { Clock } from '@impocaribe/shared';
+import type { WsServerMessage } from '@impocaribe/shared/validation';
+import { and, eq, isNull } from 'drizzle-orm';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
+import type pg from 'pg';
+import { WebSocketServer, type WebSocket } from 'ws';
+import { hashToken } from '../auth/sessions.ts';
+import { devices } from '../db/schema/devices.ts';
+import { sessions, users } from '../db/schema/users.ts';
+import { CLOCK, DB } from '../tokens.ts';
+
+export const WS_PATH = '/api/v1/ws';
+/** Plan §6.4: un ping cada 25 s; quien no contesta se da por desconectado. */
+export const PING_MS = 25_000;
+/** Plazo para el primer mensaje, `{type: "auth", token}`. */
+export const AUTH_TIMEOUT_MS = 10_000;
+/** Cierre por token inválido o vencido: la app no reintenta con ese token. */
+export const CLOSE_UNAUTHORIZED = 4401;
+
+const CHANNELS = ['impocaribe_sync', 'impocaribe_epoch', 'impocaribe_session', 'impocaribe_device'] as const;
+
+interface Client {
+  socket: WebSocket;
+  sessionId: string;
+  deviceId: string;
+  /** `app` recibe todo; el token de dispositivo (DT-05) solo session.revoked (y alert.created, con las alertas). */
+  kind: 'app' | 'device';
+  alive: boolean;
+}
+
+@Injectable()
+export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
+  private readonly log = new Logger('Realtime');
+  private readonly wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
+  private readonly clients = new Set<Client>();
+  private listener: pg.PoolClient | null = null;
+  private pinger: NodeJS.Timeout | undefined;
+  private closing = false;
+
+  constructor(
+    @Inject(DB) private readonly db: NodePgDatabase,
+    @Inject(CLOCK) private readonly clock: Clock,
+    private readonly adapter: HttpAdapterHost,
+  ) {}
+
+  async onApplicationBootstrap(): Promise<void> {
+    const server = this.adapter.httpAdapter.getHttpServer() as import('node:http').Server;
+    server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+      if (new URL(req.url ?? '/', 'http://x').pathname !== WS_PATH) {
+        socket.destroy();
+        return;
+      }
+      this.wss.handleUpgrade(req, socket, head, (ws) => this.accept(ws));
+    });
+    this.pinger = setInterval(() => this.ping(), PING_MS);
+    this.pinger.unref();
+    await this.listen();
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    this.closing = true;
+    clearInterval(this.pinger);
+    for (const c of this.clients) c.socket.terminate();
+    this.wss.close();
+    this.listener?.release(true);
+  }
+
+  /** Un cliente dedicado a LISTEN; si se cae la conexión, se rehace. */
+  private async listen(): Promise<void> {
+    const pool = (this.db as unknown as { $client: pg.Pool }).$client;
+    try {
+      const client = await pool.connect();
+      client.on('notification', (n) => this.dispatch(n.channel, n.payload ?? ''));
+      client.on('error', (err) => {
+        this.log.warn(`Se perdió la escucha de avisos de la base: ${err.message}. Reintentando.`);
+        client.release(true);
+        this.listener = null;
+        if (!this.closing) setTimeout(() => void this.listen(), 1000).unref();
+      });
+      await client.query(CHANNELS.map((c) => `LISTEN ${c};`).join(' '));
+      this.listener = client;
+    } catch (err) {
+      this.log.warn(`No se pudo escuchar los avisos de la base: ${String(err)}. Reintentando.`);
+      if (!this.closing) setTimeout(() => void this.listen(), 1000).unref();
+    }
+  }
+
+  private accept(socket: WebSocket): void {
+    const timer = setTimeout(() => socket.close(CLOSE_UNAUTHORIZED, 'Sin autenticación'), AUTH_TIMEOUT_MS);
+    socket.once('message', (data) => {
+      clearTimeout(timer);
+      void this.authenticate(socket, data.toString());
+    });
+  }
+
+  private async authenticate(socket: WebSocket, raw: string): Promise<void> {
+    let token: unknown;
+    try {
+      const msg = JSON.parse(raw) as { type?: unknown; token?: unknown };
+      if (msg.type === 'auth') token = msg.token;
+    } catch {
+      // Cae al cierre de abajo.
+    }
+    const session = typeof token === 'string' ? await this.findSession(token) : null;
+    if (!session) {
+      socket.close(CLOSE_UNAUTHORIZED, 'La sesión no es válida');
+      return;
+    }
+    const client: Client = { socket, ...session, alive: true };
+    this.clients.add(client);
+    socket.on('pong', () => (client.alive = true));
+    socket.on('close', () => this.clients.delete(client));
+    socket.on('error', () => socket.terminate());
+    this.send(client, { type: 'ready' });
+  }
+
+  /** La sesión del token, si está vigente, su usuario activo y su dispositivo sin revocar. */
+  private async findSession(token: string) {
+    const [row] = await this.db
+      .select({
+        sessionId: sessions.id,
+        deviceId: sessions.deviceId,
+        kind: sessions.kind,
+        expiresAt: sessions.expiresAt,
+        active: users.active,
+      })
+      .from(sessions)
+      .innerJoin(users, eq(users.id, sessions.userId))
+      .innerJoin(devices, and(eq(devices.id, sessions.deviceId), isNull(devices.revokedAt)))
+      .where(and(eq(sessions.tokenHash, hashToken(token)), isNull(sessions.revokedAt)));
+    if (!row || !row.active || row.expiresAt <= this.clock.now()) return null;
+    return { sessionId: row.sessionId, deviceId: row.deviceId, kind: row.kind };
+  }
+
+  private dispatch(channel: string, payload: string): void {
+    for (const c of this.clients) {
+      if (channel === 'impocaribe_sync' && c.kind === 'app')
+        this.send(c, { type: 'sync.available', seq: Number(payload) });
+      else if (channel === 'impocaribe_epoch' && c.kind === 'app') this.send(c, { type: 'sync.epoch_changed' });
+      else if (channel === 'impocaribe_session' && c.sessionId === payload) this.drop(c, { type: 'session.revoked' });
+      else if (channel === 'impocaribe_device' && c.deviceId === payload && c.kind === 'app')
+        this.drop(c, { type: 'device.revoked' });
+    }
+  }
+
+  private send(c: Client, msg: WsServerMessage): void {
+    if (c.socket.readyState === c.socket.OPEN) c.socket.send(JSON.stringify(msg));
+  }
+
+  /** Avisa y cierra: esa sesión o ese dispositivo ya no reciben nada más. */
+  private drop(c: Client, msg: WsServerMessage): void {
+    this.send(c, msg);
+    this.clients.delete(c);
+    c.socket.close(1000, msg.type);
+  }
+
+  private ping(): void {
+    for (const c of this.clients) {
+      if (!c.alive) {
+        c.socket.terminate();
+        continue;
+      }
+      c.alive = false;
+      c.socket.ping();
+    }
+  }
+}

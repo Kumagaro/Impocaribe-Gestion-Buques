@@ -58,6 +58,8 @@ export interface ApiClientOptions {
   onSessionExpired?(): void;
   onUpgradeRequired?(details: Record<string, unknown> | undefined): void;
   onResyncRequired?(): void;
+  /** RF-RED-05: el servidor revocó este dispositivo. */
+  onDeviceRevoked?(): void;
 }
 
 export interface RequestOptions<In> {
@@ -126,6 +128,7 @@ export function createApiClient(options: ApiClientOptions) {
     if (body.code === 'SESSION_EXPIRED') options.onSessionExpired?.();
     if (body.code === 'UPGRADE_REQUIRED') options.onUpgradeRequired?.(body.details);
     if (body.code === 'RESYNC_REQUIRED') options.onResyncRequired?.();
+    if (body.code === 'DEVICE_REVOKED') options.onDeviceRevoked?.();
     throw new ApiError(res.status, body.code, body.message, body.details);
   }
 

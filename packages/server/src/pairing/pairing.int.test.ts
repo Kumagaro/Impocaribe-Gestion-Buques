@@ -4,7 +4,6 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { appHeaders, createTestApp, type TestApp } from '../../test/app.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
-import { ServerEvents } from '../events/server-events.ts';
 import { createUser } from '../users/users.repo.ts';
 
 // T035 · RF-RED-04 y 05, DT-24, plan §6.2 (Descubrimiento y emparejamiento, Administración local) y §9.
@@ -326,11 +325,9 @@ describe('RF-RED-05: dispositivos emparejados y revocación', () => {
     });
   });
 
-  it('un dispositivo revocado recibe DEVICE_REVOKED, pierde sus sesiones y se avisa con device.revoked', async () => {
+  it('un dispositivo revocado recibe DEVICE_REVOKED y pierde sus sesiones', async () => {
     const token = await apoderada();
     const device = await pairByCode();
-    const events: unknown[] = [];
-    t.app.get(ServerEvents).on('device.revoked', (e) => events.push(e));
     const res = await t.fetch(`${t.base}/devices/${device.deviceId}/revoke`, {
       method: 'POST',
       headers: appHeaders({ Authorization: `Bearer ${token}` }),
@@ -338,7 +335,6 @@ describe('RF-RED-05: dispositivos emparejados y revocación', () => {
     expect(res.status).toBe(200);
     const after = await asDevice(device.deviceId, device.deviceSecret, '/setup/status');
     expect([after.status, ((await after.json()) as { code: string }).code]).toEqual([403, 'DEVICE_REVOKED']);
-    expect(events).toEqual([{ deviceId: device.deviceId }]);
     const audit = await suite.admin.query("SELECT entity_id, ok FROM audit_log WHERE action = 'device.revoke'");
     expect(audit.rows).toEqual([{ entity_id: device.deviceId, ok: true }]);
   });

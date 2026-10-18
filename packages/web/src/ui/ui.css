@@ -776,6 +776,19 @@
 [aria-sort='descending'] .ui-table__sort::after {
   content: ' ▼';
 }
+/* MOV-02: la fila o tarjeta que cambió otro usuario se resalta 1,5 s y vuelve con un fundido; reducido, sin animar. */
+.ui-table tbody tr,
+.ui-list-card {
+  transition: background-color 250ms ease-out;
+}
+.ui-table[data-reduced] tbody tr,
+.ui-list-card[data-reduced] {
+  transition: none;
+}
+.ui-table tbody tr[data-changed],
+.ui-list-card[data-changed] {
+  background: var(--accent-soft);
+}
 .ui-table tbody tr:hover {
   background: var(--surface-2);
 }

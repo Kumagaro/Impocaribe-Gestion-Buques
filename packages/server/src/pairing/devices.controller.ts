@@ -10,7 +10,6 @@ import type { z } from 'zod';
 import type { AuthedRequest } from '../auth/session.guard.ts';
 import { devices } from '../db/schema/devices.ts';
 import { sessions } from '../db/schema/users.ts';
-import { ServerEvents } from '../events/server-events.ts';
 import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
 import { CLOCK, DB } from '../tokens.ts';
@@ -32,7 +31,6 @@ export class DevicesController {
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
     @Inject(CLOCK) private readonly clock: Clock,
-    private readonly events: ServerEvents,
   ) {}
 
   @Get()
@@ -62,8 +60,7 @@ export class DevicesController {
         .where(and(eq(sessions.deviceId, id), isNull(sessions.revokedAt)));
       return { status: 200, body: toDto(revoked), after: { revokedAt: now.toISOString() } };
     });
-    // Después del COMMIT: el aviso por WebSocket (T043) no debe salir si la revocación se revierte.
-    if (result.status === 200) this.events.emit('device.revoked', { deviceId: id });
+    // El aviso device.revoked por WebSocket lo da la base al confirmar (migración 0006, T043).
     res.status(result.status).json(result.body);
   }
 }

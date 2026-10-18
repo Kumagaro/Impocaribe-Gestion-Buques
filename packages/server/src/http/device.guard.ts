@@ -23,6 +23,9 @@ export type DeviceRequest = Request & { device?: { id: string } };
 // 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola.
 const EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local)(\/|$)/;
 const WINDOW_MS = 5 * 60_000;
+// RF-CON-10: aquí se mide el desfase, así que es la única ruta que se acepta con la hora fuera de la ventana. La firma
+// y el rechazo de repeticiones se comprueban igual.
+const MEASURES_CLOCK = /^\/api\/v1\/sync\/state(\?|$)/;
 
 const notPaired = () =>
   new AppError(
@@ -61,7 +64,10 @@ export class DeviceGuard implements CanActivate {
     const expected = await signRequest({ method: req.method, path: req.originalUrl, time, body }, device.secret);
     if (signature !== expected) throw new AppError('DEVICE_NOT_PAIRED', 'La firma del dispositivo no es válida.');
     const now = this.clock.now();
-    if (isClockSkewed(new Date(parseInt(time, 10) - device.clockOffsetMs), now)) {
+    if (
+      !MEASURES_CLOCK.test(req.originalUrl) &&
+      isClockSkewed(new Date(parseInt(time, 10) - device.clockOffsetMs), now)
+    ) {
       throw new AppError(
         'DEVICE_NOT_PAIRED',
         'La hora del dispositivo difiere más de 5 minutos de la del servidor. Ajústela y vuelva a intentarlo.',

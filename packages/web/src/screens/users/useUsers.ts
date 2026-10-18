@@ -5,15 +5,10 @@ import { havanaDate, havanaDateTime, nationalIdDateWarning } from '@impocaribe/s
 import { editUserSchema, newUserSchema, resetPasswordSchema, type UserListItem } from '@impocaribe/shared/validation';
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../api/client';
-import {
-  activateUser,
-  deactivateUser,
-  getUsers,
-  patchUser,
-  postUser,
-  resetUserPassword,
-} from '../../api/endpoints/users';
+import { activateUser, deactivateUser, patchUser, postUser, resetUserPassword } from '../../api/endpoints/users';
 import { useAppSession } from '../../session/SessionProvider';
+import { OFFLINE_REASON } from '../../sync/SyncGate';
+import { useLocalList, useOnline, useRecentlyChanged, useSyncNow } from '../../sync/SyncProvider';
 import type { FieldState } from '../../ui/form';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
@@ -54,23 +49,29 @@ const messageOf = (err: unknown) =>
 
 export function useUsers() {
   const { session } = useAppSession();
-  const [list, setList] = useState<ListState>({ status: 'loading' });
   const [panel, setPanel] = useState<UsersPanel>(null);
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'info' | 'bad'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
+  // T046: la lista sale de la copia local (Const. art. VII); cada escritura espera a que la sincronización la traiga.
+  const local = useLocalList<UserListItem>('user_admin');
+  const changed = useRecentlyChanged('user_admin');
+  const syncNow = useSyncNow();
+  const online = useOnline();
   const load = useCallback(async () => {
-    try {
-      setList({ status: 'ready', users: await session.api().request(getUsers) });
-    } catch (err) {
-      setList({ status: 'error', message: messageOf(err) });
-    }
-  }, [session]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+    await syncNow?.();
+  }, [syncNow]);
+  const list: ListState = local.isError
+    ? { status: 'error', message: 'No se pudo leer la copia local de este dispositivo.' }
+    : local.data
+      ? {
+          status: 'ready',
+          users: [...local.data].sort(
+            (a, b) => a.fullName.localeCompare(b.fullName, 'es') || a.username.localeCompare(b.username),
+          ),
+        }
+      : { status: 'loading' };
 
   // RNF-09: capturas bloqueadas mientras se ven los códigos del nuevo usuario.
   const showingCodes = panel?.kind === 'codes';
@@ -180,7 +181,10 @@ export function useUsers() {
 
   return {
     list,
-    reload: () => void load(),
+    reload: () => void local.refetch(),
+    changed,
+    /** RF-CON-06 y EST-03: sin conexión, las escrituras se desactivan con el motivo. */
+    offlineReason: online ? undefined : OFFLINE_REASON,
     now: session.now(),
     notice,
     busy,

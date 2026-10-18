@@ -16,7 +16,8 @@ function peerChain(cert: DetailedPeerCertificate): X509Certificate[] {
   return chain;
 }
 
-export function createNodeTransport(server: PairedServer, now: () => Date = () => new Date()) {
+/** Agente HTTPS que solo entrega la conexión si la cadena es la del servidor emparejado (HTTP y WebSocket). */
+export function identityAgent(server: PairedServer, now: () => Date = () => new Date()): Agent {
   const agent = new Agent({ keepAlive: false });
   // La CA de la instalación no es de confianza para el sistema: la confianza la decide verifyServerChain.
   agent.createConnection = (options, callback) => {
@@ -32,7 +33,11 @@ export function createNodeTransport(server: PairedServer, now: () => Date = () =
     socket.once('error', (err) => callback!(err, undefined as never));
     return undefined as never;
   };
+  return agent;
+}
 
+export function createNodeTransport(server: PairedServer, now: () => Date = () => new Date()) {
+  const agent = identityAgent(server, now);
   return (url: string, init: RequestInit): Promise<Response> =>
     new Promise((resolve, reject) => {
       const req = request(

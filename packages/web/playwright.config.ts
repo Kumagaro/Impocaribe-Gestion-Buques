@@ -59,7 +59,8 @@ export default defineConfig({
         IMPOCARIBE_IDENTITY_DIR: E2E_IDENTITY_DIR,
         IMPOCARIBE_TLS: 'off',
       },
-      timeout: 180_000,
+      // Reiniciar la base, compilar shared y el servidor y arrancarlo pasa de 3 min en el equipo de desarrollo.
+      timeout: 360_000,
       reuseExistingServer: false,
     },
     {
