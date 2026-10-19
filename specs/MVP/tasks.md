@@ -397,11 +397,11 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T046
   - *Estado (2026-10-19):* banda e icono de sin conexión con la hora de la copia; escrituras desactivadas con su motivo (EST-03) en P-05 y P-21; primera descarga con progreso y, sin conexión, explicación (`SyncGate`, RNF-20); sesión vencida que sigue en consulta 72 h según la hora del servidor; banda de hora desfasada (> 5 min). La alerta AL-18 de hora desfasada queda para T092.
 
-- [ ] **T048. (PP) Pantalla P-30 Diagnóstico de red.**
+- [x] **T048. (PP) Pantalla P-30 Diagnóstico de red.**
   - *Cubre:* RF-RED-06
   - *Depende:* T036, T047
   - *Pruebas E2E adicionales:* servidor apagado → "El servidor no responde"; aislamiento simulado detectado y explicado.
-  - *Estado (2026-10-19):* implementada, a la espera de que el responsable apruebe las referencias visuales (`Pantallas/Diagnóstico de red`). `web/src/screens/diagnostics/`: semáforo, qué hacer, detalle y "Volver a probar"; se abre con sesión dentro de la estructura (también sin copia local), y sin sesión o sin emparejar en su propio marco; P-01 lleva a ella cuando no encuentra el servidor. El estado de la red llega por `platform.discovery.lan()`, que implementan los cascarones (T115, T118); en el navegador solo lo simula la E2E (`e2e/diagnostics.e2e.ts`). "En la PC servidor: dispositivos conectados y montaje de red" pasa a T128, que trae `/local/status` (el montaje se guarda en T052).
+  - *Estado (2026-10-19):* referencias visuales (`Pantallas/Diagnóstico de red`, 30, y las de P-01 "no encontrado" con el botón al diagnóstico) aprobadas por el responsable el 2026-10-19. `web/src/screens/diagnostics/`: semáforo, qué hacer, detalle y "Volver a probar"; se abre con sesión dentro de la estructura (también sin copia local), y sin sesión o sin emparejar en su propio marco; P-01 lleva a ella cuando no encuentra el servidor. El estado de la red llega por `platform.discovery.lan()`, que implementan los cascarones (T115, T118); en el navegador solo lo simula la E2E (`e2e/diagnostics.e2e.ts`). "En la PC servidor: dispositivos conectados y montaje de red" pasa a T128, que trae `/local/status` (el montaje se guarda en T052).
 
 - [x] **T049. Cierre de sesión y revocación.**
   - *Cubre:* RF-AUT-08
