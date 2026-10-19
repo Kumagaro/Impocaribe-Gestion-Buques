@@ -4,6 +4,7 @@ import { havanaDateTime } from '@impocaribe/shared';
 import { useEffect } from 'react';
 import type { RouteObject } from 'react-router';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
+import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
@@ -86,6 +87,8 @@ export const appRoutes: RouteObject[] = [
       {
         element: <SignedIn />,
         children: [
+          // P-30: también sin copia local, que es cuando más falta hace saber por qué no llega el servidor.
+          { path: '/diagnostico', handle: { title: 'Diagnóstico de red' }, element: <DiagnosticsScreen /> },
           {
             // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla. T045: hasta
             // tener copia local, la primera descarga.

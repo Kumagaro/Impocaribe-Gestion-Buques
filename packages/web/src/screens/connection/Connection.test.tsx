@@ -222,4 +222,14 @@ describe('RF-RED-02 y F-01: sin servidor en la red', () => {
     expect(await screen.findByRole('heading', { name: 'Servidor encontrado' })).not.toBeNull();
     expect(screen.getByText('Encontrado por la dirección escrita · pc-servidor')).not.toBeNull();
   });
+
+  it('RF-RED-06: si no lo encuentra, lleva al Diagnóstico de red', async () => {
+    const t = await open({
+      discovery: createSimulatedNetwork({ servers: [] }),
+      otherRoutes: ['/login', '/diagnostico'],
+    });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir el Diagnóstico de red' }));
+    expect(t.router.state.location.pathname).toBe('/diagnostico');
+  });
 });

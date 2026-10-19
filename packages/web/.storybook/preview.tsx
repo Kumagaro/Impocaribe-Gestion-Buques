@@ -5,6 +5,7 @@ import '../src/app/app.css';
 import '../src/screens/auth/auth.css';
 import '../src/screens/profile/profile.css';
 import '../src/screens/users/users.css';
+import '../src/screens/diagnostics/diagnostics.css';
 import { MotionProvider } from '../src/motion/MotionProvider';
 import { DeviceClassProvider } from '../src/ui/device';
 import { installTokens } from '../src/ui/theme';

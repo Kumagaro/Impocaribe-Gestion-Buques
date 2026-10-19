@@ -66,6 +66,21 @@ describe('rutas según la sesión', () => {
     expect(screen.getAllByRole('heading', { name: 'Tablero' }).length).toBeGreaterThan(0);
   });
 
+  it.each([
+    ['sin emparejar', { paired: false }],
+    ['sin sesión', {}],
+  ] as const)('P-30: %s, el Diagnóstico de red se abre en su propio marco', async (_, options) => {
+    await start('#/diagnostico', options);
+    expect(await screen.findByRole('heading', { name: 'Diagnóstico de red' })).not.toBeNull();
+    expect(window.location.hash).toBe('#/diagnostico');
+  });
+
+  it('P-30: con sesión, dentro de la estructura', async () => {
+    await start('#/diagnostico', { session: SIGNED_IN });
+    expect(await screen.findByRole('status', { name: 'Comprobando la conexión…' })).not.toBeNull();
+    expect(document.body.textContent).toContain('Ilén Fernández');
+  });
+
   it('quien debe cambiar la contraseña solo puede ir a su perfil (RF-REC-06)', async () => {
     await start('#/', { session: { ...SIGNED_IN, user: { ...USER, mustChangePassword: true } } });
     await waitFor(() => expect(window.location.hash).toBe('#/perfil'));

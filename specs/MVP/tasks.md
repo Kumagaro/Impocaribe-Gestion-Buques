@@ -366,39 +366,47 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
 
 Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra sus cambios.
 
-- [ ] **T042. Endpoints de sincronización.**
+- [x] **T042. Endpoints de sincronización.**
   - *Cubre:* RF-CON-02, 03, 09, 10
   - *Depende:* T014, T032
+  - *Estado (2026-10-19):* `server/src/sync/sync.controller.ts`: `/sync/state` (época, último seq, versión de esquema y hora del servidor; guarda el desfase del dispositivo y queda fuera de la comprobación de ±5 min, que es justo lo que mide), `/sync/changes` filtrado por audiencia (todos, editores, Apoderada o un usuario) y `410 RESYNC_REQUIRED` si el cursor quedó atrás, y `/sync/snapshot` por páginas en una transacción de solo lectura. `change_log` se poda a los 30 días al arrancar y cada día. Cada escritura registra sus cambios como último paso antes de confirmar (`recordUserChange`). Entidades replicadas hoy: `user_directory` y `user_admin` (`shared/validation/sync.ts`); cada fase añade las suyas.
 
-- [ ] **T043. WebSocket.** Incluye el equivalente de Node de `platform.ws`, con la misma verificación de identidad que el transporte HTTP de T021.
+- [x] **T043. WebSocket.** Incluye el equivalente de Node de `platform.ws`, con la misma verificación de identidad que el transporte HTTP de T021.
   - *Cubre:* RNF-04
   - *Depende:* T042
+  - *Estado (2026-10-19):* `server/src/sync/realtime.ts` en `/api/v1/ws`: autenticación por mensaje en 10 s (si no, cierre 4401), avisos `sync.available`, `sync.epoch_changed`, `session.revoked` y `device.revoked` que salen de `NOTIFY` en la base (migración 0006), así que solo se avisa tras confirmar; ping cada 25 s. Sustituye al bus interno `ServerEvents`. Equivalente de Node: `shared/src/node/node-socket.ts` (librería `ws`) con la misma verificación de identidad que el transporte HTTP.
 
-- [ ] **T044. Base local.**
+- [x] **T044. Base local.**
   - *Cubre:* DT-03
   - *Depende:* T019
+  - *Estado (2026-10-19):* `web/src/local/local-store.ts`: una tabla por entidad y `sync_meta`, migraciones por `PRAGMA user_version`, cada aplicación de cambios en una transacción y en cola, poda a los 12 meses. En el navegador de pruebas, sql.js; la copia cifrada (SQLCipher) llega con los cascarones nativos (T115, T118).
 
-- [ ] **T045. Motor de sincronización.**
+- [x] **T045. Motor de sincronización.**
   - *Cubre:* RF-CON-03, 04, 09
   - *Depende:* T043, T044
   - *Pruebas:* propiedad de convergencia con 1 000 operaciones y cortes de red.
+  - *Estado (2026-10-19):* `web/src/sync/engine.ts`: instantánea inicial, cambios incrementales, reconstrucción ante nueva época, esquema o `RESYNC_REQUIRED`, reconexión del WebSocket de 1 a 30 s y sondeo cada 60 s de respaldo. Prueba de propiedad de convergencia (≥ 1 000 operaciones, 12 ejecuciones, con fallos de red aleatorios) contra un servidor simulado (`web/test/sync-server.ts`).
 
-- [ ] **T046. Lecturas locales.** Hooks e invalidación; el resaltado MOV-02 se aplica a las filas modificadas por la sincronización.
+- [x] **T046. Lecturas locales.** Hooks e invalidación; el resaltado MOV-02 se aplica a las filas modificadas por la sincronización.
   - *Cubre:* Const. art. VII, RNF-13
   - *Depende:* T045
+  - *Estado (2026-10-19):* TanStack Query sobre la copia local (`useLocalList`, clave `['local', entidad]`), invalidada por el motor; `useRecentlyChanged` resalta 1,5 s las filas que cambió la sincronización (MOV-02, sin transición con movimiento reducido) en `DataTable` y `ListCard`. P-21 ya lee de la copia local.
 
-- [ ] **T047. Modo sin conexión.** Banda, escrituras desactivadas (EST-03), sesión vencida con 72 horas de consulta, hora desfasada e icono de sin conexión (MOV-08).
+- [x] **T047. Modo sin conexión.** Banda, escrituras desactivadas (EST-03), sesión vencida con 72 horas de consulta, hora desfasada e icono de sin conexión (MOV-08).
   - *Cubre:* HU-06, RF-CON-01, 05, 06, 10, RF-AUT-09
   - *Depende:* T046
+  - *Estado (2026-10-19):* banda e icono de sin conexión con la hora de la copia; escrituras desactivadas con su motivo (EST-03) en P-05 y P-21; primera descarga con progreso y, sin conexión, explicación (`SyncGate`, RNF-20); sesión vencida que sigue en consulta 72 h según la hora del servidor; banda de hora desfasada (> 5 min). La alerta AL-18 de hora desfasada queda para T092.
 
 - [ ] **T048. (PP) Pantalla P-30 Diagnóstico de red.**
   - *Cubre:* RF-RED-06
   - *Depende:* T036, T047
   - *Pruebas E2E adicionales:* servidor apagado → "El servidor no responde"; aislamiento simulado detectado y explicado.
+  - *Estado (2026-10-19):* implementada, a la espera de que el responsable apruebe las referencias visuales (`Pantallas/Diagnóstico de red`). `web/src/screens/diagnostics/`: semáforo, qué hacer, detalle y "Volver a probar"; se abre con sesión dentro de la estructura (también sin copia local), y sin sesión o sin emparejar en su propio marco; P-01 lleva a ella cuando no encuentra el servidor. El estado de la red llega por `platform.discovery.lan()`, que implementan los cascarones (T115, T118); en el navegador solo lo simula la E2E (`e2e/diagnostics.e2e.ts`). "En la PC servidor: dispositivos conectados y montaje de red" pasa a T128, que trae `/local/status` (el montaje se guarda en T052).
 
-- [ ] **T049. Cierre de sesión y revocación.**
+- [x] **T049. Cierre de sesión y revocación.**
   - *Cubre:* RF-AUT-08
   - *Depende:* T045
+  - *Estado (2026-10-19):* cerrar sesión detiene la sincronización y borra la copia local; `session.revoked` por WebSocket o `SESSION_EXPIRED` llevan al login, y `device.revoked` (o `DEVICE_REVOKED` en cualquier petición) olvida además el emparejamiento.
 
 ## F3. Empresa, firma, cuño y configuración
 
@@ -741,7 +749,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS-03, RNF-18, HU-14
   - *Depende:* T126, T124, T038
 
-- [ ] **T128. (PP, solo escritorio) Pantalla P-29 Estado del servidor:** estado, energía, montaje, QR, solicitudes de emparejamiento (AL-22, con la ventana al frente), dispositivos, consumo de memoria y acciones de mantenimiento, incluido el restablecimiento de emergencia.
+- [ ] **T128. (PP, solo escritorio) Pantalla P-29 Estado del servidor:** estado, energía, montaje, QR, solicitudes de emparejamiento (AL-22, con la ventana al frente), dispositivos, consumo de memoria y acciones de mantenimiento, incluido el restablecimiento de emergencia. Añade también a P-30, en la PC servidor, los dispositivos conectados y el montaje de red (pendiente de T048).
   - *Cubre:* RF-INS-04, RF-RED-04, 05, RF-INS-11
   - *Depende:* T127, T035
 

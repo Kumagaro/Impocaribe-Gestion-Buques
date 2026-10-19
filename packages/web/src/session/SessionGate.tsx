@@ -1,6 +1,7 @@
 // T038 · A dónde puede ir cada estado de la app: sin emparejar, solo a la conexión (P-01); sin sesión, a las pantallas
 // de acceso (P-01 a P-04); con sesión, a la app, y quien debe cambiar la contraseña, solo a su perfil (RF-REC-06).
 import { Navigate, Outlet, useLocation } from 'react-router';
+import { DiagnosticsStandalone } from '../screens/diagnostics/DiagnosticsStandalone';
 import { Skeleton } from '../ui/presentation';
 import { useAppSession } from './SessionProvider';
 
@@ -10,6 +11,8 @@ export function SessionGate() {
   const { state } = useAppSession();
   const { pathname } = useLocation();
   if (state.status === 'loading') return <Skeleton lines={4} />;
+  // P-30: el diagnóstico de red se abre siempre, con sesión dentro de la estructura y sin ella en su propio marco.
+  if (pathname === '/diagnostico' && state.status !== 'signedIn') return <DiagnosticsStandalone />;
   if (state.status === 'unpaired') return pathname === '/conexion' ? <Outlet /> : <Navigate to="/conexion" replace />;
   if (state.status === 'signedOut') return ACCESS.includes(pathname) ? <Outlet /> : <Navigate to="/login" replace />;
   if (state.session?.user.mustChangePassword && !pathname.startsWith('/perfil'))

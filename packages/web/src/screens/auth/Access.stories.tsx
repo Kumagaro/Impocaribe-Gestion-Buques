@@ -48,6 +48,7 @@ const connection = (phase: ConnectionPhase, extra: Partial<ConnectionModel> = {}
   cancel: noop,
   scan: noop,
   goLogin: noop,
+  openDiagnostics: noop,
   ...extra,
 });
 const CONNECTION = { phone: ConnectionPhone, tablet: ConnectionTablet, desktop: ConnectionDesktop };

@@ -13,6 +13,7 @@ import './app/app.css';
 import './screens/auth/auth.css';
 import './screens/profile/profile.css';
 import './screens/users/users.css';
+import './screens/diagnostics/diagnostics.css';
 
 installTokens();
 

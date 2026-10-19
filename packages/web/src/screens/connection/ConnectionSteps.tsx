@@ -102,6 +102,9 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
           <li>Si usa el hotspot de un celular, revise que esté activo.</li>
         </ul>
         <Button onClick={model.search}>Volver a buscar</Button>
+        <Button variant="secondary" onClick={model.openDiagnostics}>
+          Abrir el Diagnóstico de red
+        </Button>
         <Alternatives model={model} />
       </>
     );

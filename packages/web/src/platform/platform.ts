@@ -63,6 +63,24 @@ export interface PlatformDiscovery {
   probe(address: string, port: number, timeoutMs: number): Promise<ServerAnnouncement | null>;
   /** Las direcciones de la red local (/24) del dispositivo, para buscar una a una. */
   subnetAddresses(): Promise<string[]>;
+  /**
+   * RF-RED-06: el estado de la red del dispositivo, para explicar por qué no se encuentra el servidor. Lo implementan
+   * los cascarones (T115, T118); sin él, o con null (no se sabe), el diagnóstico no distingue un servidor apagado de una
+   * red que aísla equipos.
+   */
+  lan?(): Promise<LanStatus | null>;
+}
+
+/** Clave de sessionStorage con el estado de red que simula una prueba de extremo a extremo (browser-platform). */
+export const SIMULATED_LAN_KEY = 'impocaribe.e2e.lan';
+
+export interface LanStatus {
+  /** Nombre de la red wifi, si el sistema lo da. */
+  wifi: string | null;
+  /** El router (puerta de enlace) responde: hay red. */
+  gatewayReachable: boolean;
+  /** Se ven otros equipos de la red: si no, el router aísla a los clientes (AP isolation). */
+  peersVisible: boolean;
 }
 
 export interface Platform {

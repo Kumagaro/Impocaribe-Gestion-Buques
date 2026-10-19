@@ -3,7 +3,15 @@
 // usa cuando no hay ninguna. No verifica la identidad del servidor (lo hace el transporte nativo, DT-19) y guarda los
 // secretos en sessionStorage, que muere con la pestaña: sirve para probar, nunca para trabajar.
 import { SERVER_PORT } from '../connection/discovery';
-import type { DeviceInfo, Platform, PlatformDiscovery, ServerAnnouncement, PlatformSocket } from './platform';
+import {
+  SIMULATED_LAN_KEY,
+  type DeviceInfo,
+  type LanStatus,
+  type Platform,
+  type PlatformDiscovery,
+  type ServerAnnouncement,
+  type PlatformSocket,
+} from './platform';
 import { openSqlJsDatabase } from './sqljs';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
@@ -42,6 +50,12 @@ export function browserDiscovery(origin: { address: string; port: number }): Pla
         ? probe(origin.address, origin.port, timeoutMs)
         : probe(address, port, timeoutMs),
     subnetAddresses: async () => [],
+    // shortcut: el navegador no ve la red local; solo devuelve el estado que una prueba simula (e2e de P-30). La
+    // detección real la hacen los cascarones nativos (T115, T118).
+    lan: async () => {
+      const simulated = sessionStorage.getItem(SIMULATED_LAN_KEY);
+      return simulated ? (JSON.parse(simulated) as LanStatus) : null;
+    },
   };
 }
 

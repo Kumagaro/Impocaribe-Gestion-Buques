@@ -197,6 +197,8 @@ export function useConnection() {
     cancel,
     scan: () => void scan(),
     goLogin: () => void navigate('/login', { replace: true }),
+    /** RF-RED-06: si no lo encuentra, el diagnóstico explica por qué. */
+    openDiagnostics: () => void navigate('/diagnostico'),
   };
 }
 
