@@ -13,6 +13,8 @@ const MIGRATIONS: string[][] = [
     entityTable('user_directory'),
     entityTable('user_admin'),
   ],
+  // T056: catálogos (plan §4.4).
+  ['client', 'carrier', 'truck', 'trailer', 'driver'].map(entityTable),
 ];
 export const LOCAL_SCHEMA_VERSION = MIGRATIONS.length;
 

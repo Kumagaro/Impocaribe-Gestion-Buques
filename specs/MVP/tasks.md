@@ -441,21 +441,26 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-CAT-01 a 05, 07, RF-CAT-09, RF-CAT-10, RF-CAT-11
   - *Depende:* T013
   - *Pruebas:* "w 011 612" es duplicado de "W011612"; camión sin remolque rechazado; licencias de 10 y 12 dígitos rechazadas; chofer sin transportista, carné o licencia rechazado; licencia repetida rechazada; "Nuevos Tiempos S.R.L." y "NUEVOS TIEMPOS SRL" son el mismo cliente; "Nuevos Tiempos" y "Nuevo Tiempo" solo se avisan como parecidos.
+  - *Estado (2026-10-20):* hecha. `server/src/db/schema/catalogs.ts` y `drizzle/0008_catalogs.sql`: nombres normalizados únicos (`shared/domain/names.ts`), chapas, carné y licencia únicos, capacidad de 0 a 100 t y un disparador diferido que exige al menos un remolque por camión al confirmar. Sin `DELETE` (solo se desactiva). Se replican a todos los dispositivos. La comprobación de DM abiertas al desactivar un cliente (RF-CAT-11) llega con las DM (F5), y el recuento de borradores de RF-CAT-10, con las órdenes (F6). Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T056. Endpoints y DTO de catálogos**, con los esquemas F-11 a F-13, el filtro de choferes por transportista, el cambio de transportista con motivo y `/validation/unique`.
   - *Cubre:* RF-CAT-06 a 08, RF-CAT-09, RF-VAL-04 a 06
   - *Depende:* T055, T042
+  - *Estado (2026-10-20):* hecha. `server/src/catalogs/catalogs.controller.ts` (alta, edición con versión, activar y desactivar de los cinco catálogos; `POST /drivers/:id/carrier` con motivo en la bitácora) y `web/src/api/endpoints/catalogs.ts`. Decisiones: el repetido y el parecido se comprueban contra la copia local mientras se escribe y el servidor confirma la unicidad al guardar (sin `/validation/unique`); el cliente se guarda con sus destinatarios en una sola petición; las chapas y el carné repetidos dan `DUPLICATE_PLATE` y `DUPLICATE_NATIONAL_ID`, y el nombre y la licencia, `VALIDATION_ERROR` con el campo. 17 pruebas de integración. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T057. Maquetas de P-18 a P-20.**
   - *Depende:* T017
+  - *Estado (2026-10-20):* `docs/maquetas/T057-catalogos.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
 
 - [ ] **T058. (PP) Pantalla P-18 Choferes y camiones**, con choferes por transportista y búsqueda por carné.
   - *Cubre:* RF-CAT-03 a 08, HU-08
   - *Depende:* T056, T057, T046, T041
+  - *Estado (2026-10-20):* hecha, a la espera de que el responsable apruebe la maqueta T057 y las referencias visuales (`Pantallas/Catálogos`). `web/src/screens/catalogs/` (`useFleet`, `Fleet.*`): pestañas Camiones, Remolques y Choferes con filtro por transportista y búsqueda por chapa o carné; remolques del mismo transportista activo como fichas, con la capacidad total; en TEL el alta del camión va por pasos; cambio de transportista del chofer con motivo. 10 pruebas de componente y E2E (`e2e/catalogs.e2e.ts`).
 
 - [ ] **T059. (PP) Pantallas P-19 Clientes y P-20 Transportistas.**
   - *Cubre:* RF-CAT-01, 02
   - *Depende:* T058
+  - *Estado (2026-10-20):* hecha, a la espera de la misma aprobación. P-19 (destinatarios que se añaden o se desactivan, nunca se borran) y P-20 (desactivar avisa cuántos camiones, remolques y choferes deja sin elegir). 8 y 7 pruebas de componente; en el E2E, cliente con dos destinatarios y uno desactivado, y el nombre repetido bloqueado.
 
 ## F5. Buques, DM y asignaciones
 

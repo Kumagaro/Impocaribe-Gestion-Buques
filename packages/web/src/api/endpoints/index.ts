@@ -6,5 +6,6 @@ import './pairing';
 import './users';
 import './sync';
 import './company';
+import './catalogs';
 
 export { apiRegistry, type Endpoint } from '../client';

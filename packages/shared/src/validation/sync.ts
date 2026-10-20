@@ -3,7 +3,15 @@
 import { z } from 'zod';
 
 /** Entidades replicadas hasta hoy (plan §4.4). Cada fase añade las suyas: buques, DM, órdenes, catálogos… */
-export const SYNC_ENTITIES = ['user_directory', 'user_admin'] as const;
+export const SYNC_ENTITIES = [
+  'user_directory',
+  'user_admin',
+  'client',
+  'carrier',
+  'truck',
+  'trailer',
+  'driver',
+] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 
 export const syncStateSchema = z.object({

@@ -1,0 +1,113 @@
+/* T058 y T059 · P-18 a P-20 Catálogos, de la maqueta T057 (docs/maquetas/T057-catalogos.html). */
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.catalog-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.catalog-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.catalog-grid--panel {
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+.catalog-list {
+  min-width: 0;
+}
+.catalog-side {
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  padding: 18px;
+}
+.catalog-panel,
+.catalog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.catalog-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+.catalog-actions,
+.catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+.catalog-filters > * {
+  min-width: 200px;
+  flex: 1;
+}
+.catalog-text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.catalog-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.catalog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.catalog-chips button {
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.catalog-chips button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.catalog-chips button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.catalog-recipient {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.catalog-recipient[data-inactive] {
+  opacity: 0.7;
+}
+.catalog-recipient__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 1100px) {
+  .catalog-grid--panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-side {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}

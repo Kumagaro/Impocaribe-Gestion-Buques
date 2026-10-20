@@ -3,7 +3,8 @@
 import { z } from 'zod';
 import { normalizePlate } from '../../domain/names.ts';
 import { compareTons, parseTons, tonsToApi, TonsParseError } from '../../domain/tons.ts';
-import { fullNameSchema, nationalIdSchema } from './F02.ts';
+import { nationalIdSchema } from './F02.ts';
+import { textSchema } from './F05.ts';
 import { reasonSchema } from './F15.ts';
 
 const version = z.number().int().nonnegative();
@@ -80,7 +81,12 @@ const trailerFields = { carrierId, plate: plateSchema, capacityTons: capacitySch
 export const trailerSchema = z.object(trailerFields);
 export const editTrailerSchema = z.object({ ...trailerFields, expectedVersion: version });
 
-const driverFields = { fullName: fullNameSchema, nationalId: nationalIdSchema, licenseNo: licenseSchema };
+// F-13: de 3 a 100 caracteres (admite iniciales con punto, como «Juan C.»).
+const driverFields = {
+  fullName: textSchema('Escriba el nombre y los apellidos.', 'El nombre', 3, 100),
+  nationalId: nationalIdSchema,
+  licenseNo: licenseSchema,
+};
 export const driverSchema = z.object({ ...driverFields, carrierId });
 /** El transportista no se edita aquí: su cambio pide motivo (RF-CAT-09). */
 export const editDriverSchema = z.object({ ...driverFields, expectedVersion: version });

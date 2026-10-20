@@ -5,3 +5,4 @@ export * from './idempotency.ts';
 export * from './users.ts';
 export * from './devices.ts';
 export * from './company.ts';
+export * from './catalogs.ts';

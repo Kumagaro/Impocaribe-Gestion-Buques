@@ -14,3 +14,4 @@ export * from './company.ts';
 export * from './forms/F11.ts';
 export * from './forms/F12.ts';
 export * from './forms/F13.ts';
+export * from './catalogs.ts';

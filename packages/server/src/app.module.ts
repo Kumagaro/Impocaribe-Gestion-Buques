@@ -19,6 +19,7 @@ import { SetupController } from './users/setup.controller.ts';
 import { UsersController } from './users/users.controller.ts';
 import { CompanyController } from './company/company.controller.ts';
 import { SettingsController } from './company/settings.controller.ts';
+import { CATALOG_CONTROLLERS } from './catalogs/catalogs.controller.ts';
 import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
@@ -37,6 +38,7 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     SyncController,
     CompanyController,
     SettingsController,
+    ...CATALOG_CONTROLLERS,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },

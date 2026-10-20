@@ -44,7 +44,12 @@ export const putSignature = defineEndpoint({
   output: signatureVersionSchema,
   roles: A,
 });
-export const getStamp = defineEndpoint({ method: 'GET', path: '/company/stamp', output: stampResponseSchema, roles: A });
+export const getStamp = defineEndpoint({
+  method: 'GET',
+  path: '/company/stamp',
+  output: stampResponseSchema,
+  roles: A,
+});
 export const putStamp = defineEndpoint({
   method: 'PUT',
   path: '/company/stamp',

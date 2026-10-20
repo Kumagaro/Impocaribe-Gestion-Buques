@@ -29,6 +29,7 @@ import type { AuthedRequest } from '../auth/session.guard.ts';
 import { devices } from '../db/schema/devices.ts';
 import { changeLog, syncState } from '../db/schema/sync.ts';
 import { sessions, users } from '../db/schema/users.ts';
+import { CATALOG_ENTITIES, loadCatalog } from '../catalogs/catalogs.repo.ts';
 import { Contract } from '../http/contract.ts';
 import type { DeviceRequest } from '../http/device.guard.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
@@ -99,6 +100,15 @@ const SOURCES: SnapshotSource[] = [
       }));
     },
   },
+  // T056: los catálogos, para todos (plan §4.4).
+  ...CATALOG_ENTITIES.map((entity): SnapshotSource => ({
+    entityType: entity,
+    audience: 'all',
+    async page(tx, after, limit) {
+      const rows = await loadCatalog(tx, entity, { after, limit });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: null }));
+    },
+  })),
 ];
 
 const resync = () =>

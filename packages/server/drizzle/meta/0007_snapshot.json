@@ -266,10 +266,7 @@
       "compositePrimaryKeys": {
         "idempotency_keys_device_id_key_pk": {
           "name": "idempotency_keys_device_id_key_pk",
-          "columns": [
-            "device_id",
-            "key"
-          ]
+          "columns": ["device_id", "key"]
         }
       },
       "uniqueConstraints": {},
@@ -340,12 +337,8 @@
           "name": "recovery_attempts_user_id_users_id_fk",
           "tableFrom": "recovery_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -426,12 +419,8 @@
           "name": "recovery_codes_user_id_users_id_fk",
           "tableFrom": "recovery_codes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -543,12 +532,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -558,9 +543,7 @@
         "sessions_token_hash_unique": {
           "name": "sessions_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -674,16 +657,12 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         },
         "users_national_id_unique": {
           "name": "users_national_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "national_id"
-          ]
+          "columns": ["national_id"]
         }
       },
       "policies": {},
@@ -782,12 +761,8 @@
           "name": "devices_revoked_by_users_id_fk",
           "tableFrom": "devices",
           "tableTo": "users",
-          "columnsFrom": [
-            "revoked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revoked_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -848,12 +823,8 @@
           "name": "pairing_qr_tokens_device_id_devices_id_fk",
           "tableFrom": "pairing_qr_tokens",
           "tableTo": "devices",
-          "columnsFrom": [
-            "device_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["device_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -942,12 +913,8 @@
           "name": "pairing_requests_device_id_devices_id_fk",
           "tableFrom": "pairing_requests",
           "tableTo": "devices",
-          "columnsFrom": [
-            "device_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["device_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1067,12 +1034,8 @@
           "name": "official_signatures_file_id_files_id_fk",
           "tableFrom": "official_signatures",
           "tableTo": "files",
-          "columnsFrom": [
-            "file_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["file_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1080,12 +1043,8 @@
           "name": "official_signatures_created_by_users_id_fk",
           "tableFrom": "official_signatures",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1132,12 +1091,8 @@
           "name": "official_stamps_file_id_files_id_fk",
           "tableFrom": "official_stamps",
           "tableTo": "files",
-          "columnsFrom": [
-            "file_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["file_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1145,12 +1100,8 @@
           "name": "official_stamps_created_by_users_id_fk",
           "tableFrom": "official_stamps",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1270,12 +1221,8 @@
           "name": "system_settings_current_signature_id_official_signatures_id_fk",
           "tableFrom": "system_settings",
           "tableTo": "official_signatures",
-          "columnsFrom": [
-            "current_signature_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["current_signature_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1283,12 +1230,8 @@
           "name": "system_settings_current_stamp_id_official_stamps_id_fk",
           "tableFrom": "system_settings",
           "tableTo": "official_stamps",
-          "columnsFrom": [
-            "current_stamp_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["current_stamp_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1317,27 +1260,17 @@
     "public.session_kind": {
       "name": "session_kind",
       "schema": "public",
-      "values": [
-        "app",
-        "device"
-      ]
+      "values": ["app", "device"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "apoderada",
-        "operador",
-        "lectura"
-      ]
+      "values": ["apoderada", "operador", "lectura"]
     },
     "public.network_setup": {
       "name": "network_setup",
       "schema": "public",
-      "values": [
-        "router",
-        "hotspot"
-      ]
+      "values": ["router", "hotspot"]
     }
   },
   "schemas": {},

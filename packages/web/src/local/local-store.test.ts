@@ -17,7 +17,16 @@ describe('esquema', () => {
     const tables = (
       await store.db.query<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
     ).map((t) => t.name);
-    expect(tables).toEqual(['sync_meta', 'user_admin', 'user_directory']);
+    expect(tables).toEqual([
+      'carrier',
+      'client',
+      'driver',
+      'sync_meta',
+      'trailer',
+      'truck',
+      'user_admin',
+      'user_directory',
+    ]);
   });
 
   it('volver a abrirla no repite las migraciones', async () => {
