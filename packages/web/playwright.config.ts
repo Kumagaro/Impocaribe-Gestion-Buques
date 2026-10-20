@@ -48,7 +48,8 @@ export default defineConfig({
       name: 'servidor',
       // Base propia recreada y migrada; shared y el servidor compilados como en producción.
       command:
-        'pnpm --filter @impocaribe/server db:reset && pnpm --filter @impocaribe/shared build && ' +
+        // shared primero: db:reset lo usa (código de instalación de desarrollo, T052) desde su dist.
+        'pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/server db:reset && ' +
         'pnpm --filter @impocaribe/server build && node packages/server/dist/main.js',
       cwd: repoRoot,
       url: `http://127.0.0.1:${SERVER_PORT}/api/v1/health`,

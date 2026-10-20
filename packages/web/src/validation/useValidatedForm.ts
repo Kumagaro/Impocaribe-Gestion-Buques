@@ -115,5 +115,11 @@ export function useValidatedForm<S extends Schema>({
       })
     : [];
 
-  return { field, submit, summary, formError, dirty: isDirty, form };
+  /** Vuelve a los valores dados (o a los iniciales) y quita el error general: al abrir otra vez un formulario. */
+  const reset = (values?: DefaultValues<In>) => {
+    form.reset(values);
+    setFormError(null);
+  };
+
+  return { field, submit, summary, formError, dirty: isDirty, form, reset };
 }

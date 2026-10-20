@@ -5,5 +5,6 @@ import './auth';
 import './pairing';
 import './users';
 import './sync';
+import './company';
 
 export { apiRegistry, type Endpoint } from '../client';

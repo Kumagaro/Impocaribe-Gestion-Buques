@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppError, isBelowMinVersion } from '@impocaribe/shared';
-import type { NextFunction, Request, Response } from 'express';
+import { json, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
 import { HttpErrorFilter } from './http/http-error.filter.ts';
@@ -14,6 +14,8 @@ const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://local
 const VERSION_EXEMPT = /^\/api\/v1\/(health|discovery|updates)(\/|$)/;
 const API = /^\/api\/v1(\/|$)/;
 const WRITES = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
+// La firma y el cuño viajan en base64 (F-05: hasta 2 MB, unos 2,7 MB en el JSON); el resto, con el límite por defecto.
+const IMAGE_ROUTES = ['/api/v1/company/signature', '/api/v1/company/stamp'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function configureApp(app: INestApplication): INestApplication {
@@ -24,6 +26,17 @@ export function configureApp(app: INestApplication): INestApplication {
     }),
   );
   app.enableCors({ origin: APP_ORIGINS });
+  // Antes que el lector de JSON de Nest, que ya no vuelve a leer el cuerpo; guarda el cuerpo tal cual, como él (rawBody).
+  // Va envuelto en una función con otro nombre: Nest no registra su propio lector si ya ve uno llamado jsonParser.
+  const imageJson = json({
+    limit: '3mb',
+    verify: (req, _res, buf) => {
+      (req as Request & { rawBody?: Buffer }).rawBody = buf;
+    },
+  });
+  app.use(IMAGE_ROUTES, function imageBodyParser(req: Request, res: Response, next: NextFunction) {
+    imageJson(req, res, next);
+  });
   const minVersion = app.get<string>(MIN_APP_VERSION);
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'OPTIONS' || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();

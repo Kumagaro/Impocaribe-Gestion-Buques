@@ -12,3 +12,5 @@ export * from './domain/appVersion.ts';
 export * from './domain/deviceSignature.ts';
 export * from './domain/pairingCode.ts';
 export * from './domain/serverName.ts';
+export * from './domain/imageInfo.ts';
+export * from './domain/names.ts';

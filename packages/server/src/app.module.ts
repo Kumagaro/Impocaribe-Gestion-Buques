@@ -17,9 +17,11 @@ import { LocalController } from './pairing/local.controller.ts';
 import { PairingController } from './pairing/pairing.controller.ts';
 import { SetupController } from './users/setup.controller.ts';
 import { UsersController } from './users/users.controller.ts';
+import { CompanyController } from './company/company.controller.ts';
+import { SettingsController } from './company/settings.controller.ts';
 import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
-import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
+import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
 
 @Module({
   controllers: [
@@ -33,11 +35,14 @@ import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERV
     RecoveryController,
     UsersController,
     SyncController,
+    CompanyController,
+    SettingsController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
     { provide: SERVER_INFO, useFactory: () => readServerInfo(config().identityDir) },
     { provide: MIN_APP_VERSION, useFactory: () => config().minAppVersion },
+    { provide: DATA_DIR, useFactory: () => config().dataDir },
     { provide: DB, useFactory: () => drizzle(createAppPool(config().databaseUrl)) },
     Realtime,
     ChangeLogPurge,

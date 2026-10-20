@@ -18,6 +18,9 @@
       "source": "./src/validation/index.ts",
       "types": "./dist/validation/index.d.ts",
       "default": "./dist/validation/index.js"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts"
     }
   },
   "scripts": {

@@ -408,25 +408,32 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T045
   - *Estado (2026-10-19):* cerrar sesión detiene la sincronización y borra la copia local; `session.revoked` por WebSocket o `SESSION_EXPIRED` llevan al login, y `device.revoked` (o `DEVICE_REVOKED` en cualquier petición) olvida además el emparejamiento.
 
+> **Pendiente de F2 (2026-10-20):** la mutación del servidor (`src/sync/**` e `idempotency.ts`) no se ha pasado; el responsable la correrá a mano junto con la de F3.
+
 ## F3. Empresa, firma, cuño y configuración
 
 - [ ] **T050. Archivos.**
   - *Depende:* T013
+  - *Estado (2026-10-20):* hecha. `server/src/files/files.ts`: el binario en la carpeta de datos con el nombre de su SHA-256 (la misma imagen ocupa un archivo), escrito por un temporal y renombrado; la fila `files` (solo inserción) guarda huella, tipo, tamaño y ruta relativa. Carpeta de datos inyectable (`DATA_DIR`).
 
 - [ ] **T051. Empresa, firma oficial y cuño oficial.**
   - *Cubre:* RF-EMP-01, 02, 05, 06
   - *Depende:* T050, T031
+  - *Estado (2026-10-20):* hecha. `server/src/company/company.controller.ts`: `GET/PATCH /company`, `GET/PUT /company/signature` y `/stamp` (solo Apoderada), `GET /company/official-status` (A y O). Cada reemplazo es una fila nueva (solo inserción) y queda en la bitácora sin la imagen. Decisión del responsable: las imágenes viajan en base64 dentro del JSON (no multipart), para que la firma del dispositivo (DT-24) y la idempotencia (DT-22) sigan usando el cuerpo de texto; límite de 3 MB solo en esas dos rutas. El tipo y el tamaño se leen de la cabecera (`shared/domain/imageInfo.ts`, sin dependencias). La alerta AL-16 llega con las alertas. Pendiente de la mutación del servidor, que el responsable correrá a mano (pasa de 30 min).
 
 - [ ] **T052. Configuración del sistema**, incluidos el montaje de red declarado, el texto del aviso legal del plazo y el cambio del código de instalación.
   - *Cubre:* RF-CFG-01 a 04
   - *Depende:* T031
+  - *Estado (2026-10-20):* hecha. `system_settings` de una sola fila con los valores por defecto de RF-CFG-02; `GET/PATCH /settings` (la carpeta externa la comprueba el servidor solo si cambia) y `POST /settings/installation-code` (argon2id; los códigos no entran en la bitácora ni en la huella de idempotencia). En desarrollo, `db:reset` guarda el hash de `IMPOCARIBE_INSTALL_CODE` (.env); en producción lo hará el ayudante de instalación (T126). Pendiente de la mutación del servidor, que el responsable correrá a mano (pasa de 30 min).
 
-- [ ] **T053. Maquetas de P-22 y P-23.**
+- [x] **T053. Maquetas de P-22 y P-23.**
   - *Depende:* T017
+  - *Estado (2026-10-20):* `docs/maquetas/T053-empresa-configuracion.html`, aprobadas por el responsable el 2026-10-19.
 
 - [ ] **T054. (PP) Pantallas P-22 Empresa y P-23 Configuración.**
   - *Cubre:* RF-EMP, RF-CFG, RNF-09
   - *Depende:* T051, T052, T053, T041, T046
+  - *Estado (2026-10-20):* hecha, a la espera de que el responsable apruebe las referencias visuales (`Pantallas/Empresa` y `Pantallas/Configuración`, 48). `web/src/screens/{company,settings}/` con hook, tres presentaciones, historias y pruebas de componente; capturas bloqueadas en P-22; aviso de cambios sin guardar; conflicto de edición recuperable. E2E (`e2e/company.e2e.ts`) con el efecto en la base y la bitácora. La aceptación que necesita órdenes ("la siguiente orden usa la firma nueva" y "Nueva orden rechaza el día 4") se hará con las órdenes (F6). La firma y el cuño no se replican: sin conexión estas pantallas no se pueden consultar.
 
 ## F4. Catálogos
 

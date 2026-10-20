@@ -4,10 +4,12 @@ import type { INestApplication, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { signRequest, type Clock } from '@impocaribe/shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { networkInterfaces } from 'node:os';
+import { mkdtempSync } from 'node:fs';
+import { networkInterfaces, tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { AppModule } from '../src/app.module.ts';
 import { configureApp } from '../src/app.ts';
-import { CLOCK, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
+import { CLOCK, DATA_DIR, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
 import { listenForTests } from './listen.ts';
 import type { SuiteDb } from './suite-db.ts';
 
@@ -17,6 +19,8 @@ export interface TestApp {
   base: string;
   /** URL base por una dirección de la red local, como la vería otro equipo (null si el equipo no tiene red). */
   lanBase: string | null;
+  /** Carpeta de datos propia de esta app de prueba (archivos de T050). */
+  dataDir: string;
   /**
    * fetch firmado como un dispositivo emparejado (DT-24). El dispositivo es el de X-Device-Id, el de la sesión del
    * token o el deviceId del cuerpo del login; si no existe, se empareja en la base de la suite.
@@ -38,6 +42,7 @@ export function lanAddress(): string | null {
 }
 
 export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: Type[] = []): Promise<TestApp> {
+  const dataDir = mkdtempSync(join(tmpdir(), 'impocaribe-data-'));
   const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers })
     .overrideProvider(CLOCK)
     .useValue(clock)
@@ -51,6 +56,8 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
       version: '1.0.0-test',
       caFingerprint: 'AA:BB',
     })
+    .overrideProvider(DATA_DIR)
+    .useValue(dataDir)
     .overrideProvider(DB)
     .useValue(drizzle(suite.app))
     .compile();
@@ -99,6 +106,7 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     app,
     base,
     lanBase: lan ? base.replace('127.0.0.1', lan) : null,
+    dataDir,
     fetch: signedFetch,
     close: () => app.close(),
   };

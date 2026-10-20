@@ -4,3 +4,4 @@ export * from './sync.ts';
 export * from './idempotency.ts';
 export * from './users.ts';
 export * from './devices.ts';
+export * from './company.ts';

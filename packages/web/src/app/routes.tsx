@@ -3,11 +3,13 @@
 import { havanaDateTime } from '@impocaribe/shared';
 import { useEffect } from 'react';
 import type { RouteObject } from 'react-router';
+import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
+import { SettingsScreen } from '../screens/settings/Settings.screen';
 import { SetupScreen } from '../screens/setup/Setup.screen';
 import { UsersScreen } from '../screens/users/Users.screen';
 import { SessionGate } from '../session/SessionGate';
@@ -101,6 +103,8 @@ export const appRoutes: RouteObject[] = [
               { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
               { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
               { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
+              { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
+              { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
               {
                 path: '*',
                 handle: { title: 'Órdenes de Carga' },
