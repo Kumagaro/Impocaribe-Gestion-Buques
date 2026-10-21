@@ -11,7 +11,7 @@
     "doctor": "node scripts/doctor.ts",
     "dev": "pnpm --parallel --filter @impocaribe/server --filter @impocaribe/web dev",
     "build": "pnpm -r --filter !@impocaribe/android build",
-    "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts",
+    "test": "pnpm -r --workspace-concurrency=1 test && vitest run --config vitest.scripts.config.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",

@@ -1,5 +1,5 @@
 // Preparación de las pruebas de componente.
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
 // jsdom no trae matchMedia: por defecto el sistema no pide reducir el movimiento (cada prueba puede cambiarlo).
@@ -16,6 +16,10 @@ if (!window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// El primer render de cada archivo carga en frío la app entera (muchas pantallas): 1 s por defecto no siempre basta.
+// findBy termina en cuanto aparece el elemento, así que esperar más solo cuesta cuando algo de verdad falta.
+configure({ asyncUtilTimeout: 5_000 });
 
 // Cada prueba empieza con el documento vacío.
 afterEach(() => {
