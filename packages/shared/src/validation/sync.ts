@@ -11,6 +11,8 @@ export const SYNC_ENTITIES = [
   'truck',
   'trailer',
   'driver',
+  'vessel',
+  'declaration',
 ] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 

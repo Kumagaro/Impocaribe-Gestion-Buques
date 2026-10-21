@@ -30,6 +30,7 @@ import { devices } from '../db/schema/devices.ts';
 import { changeLog, syncState } from '../db/schema/sync.ts';
 import { sessions, users } from '../db/schema/users.ts';
 import { CATALOG_ENTITIES, loadCatalog } from '../catalogs/catalogs.repo.ts';
+import { loadDeclarations, loadVessels } from '../vessels/vessels.repo.ts';
 import { Contract } from '../http/contract.ts';
 import type { DeviceRequest } from '../http/device.guard.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
@@ -109,6 +110,23 @@ const SOURCES: SnapshotSource[] = [
       return rows.map((r) => ({ id: r.id, payload: r, refDate: null }));
     },
   })),
+  // T066: buques y DM con sus saldos, para todos (plan §4.4).
+  {
+    entityType: 'vessel',
+    audience: 'all',
+    async page(tx, after, limit) {
+      const rows = await loadVessels(tx, { after, limit });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: r.arrivalDate ?? r.etaDate }));
+    },
+  },
+  {
+    entityType: 'declaration',
+    audience: 'all',
+    async page(tx, after, limit) {
+      const rows = await loadDeclarations(tx, { after, limit });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: r.deadlineStartDate }));
+    },
+  },
 ];
 
 const resync = () =>

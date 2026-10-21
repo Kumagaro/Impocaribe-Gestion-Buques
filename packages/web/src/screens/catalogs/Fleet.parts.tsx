@@ -14,7 +14,7 @@ import { blocked, CatalogLayout } from './CatalogLayout';
 import { capacityOf, type FleetModel, type FleetTab } from './useFleet';
 
 /** Un `Select` con el contrato de campo del formulario (RF-VAL-02). */
-const selectOf = (c: FieldControl, options: Option[], placeholder: string) => (
+export const selectOf = (c: FieldControl, options: Option[], placeholder: string) => (
   <Select
     id={c.id}
     name={c.name}

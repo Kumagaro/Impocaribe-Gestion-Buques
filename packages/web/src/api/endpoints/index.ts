@@ -7,5 +7,6 @@ import './users';
 import './sync';
 import './company';
 import './catalogs';
+import './vessels';
 
 export { apiRegistry, type Endpoint } from '../client';

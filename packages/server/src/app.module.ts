@@ -20,6 +20,9 @@ import { UsersController } from './users/users.controller.ts';
 import { CompanyController } from './company/company.controller.ts';
 import { SettingsController } from './company/settings.controller.ts';
 import { CATALOG_CONTROLLERS } from './catalogs/catalogs.controller.ts';
+import { AllocationsController, DeclarationsController } from './vessels/declarations.controller.ts';
+import { DeclarationExpiry } from './vessels/expiry.ts';
+import { VesselsController } from './vessels/vessels.controller.ts';
 import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
@@ -39,6 +42,9 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     CompanyController,
     SettingsController,
     ...CATALOG_CONTROLLERS,
+    VesselsController,
+    DeclarationsController,
+    AllocationsController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -48,6 +54,7 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     { provide: DB, useFactory: () => drizzle(createAppPool(config().databaseUrl)) },
     Realtime,
     ChangeLogPurge,
+    DeclarationExpiry,
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).
     { provide: DEVICE_GUARD_ENABLED, useValue: true },
     {

@@ -14,3 +14,6 @@ export * from './domain/pairingCode.ts';
 export * from './domain/serverName.ts';
 export * from './domain/imageInfo.ts';
 export * from './domain/names.ts';
+export * from './domain/deadline.ts';
+export * from './domain/balances.ts';
+export * from './domain/numbering.ts';

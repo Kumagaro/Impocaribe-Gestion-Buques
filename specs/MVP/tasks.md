@@ -408,7 +408,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T045
   - *Estado (2026-10-19):* cerrar sesión detiene la sincronización y borra la copia local; `session.revoked` por WebSocket o `SESSION_EXPIRED` llevan al login, y `device.revoked` (o `DEVICE_REVOKED` en cualquier petición) olvida además el emparejamiento.
 
-> **Pendiente de F2 (2026-10-20):** la mutación del servidor (`src/sync/**` e `idempotency.ts`) no se ha pasado; el responsable la correrá a mano junto con la de F3.
+> **Pendiente de F2 (2026-10-20):** la mutación del servidor (`src/sync/**` e `idempotency.ts`) no se ha pasado; el responsable la correrá a mano junto con la de F3, F4 y F5.
 
 ## F3. Empresa, firma, cuño y configuración
 
@@ -469,53 +469,66 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T008, T010
   - *Pruebas:* tabla de RF-PLZ-01; fin de mes, fin de año y cambio de horario; prioridad de estados.
   - *Terminado:* mutación ≥ 90 %.
+  - *Estado (2026-10-21):* hecha. `shared/domain/deadline.ts` (día del plazo en La Habana, aviso desde el 25, vence al empezar el 31) y `shared/domain/balances.ts` (saldos de §6, sobrante del buque y estado de la DM en el orden de RF-DM-06), con la tabla de RF-PLZ-01, fin de mes y de año, los dos cambios de horario y propiedades. Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T061. Código de buque y número de orden.**
   - *Cubre:* RF-BUQ-02, RF-ORD-15
   - *Depende:* T007
+  - *Estado (2026-10-21):* hecha. `shared/domain/numbering.ts`: código del buque (sin tildes, espacios ni símbolos) y número de orden reversible (propiedad). Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T062. Buques.**
   - *Cubre:* RF-BUQ-01 a 07
   - *Depende:* T060, T061, T014
+  - *Estado (2026-10-21):* hecha. `server/src/vessels/vessels.controller.ts` y la migración 0009. Decisiones: el viaje es el siguiente del código en el año de arribo real al registrarlo (corregir la fecha dentro del mismo año lo conserva); tras el arribo, el nombre solo cambia si da el mismo código; el total no baja de lo asignado más lo que ya salió del buque (transferido o merma). Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T063. DM y versiones**, con conflicto de edición (`STALE_RECORD`) y fecha de creación asignada por el servidor.
   - *Cubre:* RF-DM-01 a 05, D6, D13
   - *Depende:* T062, T055
+  - *Estado (2026-10-21):* hecha. `declarations.controller.ts`: fecha de La Habana puesta por el servidor, número único para siempre, versiones de solo inserción con motivo, disparador que impide cambiar número, cliente o fecha (D13) y `STALE_RECORD`. Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T064. Asignaciones.**
   - *Cubre:* RF-ASG-01 a 04, D2, D11
   - *Depende:* T063
+  - *Estado (2026-10-21):* hecha. `vessels/allocate.ts`: buque bloqueado antes que la DM (DT-09), `ALLOCATION_EXCEEDS_VESSEL` con exceso y libre, asignación parcial solo con `confirmPartial` y motivo, `PATCH /allocations/:id` con versión y motivo. La alerta AL-10 llega con las alertas (F7). Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T065. Vistas de saldo.**
   - *Cubre:* Const. art. I, RF-BUQ-06, D1
   - *Depende:* T064
+  - *Estado (2026-10-21):* hecha. Vistas `v_allocation_balance`, `v_declaration_balance` y `v_vessel_balance`; una prueba compara sus saldos con `shared/domain`. Decisión: lo cargado es 0 hasta que existan las órdenes (F6 redefine `v_allocation_balance` con las mismas columnas), y el estado de la DM se calcula solo en `shared/domain` con la hora del servidor (no en SQL), porque depende del día y el reloj se inyecta en las pruebas. Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T066. DTO de buques, DM y asignaciones.**
   - *Depende:* T065, T042
+  - *Estado (2026-10-21):* hecha. `shared/validation/vessels.ts`, endpoints de la web y réplica de `vessel` y `declaration` (con sus asignaciones) a todos; migración 3 de la copia local.
 
 - [ ] **T067. Vencimiento y reactivación.**
   - *Cubre:* RF-PLZ-03, 04, D7, HU-09
   - *Depende:* T066
+  - *Estado (2026-10-21):* hecha. `vessels/expiry.ts`: al arrancar y cada 10 minutos; reduce las asignaciones a lo cargado, marca la DM y añade la versión `expire`. Reactivar inicia el plazo hoy y, si la tarea aún no pasó, libera en ese momento. Las alertas AL-03 y AL-04 llegan con las alertas (F7). Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T068. Cierre de buque y sobrante.** Destinos `allocate`, `transfer` (aumenta el total del buque destino y queda registrado en ambos) y `loss` (solo Apoderada), combinables. `SURPLUS_UNRESOLVED`. Sobrante posterior al cierre.
   - *Cubre:* RF-BUQ-08, 09
   - *Depende:* T066
   - *Pruebas:* no se cierra con 0,001 t sin destino; una transferencia a un buque cerrado se rechaza; un Operador recibe `FORBIDDEN` en `loss`; dos transferencias cruzadas concurrentes no se interbloquean.
+  - *Estado (2026-10-21):* hecha. Decisión del modelo del sobrante: sobrante = total − cargado − lo que salió del buque; «transferir» y «merma» salen de lo libre (suben el total del destino o lo pierden) y «asignar a DM» lo cubre con una asignación; lo asignado y no cargado se destina después de reducir esa asignación (RF-BUQ-08). Con las cuatro pruebas pedidas, incluidas las transferencias cruzadas concurrentes. AL-17 llega con las alertas (F7). **A revisar por el responsable:** si «asignar a DM» al cerrar un buque tiene sentido, ya que el buque cerrado no admite órdenes. Pendiente de la mutación, que el responsable correrá a mano.
 
 - [ ] **T069. Propiedades de F5.**
   - *Cubre:* D2, D7, D11, D13
   - *Depende:* T067, T068
+  - *Estado (2026-10-21):* hecha. En `vessels.int.test.ts`: secuencias aleatorias (fast-check) de asignar, cambiar asignaciones y totales, transferir, vencer y reactivar contra el servidor real, sin romper D2, D7, D11 ni D13. Las de órdenes (D1, D4, D12) llegan con F6.
 
 - [ ] **T070. Maquetas de P-07 a P-11.**
   - *Depende:* T017
+  - *Estado (2026-10-21):* `docs/maquetas/T070-buques-dm.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
 
 - [ ] **T071. (PP) Pantallas P-07 Buques y P-08 Ficha de buque**, incluido el flujo de cierre con los tres destinos.
   - *Cubre:* RF-BUQ-01 a 09, RF-TAB-05
   - *Depende:* T068, T070, T046, T041
+  - *Estado (2026-10-21):* hecha, a la espera de que el responsable apruebe la maqueta T070 y las referencias visuales (`Pantallas/Buques y DM`). `web/src/screens/vessels/`: lista con saldos, ficha con Resumen, DM, Sobrante e Historial, alta y edición, arribo con candado, asignación con el diálogo de HU-04, destinos (merma solo A) y cierre desactivado mientras falte destino. 11 pruebas de componente y E2E (`e2e/vessels.e2e.ts`). Simplificación: en TEL el cierre no es un asistente de tres pasos; se dan los destinos en la pestaña Sobrante y se confirma el cierre.
 
 - [ ] **T072. (PP) Pantallas P-09 a P-11 DM:** lista, ficha, alta (con el aviso legal obligatorio de RF-DM-13), edición, asignación y reactivación.
   - *Cubre:* RF-DM, RF-ASG, RF-PLZ-04, 05, RF-TAB-02, 04, HU-04, HU-09, RF-DM-13
   - *Depende:* T067, T071
+  - *Estado (2026-10-21):* hecha, a la espera de la misma aprobación. `web/src/screens/declarations/`: filtros por estado con contadores, buque, cliente y búsqueda; ficha con saldos, etapas, plazo con barra ámbar desde el 25 y aviso legal; alta con fecha fija y aviso legal (en TEL en dos pasos), asignación inicial y diálogo de HU-04; edición con versión; reactivación. 12 pruebas de componente y E2E de HU-04. Pendientes: las órdenes de la DM y «Nueva orden para esta DM» llegan con F6; el aviso legal es el texto por defecto hasta que la configuración se replique a todos (F7).
 
 ## F6. Órdenes, numeración y PDF
 

@@ -20,12 +20,14 @@ describe('esquema', () => {
     expect(tables).toEqual([
       'carrier',
       'client',
+      'declaration',
       'driver',
       'sync_meta',
       'trailer',
       'truck',
       'user_admin',
       'user_directory',
+      'vessel',
     ]);
   });
 

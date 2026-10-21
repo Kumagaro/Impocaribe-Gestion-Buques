@@ -61,7 +61,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await suite.admin.query(
     `TRUNCATE users, files CASCADE; TRUNCATE idempotency_keys;
-     TRUNCATE truck_default_trailers, drivers, trucks, trailers, recipients, clients, carriers;
+     TRUNCATE truck_default_trailers, drivers, trucks, trailers, recipients, clients, carriers CASCADE;
      INSERT INTO system_settings (id) VALUES (1);
      ALTER TABLE audit_log DISABLE TRIGGER USER; TRUNCATE audit_log; ALTER TABLE audit_log ENABLE TRIGGER USER;
      ALTER TABLE change_log DISABLE TRIGGER USER; TRUNCATE change_log; ALTER TABLE change_log ENABLE TRIGGER USER;`,

@@ -64,6 +64,13 @@
       "when": 1792509097214,
       "tag": "0008_catalogs",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792514641757,
+      "tag": "0009_vessels_declarations",
+      "breakpoints": true
     }
   ]
 }

@@ -112,3 +112,13 @@ export function useSyncNow(): (() => Promise<void>) | null {
   const engine = useSync()?.engine;
   return engine ? () => engine.syncNow() : null;
 }
+
+/**
+ * La hora del servidor estimada con el desfase medido en la última sincronización (RF-CON-10): los plazos que se
+ * muestran (RF-PLZ-05) la usan, no la del dispositivo.
+ */
+export function useServerNow(): () => Date {
+  const { session } = useAppSession();
+  const skew = useSyncStatus().clockSkewMs ?? 0;
+  return () => new Date(session.now().getTime() - skew);
+}

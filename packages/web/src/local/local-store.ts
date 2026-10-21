@@ -15,6 +15,8 @@ const MIGRATIONS: string[][] = [
   ],
   // T056: catálogos (plan §4.4).
   ['client', 'carrier', 'truck', 'trailer', 'driver'].map(entityTable),
+  // T066: buques y DM con sus saldos.
+  ['vessel', 'declaration'].map(entityTable),
 ];
 export const LOCAL_SCHEMA_VERSION = MIGRATIONS.length;
 

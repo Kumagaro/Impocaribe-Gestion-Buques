@@ -111,3 +111,64 @@
     border-top: 1px solid var(--line);
   }
 }
+
+/* T072 · P-09 a P-11 (maqueta T070). */
+.dm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+.dm-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.dm-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+.dm-progress > [role='progressbar'] {
+  flex: 1;
+}
+.dm-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: var(--t-sm);
+}
+.dm-kv dt {
+  color: var(--ink-3);
+}
+.dm-kv dd {
+  margin: 0;
+}
+.dm-stages {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-xs);
+}
+.dm-stages li {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  text-align: center;
+}
+.dm-stages li[data-state='done'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.dm-stages li[data-state='now'] {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 650;
+}

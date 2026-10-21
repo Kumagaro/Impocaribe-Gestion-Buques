@@ -6,6 +6,8 @@ import type { RouteObject } from 'react-router';
 import { CarriersScreen } from '../screens/catalogs/Carriers.screen';
 import { ClientsScreen } from '../screens/catalogs/Clients.screen';
 import { FleetScreen } from '../screens/catalogs/Fleet.screen';
+import { DeclarationsScreen } from '../screens/declarations/Declarations.screen';
+import { VesselsScreen } from '../screens/vessels/Vessels.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
@@ -108,6 +110,8 @@ export const appRoutes: RouteObject[] = [
               { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
               { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
               { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
+              { path: '/buques/:id?', handle: { title: 'Buques' }, element: <VesselsScreen /> },
+              { path: '/dm/:id?', handle: { title: 'DM' }, element: <DeclarationsScreen /> },
               { path: '/catalogos/transportistas', handle: { title: 'Transportistas' }, element: <CarriersScreen /> },
               { path: '/catalogos/clientes', handle: { title: 'Clientes' }, element: <ClientsScreen /> },
               {
