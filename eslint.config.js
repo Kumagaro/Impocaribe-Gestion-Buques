@@ -80,6 +80,8 @@ export default tseslint.config(
       '**/playwright-report/**',
       'packages/android/android/**',
       'docs/referencia/**',
+      // Grafo de engram: artefactos generados, fuera del repositorio.
+      '.engram/**',
     ],
   },
   js.configs.recommended,
