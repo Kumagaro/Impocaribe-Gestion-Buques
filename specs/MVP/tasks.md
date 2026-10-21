@@ -469,7 +469,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T008, T010
   - *Pruebas:* tabla de RF-PLZ-01; fin de mes, fin de año y cambio de horario; prioridad de estados.
   - *Terminado:* mutación ≥ 90 %.
-  - *Estado (2026-10-21):* hecha. `shared/domain/deadline.ts` (día del plazo en La Habana, aviso desde el 25, vence al empezar el 31) y `shared/domain/balances.ts` (saldos de §6, sobrante del buque y estado de la DM en el orden de RF-DM-06), con la tabla de RF-PLZ-01, fin de mes y de año, los dos cambios de horario y propiedades. Pendiente de la mutación, que el responsable correrá a mano.
+  - *Estado (2026-10-21):* hecha. `shared/domain/deadline.ts` (día del plazo en La Habana, aviso desde el 25, vence al empezar el 31) y `shared/domain/balances.ts` (saldos de §6, sobrante del buque y estado de la DM en el orden de RF-DM-06), con la tabla de RF-PLZ-01, fin de mes y de año, los dos cambios de horario y propiedades. Mutación de shared: 93,66 % en total (deadline 95,7 %, numbering 94,9 %, balances 88,3 %); los 7 mutantes vivos de balances son constantes del módulo (los nombres de estado y el cero) que las pruebas sí comprueban, pero Stryker con Vitest no recarga el módulo para mutantes estáticos.
 
 - [ ] **T061. Código de buque y número de orden.**
   - *Cubre:* RF-BUQ-02, RF-ORD-15

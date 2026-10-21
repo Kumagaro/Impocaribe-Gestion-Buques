@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
   allocationBalance,
+  DECLARATION_STATUS_LABEL,
   declarationBalances,
   declarationStatus,
   isPendingDeclaration,
@@ -126,5 +127,17 @@ describe('propiedades', () => {
         expect(v.free.plus(v.allocated.minus(v.loaded)).plus(out).equals(v.remaining)).toBe(true);
       }),
     );
+  });
+});
+
+describe('RF-DM-06: los nombres de los estados', () => {
+  it('como los muestra la interfaz', () => {
+    expect(DECLARATION_STATUS_LABEL).toEqual({
+      closed: 'Cerrada',
+      expired: 'Vencida',
+      pending_total: 'Pendiente de total',
+      active: 'Activa',
+      pending_allocation: 'Pendiente de asignación',
+    });
   });
 });

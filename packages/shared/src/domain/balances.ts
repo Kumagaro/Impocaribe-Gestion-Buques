@@ -82,7 +82,8 @@ export function declarationStatus(d: {
 /** RF-DM-10: «pendiente» para AL-01 y AL-02: sin total o con toneladas sin asignar, si no está Cerrada ni Vencida. */
 export function isPendingDeclaration(d: { total: Tons | null; allocations: AllocationAmounts[]; expired: boolean }) {
   const status = declarationStatus(d);
-  if (status === 'closed' || status === 'expired') return false;
+  // Una DM cerrada nunca tiene toneladas sin asignar: basta con excluir la vencida.
+  if (status === 'expired') return false;
   const { pendingAllocation } = declarationBalances(d.total, d.allocations);
   return pendingAllocation === null || compareTons(pendingAllocation, ZERO_TONS) > 0;
 }
