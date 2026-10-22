@@ -17,3 +17,5 @@ export * from './domain/names.ts';
 export * from './domain/deadline.ts';
 export * from './domain/balances.ts';
 export * from './domain/numbering.ts';
+export * from './domain/pdfFormat.ts';
+export * from './domain/orderRules.ts';
