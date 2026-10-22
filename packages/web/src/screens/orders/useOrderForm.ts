@@ -300,6 +300,11 @@ export function useOrderForm(o: OrderFormOptions) {
       form.form.setValue('recipientId', r, { shouldDirty: true });
   });
 
+  // El transportista sale del camión (al corregir, o al abrir un borrador sin él) en cuanto la copia local lo tiene.
+  useEffect(() => {
+    if (truck && !v.carrierId) form.form.setValue('carrierId', truck.carrierId);
+  });
+
   // Los habituales del camión, si son activos y del mismo transportista (ACLARAR-10).
   const lastTruck = useRef(v.truckId);
   useEffect(() => {

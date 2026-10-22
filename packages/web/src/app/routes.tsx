@@ -9,6 +9,9 @@ import { FleetScreen } from '../screens/catalogs/Fleet.screen';
 import { DeclarationsScreen } from '../screens/declarations/Declarations.screen';
 import { VesselsScreen } from '../screens/vessels/Vessels.screen';
 import { NewOrderScreen } from '../screens/orders/NewOrder.screen';
+import { OrderScreen } from '../screens/orders/Order.screen';
+import { CorrectOrderScreen } from '../screens/orders/CorrectOrder.screen';
+import { DraftsScreen } from '../screens/orders/Drafts.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
@@ -111,7 +114,14 @@ export const appRoutes: RouteObject[] = [
               { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
               { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
               { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
+              { path: '/borradores', handle: { title: 'Borradores' }, element: <DraftsScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },
+              { path: '/ordenes/:id', handle: { title: 'Orden' }, element: <OrderScreen /> },
+              {
+                path: '/ordenes/:id/corregir',
+                handle: { title: 'Corregir la orden' },
+                element: <CorrectOrderScreen />,
+              },
               { path: '/buques/:id?', handle: { title: 'Buques' }, element: <VesselsScreen /> },
               { path: '/dm/:id?', handle: { title: 'DM' }, element: <DeclarationsScreen /> },
               { path: '/catalogos/transportistas', handle: { title: 'Transportistas' }, element: <CarriersScreen /> },

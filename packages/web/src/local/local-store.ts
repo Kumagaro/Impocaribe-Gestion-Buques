@@ -164,6 +164,18 @@ export class LocalStore {
     return rows.map((r) => ({ id: r.id, payload: JSON.parse(r.payload) as T, updatedAt: r.updated_at }));
   }
 
+  private draftListeners = new Set<() => void>();
+
+  /** Avisa cuando cambian los borradores de este dispositivo (P-14 los muestra al momento). */
+  onLocalDraftsChange(listener: () => void): () => void {
+    this.draftListeners.add(listener);
+    return () => this.draftListeners.delete(listener);
+  }
+
+  private draftsChanged = () => {
+    for (const l of this.draftListeners) l();
+  };
+
   saveLocalDraft(id: string, payload: unknown, updatedAt: string): Promise<void> {
     return this.write(() =>
       this.db.execute('INSERT OR REPLACE INTO local_drafts (id, payload, updated_at) VALUES (?, ?, ?)', [
@@ -171,11 +183,11 @@ export class LocalStore {
         JSON.stringify(payload),
         updatedAt,
       ]),
-    );
+    ).then(this.draftsChanged);
   }
 
   deleteLocalDraft(id: string): Promise<void> {
-    return this.write(() => this.db.execute('DELETE FROM local_drafts WHERE id = ?', [id]));
+    return this.write(() => this.db.execute('DELETE FROM local_drafts WHERE id = ?', [id])).then(this.draftsChanged);
   }
 
   /** Plan §5.9, "cada día": quita lo que tiene fecha de referencia anterior a `cutoff` (AAAA-MM-DD). */

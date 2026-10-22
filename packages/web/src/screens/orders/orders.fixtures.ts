@@ -1,0 +1,201 @@
+// Datos de prueba de P-13 a P-16 (ficticios): una DM de 100 t en Eagle 1, un camión de dos remolques y una orden.
+import type {
+  CarrierDto,
+  ClientDto,
+  DeclarationDto,
+  DraftDto,
+  DriverDto,
+  OrderDto,
+  OrderSnapshot,
+  OrderVersionDto,
+  TrailerDto,
+  TruckDto,
+  VesselDto,
+} from '@impocaribe/shared/validation';
+
+export const id = (n: number) => `0199f0a1-0000-7000-8000-0000000000${String(n).padStart(2, '0')}`;
+export const ME = id(90);
+
+export const CLIENT: ClientDto = {
+  id: id(1),
+  name: 'Nuevos Tiempos S.R.L.',
+  active: true,
+  rowVersion: 1,
+  recipients: [{ id: id(2), name: 'Almacén Central', address: 'Calle 100 y Boyeros, La Habana', active: true }],
+};
+export const CARRIER: CarrierDto = { id: id(3), name: 'Transportes Escambray', active: true, rowVersion: 1 };
+const trailer = (n: number, plate: string, tons: string): TrailerDto => ({
+  id: id(n),
+  plate,
+  capacityTons: tons,
+  carrierId: CARRIER.id,
+  active: true,
+  rowVersion: 1,
+});
+export const TRAILERS = [trailer(4, 'W006877', '30.000'), trailer(5, 'W006878', '20.000')];
+export const TRUCK: TruckDto = {
+  id: id(7),
+  plate: 'W011612',
+  tractorPlate: null,
+  baseLocation: 'LA HABANA',
+  carrierId: CARRIER.id,
+  trailerIds: [id(4), id(5)],
+  active: true,
+  rowVersion: 1,
+};
+export const DRIVER: DriverDto = {
+  id: id(8),
+  fullName: 'Juan Carlos Miranda',
+  nationalId: '84011905548',
+  licenseNo: '12345678901',
+  carrierId: CARRIER.id,
+  active: true,
+  rowVersion: 1,
+};
+export const VESSEL: VesselDto = {
+  id: id(9),
+  name: 'Eagle 1',
+  code: 'EAGLE1',
+  manifest: '0080/2026',
+  bl: 'BL-1',
+  port: 'Mariel, terminal 2',
+  internalBuyer: 'IMPOCARIBE S.A.',
+  etaDate: null,
+  arrivalDate: '2026-10-10',
+  voyageNo: 2,
+  totalTons: '1000.000',
+  allocatedTons: '100.000',
+  loadedTons: '17.280',
+  freeTons: '900.000',
+  remainingTons: '982.720',
+  disposedOutTons: '0.000',
+  surplusTons: '982.720',
+  unresolvedSurplusTons: '982.720',
+  status: 'open',
+  closedAt: null,
+  hasOrders: true,
+  rowVersion: 1,
+};
+export const DM: DeclarationDto = {
+  id: id(10),
+  number: '00431',
+  clientId: CLIENT.id,
+  brand: 'Dosel',
+  totalTons: '100.000',
+  declarationDate: '2026-10-02',
+  deadlineStartDate: '2026-10-02',
+  expiredAt: null,
+  versionNo: 1,
+  allocatedTons: '100.000',
+  loadedTons: '17.280',
+  balanceTons: '82.720',
+  pendingAllocationTons: '0.000',
+  allocations: [
+    {
+      id: id(11),
+      vesselId: VESSEL.id,
+      allocatedTons: '100.000',
+      loadedTons: '17.280',
+      balanceTons: '82.720',
+      rowVersion: 1,
+    },
+  ],
+  rowVersion: 1,
+};
+
+export const SNAPSHOT: OrderSnapshot = {
+  number: 'EAGLE1-2026-V2-0001',
+  issueDate: '2026-10-14',
+  versionNo: 1,
+  internalBuyer: 'IMPOCARIBE S.A.',
+  port: 'Mariel, terminal 2',
+  loadingDate: '2026-10-14',
+  product: 'Harina de trigo',
+  container: null,
+  tons: '17.280',
+  vesselName: 'Eagle 1',
+  manifest: '0080/2026',
+  bl: 'BL-1',
+  declarationNumber: '00431',
+  clientName: 'Nuevos Tiempos S.R.L.',
+  brand: 'Dosel',
+  recipientName: 'Almacén Central',
+  recipientAddress: 'Calle 100 y Boyeros, La Habana',
+  carrierName: 'Transportes Escambray',
+  truckPlate: 'W011612',
+  tractorPlate: null,
+  trailerPlates: ['W006877', 'W006878'],
+  lotNo: null,
+  routeSheetNo: null,
+  waybillNo: '22352',
+  baseLocation: 'LA HABANA',
+  driverName: 'Juan Carlos Miranda',
+  driverNationalId: '84011905548',
+  driverLicenseNo: '12345678901',
+  representativeName: 'Ilén Fernández Rojas',
+  credentialNo: '00123',
+  position: 'Directora',
+};
+
+export const version = (n: number, extra: Partial<OrderVersionDto> = {}): OrderVersionDto => ({
+  versionNo: n,
+  status: 'official',
+  tons: '17.280',
+  loadingDate: '2026-10-14',
+  waybillNo: '22352',
+  lotNo: null,
+  routeSheetNo: null,
+  container: null,
+  recipientId: CLIENT.recipients[0]!.id,
+  truckId: TRUCK.id,
+  driverId: DRIVER.id,
+  trailerIds: [id(4), id(5)],
+  issuedAt: '2026-10-14T14:00:00.000Z',
+  issuedById: ME,
+  issuedByName: 'Mario Delgado',
+  reason: null,
+  capacityOverrideReason: null,
+  sameDayOverrideReason: null,
+  snapshot: { ...SNAPSHOT, versionNo: n },
+  ...extra,
+});
+
+export const ORDER: OrderDto = {
+  id: id(20),
+  number: 'EAGLE1-2026-V2-0001',
+  seq: 1,
+  vesselId: VESSEL.id,
+  declarationId: DM.id,
+  allocationId: id(11),
+  status: 'official',
+  current: version(1),
+  firstIssuedAt: '2026-10-14T14:00:00.000Z',
+  versions: [version(1)],
+};
+
+export const draft = (n: number, extra: Partial<DraftDto> = {}): DraftDto => ({
+  id: id(n),
+  clientDraftId: id(n + 1),
+  ownerId: ME,
+  ownerName: 'Mario Delgado',
+  visibility: 'shared',
+  payload: { declarationId: DM.id, truckId: TRUCK.id, tons: '5' },
+  lockedById: null,
+  lockedByName: null,
+  lockExpiresAt: null,
+  updatedAt: '2026-10-14T13:00:00.000Z',
+  issuedOrderId: null,
+  ...extra,
+});
+
+/** La copia local con todo lo anterior (y lo que se agregue). */
+export const local = (...extra: { entityType: 'order' | 'draft'; entityId: string; payload: unknown }[]) => [
+  { entityType: 'client' as const, entityId: CLIENT.id, payload: CLIENT },
+  { entityType: 'carrier' as const, entityId: CARRIER.id, payload: CARRIER },
+  ...TRAILERS.map((t) => ({ entityType: 'trailer' as const, entityId: t.id, payload: t })),
+  { entityType: 'truck' as const, entityId: TRUCK.id, payload: TRUCK },
+  { entityType: 'driver' as const, entityId: DRIVER.id, payload: DRIVER },
+  { entityType: 'vessel' as const, entityId: VESSEL.id, payload: VESSEL },
+  { entityType: 'declaration' as const, entityId: DM.id, payload: DM },
+  ...extra,
+];

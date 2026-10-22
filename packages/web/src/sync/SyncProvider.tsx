@@ -1,6 +1,8 @@
 // T046 · Const. art. VII y plan §7.1: las pantallas leen de la copia local con TanStack Query; cada sincronización
 // invalida solo las consultas de las entidades que cambiaron y marca sus filas para el resaltado de MOV-02.
-import type { SyncEntity } from '@impocaribe/shared/validation';
+import { can } from '@impocaribe/shared';
+import type { DraftPayload, SyncEntity } from '@impocaribe/shared/validation';
+import { draftsApi } from '../api/endpoints/orders';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { LocalStore } from '../local/local-store';
@@ -27,7 +29,7 @@ const noop = () => () => undefined;
 
 /** Con sesión: arranca la sincronización de la sesión y conecta sus avisos con las consultas locales. */
 export function SyncProvider({ children }: { children: ReactNode }) {
-  const { session } = useAppSession();
+  const { session, state } = useAppSession();
   const queryClient = useQueryClient();
   const [value, setValue] = useState<SyncContextValue | null>(null);
 
@@ -50,7 +52,24 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     });
   }, [value, queryClient]);
 
+  // RF-ORD-08: al recuperar la conexión, los borradores de este dispositivo suben como privados de su autor.
+  const online = useSyncExternalStore(value?.engine.subscribe ?? noop, () => value?.engine.status().online ?? false);
+  const role = state.session?.user.role;
+  useEffect(() => {
+    if (!value || !online || !role || !can(role, 'drafts.edit')) return;
+    void uploadLocalDrafts(value.store, session).catch(() => undefined);
+  }, [value, online, role, session]);
+
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
+}
+
+async function uploadLocalDrafts(store: LocalStore, session: ReturnType<typeof useAppSession>['session']) {
+  const list = await store.localDrafts<DraftPayload>();
+  if (list.length === 0) return;
+  await session.api().request(draftsApi.sync, {
+    body: { drafts: list.map((d) => ({ clientDraftId: d.id, payload: d.payload })) },
+  });
+  for (const d of list) await store.deleteLocalDraft(d.id);
 }
 
 function useSync(): SyncContextValue | null {
