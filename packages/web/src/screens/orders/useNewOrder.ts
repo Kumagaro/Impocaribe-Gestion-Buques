@@ -28,8 +28,11 @@ export function useDraftSource(): { source: DraftSource | null; lockedBy: string
   const [lockedBy, setLockedBy] = useState<string | null>(null);
   const base = useCatalog();
 
+  // Una sola vez (en desarrollo React monta dos veces): dos peticiones iguales a la vez serían una repetición.
+  const started = useRef(false);
   useEffect(() => {
-    if (source || !store || !serverDrafts) return;
+    if (source || !store || !serverDrafts || started.current) return;
+    started.current = true;
     void (async () => {
       if (!wanted) return setSource({ kind: 'new', id: crypto.randomUUID() });
       const local = (await store.localDrafts<DraftPayload>()).find((d) => d.id === wanted);
@@ -41,7 +44,7 @@ export function useDraftSource(): { source: DraftSource | null; lockedBy: string
           await base.api().request(draftsApi.lock, { params: { id: draft.id } });
         } catch (e) {
           if (e instanceof ApiError && e.code === 'DRAFT_LOCKED') setLockedBy(String(e.details?.lockedBy ?? ''));
-          else throw e;
+          else setLockedBy('');
         }
       setSource({ kind: 'server', draft });
     })();
@@ -52,15 +55,17 @@ export function useDraftSource(): { source: DraftSource | null; lockedBy: string
   const id = source?.kind === 'server' ? source.draft.id : null;
   useEffect(() => {
     if (!shared || !id) return;
-    const timer = setInterval(
-      () =>
-        void base
-          .api()
-          .request(draftsApi.heartbeat, { params: { id } })
-          .catch(() => undefined),
-      HEARTBEAT_MS,
-    );
+    // Tomar el bloqueo otra vez lo renueva si ya es mío (plan §5.8); así también se recupera tras un montaje doble, que
+    // en desarrollo lo suelta al limpiar.
+    const renew = () =>
+      void base
+        .api()
+        .request(draftsApi.lock, { params: { id } })
+        .catch(() => undefined);
+    const first = setTimeout(renew, 0);
+    const timer = setInterval(renew, HEARTBEAT_MS);
     return () => {
+      clearTimeout(first);
       clearInterval(timer);
       void base
         .api()

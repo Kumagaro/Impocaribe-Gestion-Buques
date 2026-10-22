@@ -243,15 +243,23 @@ export function useOrderForm(o: OrderFormOptions) {
         );
         await o.onDone(order);
       };
-      try {
-        await send();
-      } catch (e) {
-        // RF-ORD-13: capacidad y camión repetido se saltan con una decisión de excepción con motivo.
-        if (
-          !(e instanceof ApiError) ||
-          (e.code !== 'CAPACITY_REQUIRES_OVERRIDE' && e.code !== 'SAME_DAY_REQUIRES_OVERRIDE')
-        )
-          throw e;
+      // RF-ORD-13: capacidad y camión repetido se saltan con una decisión de excepción con motivo; si hacen falta las
+      // dos, el reintento tras la primera pide la segunda.
+      const attempt = async (): Promise<void> => {
+        try {
+          await send();
+        } catch (e) {
+          if (
+            !(e instanceof ApiError) ||
+            (e.code !== 'CAPACITY_REQUIRES_OVERRIDE' && e.code !== 'SAME_DAY_REQUIRES_OVERRIDE')
+          )
+            throw e;
+          askOverride(e);
+          retry.current = attempt;
+        }
+      };
+      await attempt();
+      function askOverride(e: ApiError) {
         const d = (e.details ?? {}) as Record<string, string | number>;
         setOverride(
           e.code === 'CAPACITY_REQUIRES_OVERRIDE'
@@ -266,7 +274,6 @@ export function useOrderForm(o: OrderFormOptions) {
                 rule: 'El mismo camión no debe tener dos órdenes con la misma fecha de carga. Se puede emitir con una decisión de excepción: queda en la bitácora.',
               },
         );
-        retry.current = send;
       }
     },
   });
