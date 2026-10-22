@@ -516,6 +516,21 @@ describe('T076 · borradores (RF-ORD-06 a 11, D9)', () => {
     expect(await q("SELECT ok FROM audit_log WHERE action = 'draft.discard'")).toEqual([{ ok: true }]);
   });
 
+  it('D9: el borrador privado de otro no se bloquea, ni se libera, ni sirve para emitir', async () => {
+    await scenario();
+    const d = (await post('/drafts', { clientDraftId: randomUUID(), visibility: 'private', payload }, 'ana')).body;
+    expect((await post(`/drafts/${d.id}/lock`, {}, 'mario')).body.code).toBe('NOT_FOUND');
+    expect((await post(`/drafts/${d.id}/heartbeat`, {}, 'mario')).body.code).toBe('NOT_FOUND');
+    expect((await del(`/drafts/${d.id}/lock`, 'mario')).body.code).toBe('NOT_FOUND');
+    expect((await post(`/drafts/${d.id}/lock`, {}, 'ana')).body.message).toBe(
+      'Un borrador privado no se bloquea: solo lo edita su autor.',
+    );
+    const res = await post('/orders', order({ draftId: d.id }), 'mario');
+    expect(res.body.code).toBe('NOT_FOUND');
+    expect(await q('SELECT count(*)::int AS n FROM load_orders')).toEqual([{ n: 0 }]);
+    expect(await q('SELECT last_order_seq AS n FROM vessels')).toEqual([{ n: 0 }]);
+  });
+
   it('Solo lectura no ve ni crea borradores (ACLARAR-16)', async () => {
     expect((await get('/drafts?scope=shared', 'oscar')).status).toBe(403);
   });

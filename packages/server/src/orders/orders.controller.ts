@@ -67,6 +67,7 @@ import {
   type OrderContext,
   type OrderFields,
 } from './order-context.ts';
+import { assertCanEdit, lockDraftRow } from './drafts.controller.ts';
 import { PdfService } from './pdf-engine.ts';
 import { orderDocumentHtml, type DocumentMark } from './pdf-template.ts';
 import { readOrder, readOrders, replicateOrders } from './orders.repo.ts';
@@ -177,6 +178,8 @@ export class OrdersController {
         })
         .returning({ id: loadOrders.id });
       await this.addVersion(tx, req, c, input, order!.id, number, 1, 'official', null);
+      // D9: solo se cierra el borrador que el usuario puede editar (el suyo privado, o el compartido que tiene abierto).
+      if (input.draftId) await assertCanEdit(tx, this.clock, req.auth.userId, await lockDraftRow(tx, input.draftId));
       if (input.draftId)
         await tx
           .update(drafts)

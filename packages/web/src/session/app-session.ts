@@ -143,6 +143,11 @@ export class AppSession {
   }
 
   /** RNF-09: bloquea las capturas mientras se muestran secretos, como los códigos de recuperación. */
+  /** RF-ORD-22: «Guardar como» en escritorio; Descargas (y compartir) en Android. */
+  saveFile(name: string, data: Uint8Array): Promise<void> {
+    return this.platform.saveFile(name, data);
+  }
+
   secureScreen(enabled: boolean): Promise<void> {
     return this.platform.secureScreen(enabled);
   }

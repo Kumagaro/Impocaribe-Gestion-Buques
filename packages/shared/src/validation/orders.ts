@@ -64,6 +64,8 @@ export const orderVersionDtoSchema = z.object({
   reason: z.string().nullable(),
   capacityOverrideReason: z.string().nullable(),
   sameDayOverrideReason: z.string().nullable(),
+  /** Lo impreso en esta versión: la pantalla muestra el documento sin conexión (P-15). */
+  snapshot: orderSnapshotSchema,
 });
 export type OrderVersionDto = z.infer<typeof orderVersionDtoSchema>;
 

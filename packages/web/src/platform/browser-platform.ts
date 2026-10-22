@@ -98,7 +98,13 @@ export function createBrowserPlatform(
     },
     // La copia local del navegador vive en memoria y muere con la pestaña: sirve para probar, nunca para trabajar.
     openDatabase: () => openSqlJsDatabase(() => sqlWasmUrl),
-    saveFile: async () => undefined,
+    // El navegador de pruebas descarga de verdad: las E2E comprueban el archivo recibido.
+    saveFile: async (name, data) => {
+      const url = URL.createObjectURL(new Blob([data as BlobPart], { type: 'application/pdf' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: name });
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    },
     notify: async () => undefined,
     secureScreen: async () => undefined,
     installUpdate: async () => undefined,

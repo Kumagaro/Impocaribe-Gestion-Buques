@@ -1,7 +1,7 @@
 // T075, T076 y T079 · plan §4.2 y §4.4: el DTO de las órdenes (con todas sus versiones) y de los borradores, el
 // mismo para la respuesta, el cambio que se replica y la instantánea.
 import { AppError, type Clock } from '@impocaribe/shared';
-import type { DraftDto, DraftPayload, OrderDto, OrderVersionDto } from '@impocaribe/shared/validation';
+import type { DraftDto, DraftPayload, OrderDto, OrderSnapshot, OrderVersionDto } from '@impocaribe/shared/validation';
 import { and, asc, eq, getTableColumns, gt, inArray, isNull, type SQL } from 'drizzle-orm';
 import { alias, type PgColumn } from 'drizzle-orm/pg-core';
 import type { Tx } from '../audit/audit-log.ts';
@@ -68,6 +68,7 @@ export async function readOrders(tx: Tx, f: Filter = {}): Promise<OrderDto[]> {
     reason: v.reason,
     capacityOverrideReason: v.capacityOverrideReason,
     sameDayOverrideReason: v.sameDayOverrideReason,
+    snapshot: v.snapshot as OrderSnapshot,
   });
   return orders.map((o) => {
     const own = versions.filter((x) => x.v.orderId === o.id);

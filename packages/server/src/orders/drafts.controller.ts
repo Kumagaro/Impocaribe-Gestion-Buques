@@ -66,7 +66,7 @@ export class DraftsController {
     await this.write(req, res, 'draft.save', async (tx) => {
       const [found] = await tx.select().from(drafts).where(eq(drafts.clientDraftId, input.clientDraftId)).for('update');
       if (found) {
-        await this.assertCanEdit(tx, req, found);
+        await assertCanEdit(tx, this.clock, req.auth.userId, found);
         await tx
           .update(drafts)
           .set({
@@ -150,8 +150,8 @@ export class DraftsController {
     @Body(new ZodValidationPipe(editSchema)) input: z.output<typeof editSchema>,
   ) {
     await this.write(req, res, 'draft.edit', async (tx) => {
-      const d = await this.lockRow(tx, id);
-      await this.assertCanEdit(tx, req, d);
+      const d = await lockDraftRow(tx, id);
+      await assertCanEdit(tx, this.clock, req.auth.userId, d);
       await tx
         .update(drafts)
         .set({
@@ -169,7 +169,7 @@ export class DraftsController {
   @Contract({ output: draftDtoSchema, roles: EDITORS })
   async share(@Req() req: AuthedRequest, @Res() res: Response, @Param('id', ParseUUIDPipe) id: string) {
     await this.write(req, res, 'draft.share', async (tx) => {
-      const d = await this.lockRow(tx, id);
+      const d = await lockDraftRow(tx, id);
       if (d.ownerId !== req.auth.userId) throw new AppError('FORBIDDEN', 'Solo su autor puede compartir el borrador.');
       await tx
         .update(drafts)
@@ -184,7 +184,7 @@ export class DraftsController {
   @Contract({ output: draftDtoSchema, errors: ['DRAFT_LOCKED'], roles: EDITORS })
   async lock(@Req() req: AuthedRequest, @Res() res: Response, @Param('id', ParseUUIDPipe) id: string) {
     await this.write(req, res, 'draft.lock', async (tx) => {
-      await this.lockRow(tx, id);
+      assertShared(await lockDraftRow(tx, id), req.auth.userId);
       const now = this.clock.now();
       const [taken] = await tx
         .update(drafts)
@@ -196,7 +196,7 @@ export class DraftsController {
           ),
         )
         .returning({ id: drafts.id });
-      if (!taken) throw await this.lockedError(tx, id);
+      if (!taken) throw await lockedError(tx, id);
       return id;
     });
   }
@@ -210,8 +210,9 @@ export class DraftsController {
       res,
       'draft.heartbeat',
       async (tx) => {
-        const d = await this.lockRow(tx, id);
-        if (d.lockedBy !== req.auth.userId) throw await this.lockedError(tx, id);
+        const d = await lockDraftRow(tx, id);
+        assertShared(d, req.auth.userId);
+        if (d.lockedBy !== req.auth.userId) throw await lockedError(tx, id);
         await tx
           .update(drafts)
           .set({ lockExpiresAt: new Date(this.clock.now().getTime() + LOCK_MS) })
@@ -227,7 +228,8 @@ export class DraftsController {
   @Contract({ output: draftDtoSchema, roles: EDITORS })
   async unlock(@Req() req: AuthedRequest, @Res() res: Response, @Param('id', ParseUUIDPipe) id: string) {
     await this.write(req, res, 'draft.unlock', async (tx) => {
-      const d = await this.lockRow(tx, id);
+      const d = await lockDraftRow(tx, id);
+      assertShared(d, req.auth.userId);
       if (d.lockedBy && d.lockedBy !== req.auth.userId && req.auth.role !== 'apoderada')
         throw new AppError('FORBIDDEN', 'Solo una Apoderada puede liberar el bloqueo de otro usuario.');
       await tx.update(drafts).set({ lockedBy: null, lockExpiresAt: null }).where(eq(drafts.id, id));
@@ -240,8 +242,8 @@ export class DraftsController {
   @Contract({ output: draftDtoSchema, errors: ['DRAFT_LOCKED'], roles: EDITORS })
   async discard(@Req() req: AuthedRequest, @Res() res: Response, @Param('id', ParseUUIDPipe) id: string) {
     await this.write(req, res, 'draft.discard', async (tx) => {
-      const d = await this.lockRow(tx, id);
-      await this.assertCanEdit(tx, req, d);
+      const d = await lockDraftRow(tx, id);
+      await assertCanEdit(tx, this.clock, req.auth.userId, d);
       await tx
         .update(drafts)
         .set({ discardedAt: this.clock.now(), lockedBy: null, lockExpiresAt: null, updatedAt: this.clock.now() })
@@ -279,32 +281,42 @@ export class DraftsController {
     );
     res.status(result.status).json(result.body);
   }
+}
 
-  private async lockRow(tx: Tx, id: string) {
-    const [d] = await tx.select().from(drafts).where(eq(drafts.id, id)).for('update');
-    if (!d || d.discardedAt || d.issuedOrderId) throw new AppError('NOT_FOUND', 'El borrador no existe o ya se cerró.');
-    return d;
-  }
+const gone = () => new AppError('NOT_FOUND', 'El borrador no existe o ya se cerró.');
 
-  /** Privado: solo su autor. Compartido: quien tiene el bloqueo vigente. */
-  private async assertCanEdit(tx: Tx, req: AuthedRequest, d: typeof drafts.$inferSelect) {
-    if (d.visibility === 'private') {
-      if (d.ownerId !== req.auth.userId) throw new AppError('NOT_FOUND', 'El borrador no existe o ya se cerró.');
-      return;
-    }
-    const held = d.lockedBy && d.lockExpiresAt && d.lockExpiresAt > this.clock.now();
-    if (held && d.lockedBy !== req.auth.userId) throw await this.lockedError(tx, d.id);
-    if (!held) throw new AppError('DRAFT_LOCKED', 'Abra el borrador para editarlo: hay que tomar su bloqueo.');
-  }
+/** El borrador abierto (ni descartado ni emitido), bloqueado en la transacción. */
+export async function lockDraftRow(tx: Tx, id: string) {
+  const [d] = await tx.select().from(drafts).where(eq(drafts.id, id)).for('update');
+  if (!d || d.discardedAt || d.issuedOrderId) throw gone();
+  return d;
+}
 
-  private async lockedError(tx: Tx, id: string) {
-    const [row] = await tx
-      .select({ name: users.fullName })
-      .from(drafts)
-      .innerJoin(users, eq(users.id, drafts.lockedBy))
-      .where(eq(drafts.id, id));
-    return new AppError('DRAFT_LOCKED', `En edición por ${row?.name ?? 'otro usuario'}.`, {
-      lockedBy: row?.name ?? null,
-    });
+async function lockedError(tx: Tx, id: string) {
+  const [row] = await tx
+    .select({ name: users.fullName })
+    .from(drafts)
+    .innerJoin(users, eq(users.id, drafts.lockedBy))
+    .where(eq(drafts.id, id));
+  return new AppError('DRAFT_LOCKED', `En edición por ${row?.name ?? 'otro usuario'}.`, {
+    lockedBy: row?.name ?? null,
+  });
+}
+
+/** D9 · Privado: solo su autor (para los demás no existe). Compartido: quien tiene el bloqueo vigente. */
+export async function assertCanEdit(tx: Tx, clock: Clock, userId: string, d: typeof drafts.$inferSelect) {
+  if (d.visibility === 'private') {
+    if (d.ownerId !== userId) throw gone();
+    return;
   }
+  const held = d.lockedBy && d.lockExpiresAt && d.lockExpiresAt > clock.now();
+  if (held && d.lockedBy !== userId) throw await lockedError(tx, d.id);
+  if (!held) throw new AppError('DRAFT_LOCKED', 'Abra el borrador para editarlo: hay que tomar su bloqueo.');
+}
+
+/** El bloqueo solo existe en los compartidos: un privado ajeno no existe y uno propio no se bloquea. */
+function assertShared(d: typeof drafts.$inferSelect, userId: string) {
+  if (d.visibility === 'shared') return;
+  if (d.ownerId !== userId) throw gone();
+  throw new AppError('VALIDATION_ERROR', 'Un borrador privado no se bloquea: solo lo edita su autor.');
 }
