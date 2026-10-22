@@ -430,10 +430,10 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T017
   - *Estado (2026-10-20):* `docs/maquetas/T053-empresa-configuracion.html`, aprobadas por el responsable el 2026-10-19.
 
-- [ ] **T054. (PP) Pantallas P-22 Empresa y P-23 Configuración.**
+- [x] **T054. (PP) Pantallas P-22 Empresa y P-23 Configuración.**
   - *Cubre:* RF-EMP, RF-CFG, RNF-09
   - *Depende:* T051, T052, T053, T041, T046
-  - *Estado (2026-10-20):* hecha, a la espera de que el responsable apruebe las referencias visuales (`Pantallas/Empresa` y `Pantallas/Configuración`, 48). `web/src/screens/{company,settings}/` con hook, tres presentaciones, historias y pruebas de componente; capturas bloqueadas en P-22; aviso de cambios sin guardar; conflicto de edición recuperable. E2E (`e2e/company.e2e.ts`) con el efecto en la base y la bitácora. La aceptación que necesita órdenes ("la siguiente orden usa la firma nueva" y "Nueva orden rechaza el día 4") se hará con las órdenes (F6). La firma y el cuño no se replican: sin conexión estas pantallas no se pueden consultar.
+  - *Estado (2026-10-20):* hecha; referencias visuales (`Pantallas/Empresa` y `Pantallas/Configuración`, 48) aprobadas por el responsable el 2026-10-22. `web/src/screens/{company,settings}/` con hook, tres presentaciones, historias y pruebas de componente; capturas bloqueadas en P-22; aviso de cambios sin guardar; conflicto de edición recuperable. E2E (`e2e/company.e2e.ts`) con el efecto en la base y la bitácora. La aceptación que necesita órdenes ("la siguiente orden usa la firma nueva" y "Nueva orden rechaza el día 4") se hará con las órdenes (F6). La firma y el cuño no se replican: sin conexión estas pantallas no se pueden consultar.
 
 ## F4. Catálogos
 
@@ -448,33 +448,33 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T055, T042
   - *Estado (2026-10-20):* hecha. `server/src/catalogs/catalogs.controller.ts` (alta, edición con versión, activar y desactivar de los cinco catálogos; `POST /drivers/:id/carrier` con motivo en la bitácora) y `web/src/api/endpoints/catalogs.ts`. Decisiones: el repetido y el parecido se comprueban contra la copia local mientras se escribe y el servidor confirma la unicidad al guardar (sin `/validation/unique`); el cliente se guarda con sus destinatarios en una sola petición; las chapas y el carné repetidos dan `DUPLICATE_PLATE` y `DUPLICATE_NATIONAL_ID`, y el nombre y la licencia, `VALIDATION_ERROR` con el campo. 17 pruebas de integración. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
-- [ ] **T057. Maquetas de P-18 a P-20.**
+- [x] **T057. Maquetas de P-18 a P-20.**
   - *Depende:* T017
-  - *Estado (2026-10-20):* `docs/maquetas/T057-catalogos.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
+  - *Estado (2026-10-20):* `docs/maquetas/T057-catalogos.html` (claro y oscuro, tres clases), aprobada por el responsable el 2026-10-22.
 
-- [ ] **T058. (PP) Pantalla P-18 Choferes y camiones**, con choferes por transportista y búsqueda por carné.
+- [x] **T058. (PP) Pantalla P-18 Choferes y camiones**, con choferes por transportista y búsqueda por carné.
   - *Cubre:* RF-CAT-03 a 08, HU-08
   - *Depende:* T056, T057, T046, T041
-  - *Estado (2026-10-20):* hecha, a la espera de que el responsable apruebe la maqueta T057 y las referencias visuales (`Pantallas/Catálogos`). `web/src/screens/catalogs/` (`useFleet`, `Fleet.*`): pestañas Camiones, Remolques y Choferes con filtro por transportista y búsqueda por chapa o carné; remolques del mismo transportista activo como fichas, con la capacidad total; en TEL el alta del camión va por pasos; cambio de transportista del chofer con motivo. 10 pruebas de componente y E2E (`e2e/catalogs.e2e.ts`).
+  - *Estado (2026-10-20):* hecha; pantallas y referencias visuales (`Pantallas/Catálogos`) aprobadas por el responsable el 2026-10-22. `web/src/screens/catalogs/` (`useFleet`, `Fleet.*`): pestañas Camiones, Remolques y Choferes con filtro por transportista y búsqueda por chapa o carné; remolques del mismo transportista activo como fichas, con la capacidad total; en TEL el alta del camión va por pasos; cambio de transportista del chofer con motivo. 10 pruebas de componente y E2E (`e2e/catalogs.e2e.ts`).
 
-- [ ] **T059. (PP) Pantallas P-19 Clientes y P-20 Transportistas.**
+- [x] **T059. (PP) Pantallas P-19 Clientes y P-20 Transportistas.**
   - *Cubre:* RF-CAT-01, 02
   - *Depende:* T058
-  - *Estado (2026-10-20):* hecha, a la espera de la misma aprobación. P-19 (destinatarios que se añaden o se desactivan, nunca se borran) y P-20 (desactivar avisa cuántos camiones, remolques y choferes deja sin elegir). 8 y 7 pruebas de componente; en el E2E, cliente con dos destinatarios y uno desactivado, y el nombre repetido bloqueado.
+  - *Estado (2026-10-20):* hecha y aprobada por el responsable el 2026-10-22. P-19 (destinatarios que se añaden o se desactivan, nunca se borran) y P-20 (desactivar avisa cuántos camiones, remolques y choferes deja sin elegir). 8 y 7 pruebas de componente; en el E2E, cliente con dos destinatarios y uno desactivado, y el nombre repetido bloqueado.
 
 ## F5. Buques, DM y asignaciones
 
-- [ ] **T060. Dominio de saldos, estados y plazo.**
+- [x] **T060. Dominio de saldos, estados y plazo.**
   - *Cubre:* spec §6, RF-DM-06, 10, RF-PLZ-01, 02, 05
   - *Depende:* T008, T010
   - *Pruebas:* tabla de RF-PLZ-01; fin de mes, fin de año y cambio de horario; prioridad de estados.
   - *Terminado:* mutación ≥ 90 %.
   - *Estado (2026-10-21):* hecha. `shared/domain/deadline.ts` (día del plazo en La Habana, aviso desde el 25, vence al empezar el 31) y `shared/domain/balances.ts` (saldos de §6, sobrante del buque y estado de la DM en el orden de RF-DM-06), con la tabla de RF-PLZ-01, fin de mes y de año, los dos cambios de horario y propiedades. Mutación de shared: 93,66 % en total (deadline 95,7 %, numbering 94,9 %, balances 88,3 %); los 7 mutantes vivos de balances son constantes del módulo (los nombres de estado y el cero) que las pruebas sí comprueban, pero Stryker con Vitest no recarga el módulo para mutantes estáticos.
 
-- [ ] **T061. Código de buque y número de orden.**
+- [x] **T061. Código de buque y número de orden.**
   - *Cubre:* RF-BUQ-02, RF-ORD-15
   - *Depende:* T007
-  - *Estado (2026-10-21):* hecha. `shared/domain/numbering.ts`: código del buque (sin tildes, espacios ni símbolos) y número de orden reversible (propiedad). Pendiente de la mutación, que el responsable correrá a mano.
+  - *Estado (2026-10-21):* hecha. `shared/domain/numbering.ts`: código del buque (sin tildes, espacios ni símbolos) y número de orden reversible (propiedad). Mutación de shared: 94,9 %.
 
 - [ ] **T062. Buques.**
   - *Cubre:* RF-BUQ-01 a 07
@@ -496,7 +496,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T064
   - *Estado (2026-10-21):* hecha. Vistas `v_allocation_balance`, `v_declaration_balance` y `v_vessel_balance`; una prueba compara sus saldos con `shared/domain`. Decisión: lo cargado es 0 hasta que existan las órdenes (F6 redefine `v_allocation_balance` con las mismas columnas), y el estado de la DM se calcula solo en `shared/domain` con la hora del servidor (no en SQL), porque depende del día y el reloj se inyecta en las pruebas. Pendiente de la mutación, que el responsable correrá a mano.
 
-- [ ] **T066. DTO de buques, DM y asignaciones.**
+- [x] **T066. DTO de buques, DM y asignaciones.**
   - *Depende:* T065, T042
   - *Estado (2026-10-21):* hecha. `shared/validation/vessels.ts`, endpoints de la web y réplica de `vessel` y `declaration` (con sus asignaciones) a todos; migración 3 de la copia local.
 
@@ -511,24 +511,24 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Pruebas:* no se cierra con 0,001 t sin destino; una transferencia a un buque cerrado se rechaza; un Operador recibe `FORBIDDEN` en `loss`; dos transferencias cruzadas concurrentes no se interbloquean.
   - *Estado (2026-10-21):* hecha. Decisión del modelo del sobrante: sobrante = total − cargado − lo que salió del buque; «transferir» y «merma» salen de lo libre (suben el total del destino o lo pierden) y «asignar a DM» lo cubre con una asignación; lo asignado y no cargado se destina después de reducir esa asignación (RF-BUQ-08). Con las cuatro pruebas pedidas, incluidas las transferencias cruzadas concurrentes. AL-17 llega con las alertas (F7). **A revisar por el responsable:** si «asignar a DM» al cerrar un buque tiene sentido, ya que el buque cerrado no admite órdenes. Pendiente de la mutación, que el responsable correrá a mano.
 
-- [ ] **T069. Propiedades de F5.**
+- [x] **T069. Propiedades de F5.**
   - *Cubre:* D2, D7, D11, D13
   - *Depende:* T067, T068
   - *Estado (2026-10-21):* hecha. En `vessels.int.test.ts`: secuencias aleatorias (fast-check) de asignar, cambiar asignaciones y totales, transferir, vencer y reactivar contra el servidor real, sin romper D2, D7, D11 ni D13. Las de órdenes (D1, D4, D12) llegan con F6.
 
-- [ ] **T070. Maquetas de P-07 a P-11.**
+- [x] **T070. Maquetas de P-07 a P-11.**
   - *Depende:* T017
-  - *Estado (2026-10-21):* `docs/maquetas/T070-buques-dm.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
+  - *Estado (2026-10-21):* `docs/maquetas/T070-buques-dm.html` (claro y oscuro, tres clases), aprobada por el responsable el 2026-10-22.
 
-- [ ] **T071. (PP) Pantallas P-07 Buques y P-08 Ficha de buque**, incluido el flujo de cierre con los tres destinos.
+- [x] **T071. (PP) Pantallas P-07 Buques y P-08 Ficha de buque**, incluido el flujo de cierre con los tres destinos.
   - *Cubre:* RF-BUQ-01 a 09, RF-TAB-05
   - *Depende:* T068, T070, T046, T041
-  - *Estado (2026-10-21):* hecha, a la espera de que el responsable apruebe la maqueta T070 y las referencias visuales (`Pantallas/Buques y DM`). `web/src/screens/vessels/`: lista con saldos, ficha con Resumen, DM, Sobrante e Historial, alta y edición, arribo con candado, asignación con el diálogo de HU-04, destinos (merma solo A) y cierre desactivado mientras falte destino. 11 pruebas de componente y E2E (`e2e/vessels.e2e.ts`). Simplificación: en TEL el cierre no es un asistente de tres pasos; se dan los destinos en la pestaña Sobrante y se confirma el cierre.
+  - *Estado (2026-10-21):* hecha; pantallas y referencias visuales (`Pantallas/Buques y DM`) aprobadas por el responsable el 2026-10-22. `web/src/screens/vessels/`: lista con saldos, ficha con Resumen, DM, Sobrante e Historial, alta y edición, arribo con candado, asignación con el diálogo de HU-04, destinos (merma solo A) y cierre desactivado mientras falte destino. 11 pruebas de componente y E2E (`e2e/vessels.e2e.ts`). Simplificación: en TEL el cierre no es un asistente de tres pasos; se dan los destinos en la pestaña Sobrante y se confirma el cierre.
 
-- [ ] **T072. (PP) Pantallas P-09 a P-11 DM:** lista, ficha, alta (con el aviso legal obligatorio de RF-DM-13), edición, asignación y reactivación.
+- [x] **T072. (PP) Pantallas P-09 a P-11 DM:** lista, ficha, alta (con el aviso legal obligatorio de RF-DM-13), edición, asignación y reactivación.
   - *Cubre:* RF-DM, RF-ASG, RF-PLZ-04, 05, RF-TAB-02, 04, HU-04, HU-09, RF-DM-13
   - *Depende:* T067, T071
-  - *Estado (2026-10-21):* hecha, a la espera de la misma aprobación. `web/src/screens/declarations/`: filtros por estado con contadores, buque, cliente y búsqueda; ficha con saldos, etapas, plazo con barra ámbar desde el 25 y aviso legal; alta con fecha fija y aviso legal (en TEL en dos pasos), asignación inicial y diálogo de HU-04; edición con versión; reactivación. 12 pruebas de componente y E2E de HU-04. Pendientes: las órdenes de la DM y «Nueva orden para esta DM» llegan con F6; el aviso legal es el texto por defecto hasta que la configuración se replique a todos (F7).
+  - *Estado (2026-10-21):* hecha y aprobada por el responsable el 2026-10-22. `web/src/screens/declarations/`: filtros por estado con contadores, buque, cliente y búsqueda; ficha con saldos, etapas, plazo con barra ámbar desde el 25 y aviso legal; alta con fecha fija y aviso legal (en TEL en dos pasos), asignación inicial y diálogo de HU-04; edición con versión; reactivación. 12 pruebas de componente y E2E de HU-04. Pendientes: las órdenes de la DM y «Nueva orden para esta DM» llegan con F6; el aviso legal es el texto por defecto hasta que la configuración se replique a todos (F7).
 
 ## F6. Órdenes, numeración y PDF
 
