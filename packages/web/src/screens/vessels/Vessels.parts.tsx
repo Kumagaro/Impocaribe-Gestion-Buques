@@ -300,11 +300,6 @@ function DisposeForm({ m, v }: { m: VesselsModel; v: VesselDto }) {
           {selectOf(f.targetVesselId.control, m.targetVesselOptions, 'Elija el buque')}
         </Field>
       )}
-      {m.disposeKind === 'allocate' && (
-        <Field label="DM" {...f.targetDeclarationId.state}>
-          {selectOf(f.targetDeclarationId.control, m.declarationOptions, 'Elija la DM')}
-        </Field>
-      )}
       <Field label="Toneladas" help={`Sobrante sin destino: ${tonsText(v.unresolvedSurplusTons)}`} {...f.tons.state}>
         <TonsInput {...f.tons.control} />
       </Field>

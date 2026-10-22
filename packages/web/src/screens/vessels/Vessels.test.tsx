@@ -186,7 +186,6 @@ describe('F-10 destinos del sobrante', () => {
       kind: 'transfer',
       tons: '10.000',
       targetVesselId: OCEAN.id,
-      targetDeclarationId: null,
       reason: REASON,
     });
   });

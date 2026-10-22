@@ -386,7 +386,7 @@ describe('T067 · vencimiento y reactivación (HU-09, RF-PLZ-03, 04, D7)', () =>
 });
 
 describe('T068 · sobrante y cierre (RF-BUQ-08)', () => {
-  it('no se cierra con 0,001 t sin destino; con los tres destinos, sí', async () => {
+  it('no se cierra con 0,001 t sin destino; con transferencia y merma, sí; asignar a DM no es destino', async () => {
     const v = await vessel('Eagle 1', '100');
     const target = await vessel('Ocean Pride', '50');
     const d = (await dm('00431', '200')).body;
@@ -396,10 +396,13 @@ describe('T068 · sobrante y cierre (RF-BUQ-08)', () => {
     const give = (body: object, who = 'mario') =>
       post(`/vessels/${v.id}/surplus-dispositions`, { reason: REASON, ...body }, who);
     expect((await give({ kind: 'loss', tons: '1' })).status).toBe(403);
-    expect((await give({ kind: 'allocate', tons: '60', targetDeclarationId: d.id })).status).toBe(201);
-    const transfer = await give({ kind: 'transfer', tons: '39,999', targetVesselId: target.id });
+    // Decisión T068: un buque cerrado no admite órdenes, así que asignar a una DM no es destino del sobrante.
+    expect((await give({ kind: 'allocate', tons: '60', targetDeclarationId: d.id })).body.code).toBe(
+      'VALIDATION_ERROR',
+    );
+    const transfer = await give({ kind: 'transfer', tons: '99,999', targetVesselId: target.id });
     expect(transfer.body).toMatchObject({ unresolvedTons: '0.001' });
-    expect((await get(`/vessels/${target.id}`)).body.totalTons).toBe('89.999');
+    expect((await get(`/vessels/${target.id}`)).body.totalTons).toBe('149.999');
     const current = (await get(`/vessels/${v.id}`)).body;
     expect((await close(current.rowVersion)).body.details).toEqual({ unresolvedTons: '0.001' });
     expect((await give({ kind: 'loss', tons: '0,002' }, 'ana')).body.details.fields.tons).toBe(
@@ -423,7 +426,7 @@ describe('T068 · sobrante y cierre (RF-BUQ-08)', () => {
     expect(back.body.code).toBe('VESSEL_CLOSED');
     const surplus = (await get(`/vessels/${target.id}/surplus`)).body;
     expect(surplus.dispositions).toEqual([
-      expect.objectContaining({ kind: 'transfer', tons: '39.999', incoming: true, otherVesselId: v.id }),
+      expect.objectContaining({ kind: 'transfer', tons: '99.999', incoming: true, otherVesselId: v.id }),
     ]);
   });
 
@@ -464,7 +467,7 @@ describe('plan §4.3: las vistas y shared/domain dan los mismos saldos', () => {
   it('con asignaciones, transferencias y merma', async () => {
     const v = await vessel('Eagle 1', '1000');
     const other = await vessel('Ocean Pride', '10');
-    const d1 = (await dm('00431', '300', { allocation: { vesselId: v.id, tons: '250,5' } })).body;
+    await dm('00431', '300', { allocation: { vesselId: v.id, tons: '250,5' } });
     await dm('00432', '500', { allocation: { vesselId: v.id, tons: '123,456' } });
     await post(`/vessels/${v.id}/surplus-dispositions`, {
       kind: 'transfer',
@@ -473,19 +476,13 @@ describe('plan §4.3: las vistas y shared/domain dan los mismos saldos', () => {
       reason: REASON,
     });
     await post(`/vessels/${v.id}/surplus-dispositions`, { kind: 'loss', tons: '0,75', reason: REASON }, 'ana');
-    await post(`/vessels/${v.id}/surplus-dispositions`, {
-      kind: 'allocate',
-      tons: '49,5',
-      targetDeclarationId: d1.id,
-      reason: REASON,
-    });
     const dto = (await get(`/vessels/${v.id}`)).body;
     const rows = await q('SELECT allocated_tons FROM allocations WHERE vessel_id = $1', [v.id]);
     const own = vesselBalances({
       total: parseTons(dto.totalTons),
       allocations: rows.map((r) => ({ allocated: parseTons(r.allocated_tons), loaded: parseTons('0') })),
       disposedOut: parseTons('8'),
-      allocatedAsDisposition: parseTons('49.5'),
+      allocatedAsDisposition: parseTons('0'),
     });
     expect({
       allocatedTons: dto.allocatedTons,
@@ -500,7 +497,7 @@ describe('plan §4.3: las vistas y shared/domain dan los mismos saldos', () => {
       surplusTons: tonsToApi(own.surplus),
       unresolvedSurplusTons: tonsToApi(own.unresolved),
     });
-    expect(dto.freeTons).toBe('568.544');
+    expect(dto.freeTons).toBe('618.044');
   });
 });
 

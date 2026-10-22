@@ -3,7 +3,7 @@
 // el resto a otro buque); la tablet cierra un buque con los tres destinos (Apoderada); el teléfono, como Operador, no
 // ve la merma.
 import { clientsApi } from '../src/api/endpoints/catalogs';
-import { declarationsApi, vesselsApi } from '../src/api/endpoints/vessels';
+import { vesselsApi } from '../src/api/endpoints/vessels';
 import { fillLogin, pairApp, readState } from './support/access';
 import { signedInDevice } from './support/api';
 import { expect, test } from './support/fixtures';
@@ -32,7 +32,7 @@ async function prepare(suffix: string) {
   return { api, client };
 }
 
-test('P-07 a P-11: HU-04, cierre con los tres destinos y merma solo para la Apoderada', async ({
+test('P-07 a P-11: HU-04, cierre con transferencia y merma, y merma solo para la Apoderada', async ({
   openApp,
   page,
   device,
@@ -91,12 +91,9 @@ test('P-07 a P-11: HU-04, cierre con los tres destinos y merma solo para la Apod
   }
 
   if (device === 'tablet') {
-    const { api, client } = await prepare('TAB');
+    const { api } = await prepare('TAB');
     const closing = await api.request(vesselsApi.create, { body: vesselBody('Sea Star TAB', '100') });
     const target = await api.request(vesselsApi.create, { body: vesselBody('Ocean TAB', '50') });
-    const d = await api.request(declarationsApi.create, {
-      body: { number: '70432', clientId: client.id, brand: 'Dosel', totalTons: '200.000' },
-    });
     await pairApp(page, device);
     await fillLogin(page, state.apoderada.username, state.apoderada.password);
     await expect(page.getByRole('heading', { name: 'Tablero' }).first()).toBeVisible();
@@ -113,8 +110,9 @@ test('P-07 a P-11: HU-04, cierre con los tres destinos y merma solo para la Apod
       await page.getByRole('button', { name: 'Registrar el destino' }).click();
       await expect(page.getByText(`Se registró el destino: ${kind.toLowerCase()}.`)).toBeVisible();
     };
-    await give('Asignar a una DM', '60', ['DM', d.id]);
-    await give('Transferir a otro buque', '39', ['Buque destino', target.id]);
+    // Decisión T068: asignar a una DM no es destino del sobrante.
+    await expect(page.getByLabel('Tipo de destino').locator('option', { hasText: 'Asignar a una DM' })).toHaveCount(0);
+    await give('Transferir a otro buque', '99', ['Buque destino', target.id]);
     await give('Merma o pérdida', '1');
     await page.getByRole('tab', { name: 'Resumen' }).click();
     await page.getByRole('button', { name: 'Cerrar el buque' }).click();
@@ -123,7 +121,7 @@ test('P-07 a P-11: HU-04, cierre con los tres destinos y merma solo para la Apod
     expect(
       await sql('SELECT status, total_tons FROM vessels WHERE id IN ($1, $2) ORDER BY name', [target.id, closing.id]),
     ).toEqual([
-      { status: 'open', total_tons: '89.000' },
+      { status: 'open', total_tons: '149.000' },
       { status: 'closed', total_tons: '100.000' },
     ]);
     return;

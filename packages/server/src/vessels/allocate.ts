@@ -57,8 +57,6 @@ export interface AllocateInput {
   confirmPartial?: boolean | undefined;
   reason?: string | undefined;
   userId: string;
-  /** El destino «Asignar a DM» del sobrante (RF-BUQ-08): nunca parcial. */
-  surplus?: boolean;
 }
 
 export interface Allocated {
@@ -91,7 +89,7 @@ export async function allocate(tx: Tx, clock: Clock, input: AllocateInput): Prom
   let amount = wanted;
   if (compareTons(wanted, free) > 0) {
     const excess = subTons(wanted, free);
-    if (input.surplus || !input.confirmPartial || compareTons(free, ZERO) <= 0)
+    if (!input.confirmPartial || compareTons(free, ZERO) <= 0)
       throw new AppError(
         'ALLOCATION_EXCEEDS_VESSEL',
         compareTons(free, ZERO) <= 0
@@ -130,7 +128,7 @@ export async function allocate(tx: Tx, clock: Clock, input: AllocateInput): Prom
     allocationId: row!.id,
     previousTons: tonsToApi(previous),
     newTons: next,
-    kind: input.surplus ? 'surplus_assign' : partial ? 'partial_assign' : 'assign',
+    kind: partial ? 'partial_assign' : 'assign',
     reason: input.reason ?? null,
     createdBy: input.userId,
     createdAt: now,

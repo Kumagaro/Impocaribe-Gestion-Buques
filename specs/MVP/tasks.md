@@ -505,11 +505,11 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T066
   - *Estado (2026-10-21):* hecha. `vessels/expiry.ts`: al arrancar y cada 10 minutos; reduce las asignaciones a lo cargado, marca la DM y añade la versión `expire`. Reactivar inicia el plazo hoy y, si la tarea aún no pasó, libera en ese momento. Las alertas AL-03 y AL-04 llegan con las alertas (F7). Pendiente de la mutación, que el responsable correrá a mano.
 
-- [ ] **T068. Cierre de buque y sobrante.** Destinos `allocate`, `transfer` (aumenta el total del buque destino y queda registrado en ambos) y `loss` (solo Apoderada), combinables. `SURPLUS_UNRESOLVED`. Sobrante posterior al cierre.
+- [ ] **T068. Cierre de buque y sobrante.** Destinos `transfer` (aumenta el total del buque destino y queda registrado en ambos) y `loss` (solo Apoderada), combinables. `SURPLUS_UNRESOLVED`. Sobrante posterior al cierre.
   - *Cubre:* RF-BUQ-08, 09
   - *Depende:* T066
   - *Pruebas:* no se cierra con 0,001 t sin destino; una transferencia a un buque cerrado se rechaza; un Operador recibe `FORBIDDEN` en `loss`; dos transferencias cruzadas concurrentes no se interbloquean.
-  - *Estado (2026-10-21):* hecha. Decisión del modelo del sobrante: sobrante = total − cargado − lo que salió del buque; «transferir» y «merma» salen de lo libre (suben el total del destino o lo pierden) y «asignar a DM» lo cubre con una asignación; lo asignado y no cargado se destina después de reducir esa asignación (RF-BUQ-08). Con las cuatro pruebas pedidas, incluidas las transferencias cruzadas concurrentes. AL-17 llega con las alertas (F7). **A revisar por el responsable:** si «asignar a DM» al cerrar un buque tiene sentido, ya que el buque cerrado no admite órdenes. Pendiente de la mutación, que el responsable correrá a mano.
+  - *Estado (2026-10-21):* hecha. Decisión del modelo del sobrante: sobrante = total − cargado − lo que salió del buque; «transferir» y «merma» salen de lo libre (suben el total del destino o lo pierden) y «asignar a DM» lo cubre con una asignación; lo asignado y no cargado se destina después de reducir esa asignación (RF-BUQ-08). Con las cuatro pruebas pedidas, incluidas las transferencias cruzadas concurrentes. AL-17 llega con las alertas (F7). Decisión del responsable (2026-10-22): «asignar a DM» no es destino del sobrante, porque el buque cerrado no admite órdenes; lo que deba cargarse se asigna y se emite antes de cerrar. Los destinos son transferir y merma (RF-BUQ-08 actualizado). Pendiente de la mutación, que el responsable correrá a mano.
 
 - [x] **T069. Propiedades de F5.**
   - *Cubre:* D2, D7, D11, D13

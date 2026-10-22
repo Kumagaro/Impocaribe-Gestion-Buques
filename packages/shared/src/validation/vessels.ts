@@ -104,7 +104,6 @@ export const surplusDispositionDtoSchema = z.object({
   /** Si es una transferencia que este buque recibió de otro. */
   incoming: z.boolean(),
   otherVesselId: z.uuid().nullable(),
-  targetDeclarationId: z.uuid().nullable(),
   reason: z.string(),
   createdBy: z.string().nullable(),
   createdAt: z.iso.datetime(),

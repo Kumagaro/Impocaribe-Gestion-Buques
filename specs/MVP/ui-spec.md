@@ -193,7 +193,7 @@ Cada pantalla indica su ruta, quién la usa, los requisitos que cubre, el conten
   - alta y edición (el total pide motivo);
   - registrar el arribo real;
   - asignar DM;
-  - registrar destino del sobrante: asignar a DM, transferir a otro buque o registrar merma (solo A);
+  - registrar destino del sobrante: transferir a otro buque o registrar merma (solo A); lo que deba cargarse se asigna a una DM antes de cerrar;
   - cerrar el buque.
 - **Particularidades:**
   - la fecha de arribo real aparece bloqueada con candado y una explicación si hay órdenes;

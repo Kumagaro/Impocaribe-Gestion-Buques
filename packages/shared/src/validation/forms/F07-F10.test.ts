@@ -176,13 +176,11 @@ describe('F-09 Asignación y F-10 Sobrante', () => {
     ]);
   });
 
-  it('transferir pide el buque destino y asignar pide la DM', () => {
+  it('transferir pide el buque destino; asignar a una DM no es destino (decisión T068)', () => {
     expect(issues(surplusDispositionSchema.safeParse({ kind: 'transfer', tons: '5', reason: REASON }))).toEqual([
       ['targetVesselId', 'Elija el buque destino.'],
     ]);
-    expect(issues(surplusDispositionSchema.safeParse({ kind: 'allocate', tons: '5', reason: REASON }))).toEqual([
-      ['targetDeclarationId', 'Elija la DM.'],
-    ]);
+    expect(surplusDispositionSchema.safeParse({ kind: 'allocate', tons: '5', reason: REASON }).success).toBe(false);
     expect(surplusDispositionSchema.parse({ kind: 'loss', tons: '0,001', reason: REASON }).tons).toBe('0.001');
   });
 

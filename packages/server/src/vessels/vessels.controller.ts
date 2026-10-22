@@ -22,6 +22,7 @@ import {
   vesselHistorySchema,
   vesselSchema,
   vesselSurplusSchema,
+  type SurplusKind,
   type VesselSurplus,
 } from '@impocaribe/shared/validation';
 import { and, desc, eq, ne, or, sql } from 'drizzle-orm';
@@ -33,11 +34,11 @@ import { ALL_ROLES } from '../auth/auth.controller.ts';
 import type { AuthedRequest } from '../auth/session.guard.ts';
 import { auditLog } from '../db/schema/audit.ts';
 import { users } from '../db/schema/users.ts';
-import { allocations, vessels, vesselSurplusDispositions } from '../db/schema/vessels.ts';
+import { vessels, vesselSurplusDispositions } from '../db/schema/vessels.ts';
 import { Contract } from '../http/contract.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
 import { CLOCK, DB } from '../tokens.ts';
-import { allocate, assertVesselOpen } from './allocate.ts';
+import { assertVesselOpen } from './allocate.ts';
 import { assertVersion, EDITORS, writeVessels } from './declarations.controller.ts';
 import { loadVessel, loadVessels, lockVessels } from './vessels.repo.ts';
 
@@ -69,13 +70,11 @@ async function loadSurplus(tx: Tx, id: string): Promise<VesselSurplus> {
       kind: vesselSurplusDispositions.kind,
       tons: vesselSurplusDispositions.tons,
       targetVesselId: vesselSurplusDispositions.targetVesselId,
-      targetDeclarationId: allocations.declarationId,
       reason: vesselSurplusDispositions.reason,
       createdBy: users.fullName,
       createdAt: vesselSurplusDispositions.createdAt,
     })
     .from(vesselSurplusDispositions)
-    .leftJoin(allocations, eq(allocations.id, vesselSurplusDispositions.targetAllocationId))
     .leftJoin(users, eq(users.id, vesselSurplusDispositions.createdBy))
     .where(or(eq(vesselSurplusDispositions.vesselId, id), eq(vesselSurplusDispositions.targetVesselId, id)))
     .orderBy(desc(vesselSurplusDispositions.createdAt));
@@ -84,11 +83,11 @@ async function loadSurplus(tx: Tx, id: string): Promise<VesselSurplus> {
     unresolvedTons: v.unresolvedSurplusTons,
     dispositions: rows.map((r) => ({
       id: r.id,
-      kind: r.kind,
+      // El tipo de la base aún tiene 'allocate' (0009), pero ya nadie lo escribe (decisión T068).
+      kind: r.kind as SurplusKind,
       tons: r.tons,
       incoming: r.vesselId !== id,
       otherVesselId: r.vesselId !== id ? r.vesselId : r.targetVesselId,
-      targetDeclarationId: r.targetDeclarationId,
       reason: r.reason,
       createdBy: r.createdBy,
       createdAt: r.createdAt.toISOString(),
@@ -307,23 +306,16 @@ export class VesselsController {
   }
 
   /**
-   * RF-BUQ-08, 09: un destino para el sobrante. Asignar va por el flujo normal (nunca parcial); transferir suma las
-   * toneladas al total del buque destino; la merma solo la registra una Apoderada. Lo transferido o perdido sale de lo
-   * libre del buque: lo asignado y no cargado se destina después de reducir esa asignación.
+   * RF-BUQ-08, 09: un destino para el sobrante. Transferir suma las toneladas al total del buque destino; la merma solo
+   * la registra una Apoderada. Los dos salen de lo libre del buque: lo asignado y no cargado se destina después de
+   * reducir esa asignación. Asignar a una DM no es destino (decisión T068): se hace antes de cerrar.
    */
   @Post(':id/surplus-dispositions')
   @HttpCode(201)
   @Contract({
     input: surplusDispositionSchema,
     output: vesselSurplusSchema,
-    errors: [
-      'VESSEL_CLOSED',
-      'ALLOCATION_EXCEEDS_VESSEL',
-      'ALLOCATION_EXCEEDS_DECLARATION',
-      'DECLARATION_PENDING_TOTAL',
-      'DECLARATION_EXPIRED',
-      'DECLARATION_CLOSED',
-    ],
+    errors: ['VESSEL_CLOSED'],
     roles: EDITORS,
   })
   async dispose(
@@ -350,27 +342,12 @@ export class VesselsController {
         const unresolved = parseTons(before.unresolvedSurplusTons);
         if (compareTons(wanted, unresolved) > 0)
           throw invalid('tons', `Supera el sobrante sin destino (${formatTons(unresolved)}).`);
-        let targetAllocationId: string | null = null;
-        const touchedDeclarations: string[] = [];
-        if (input.kind === 'allocate') {
-          const done = await allocate(tx, this.clock, {
-            declarationId: input.targetDeclarationId!,
-            vesselId: id,
-            tons: input.tons,
-            reason: input.reason,
-            userId: req.auth.userId,
-            surplus: true,
-          });
-          targetAllocationId = done.allocationId;
-          touchedDeclarations.push(input.targetDeclarationId!);
-        } else {
-          const free = parseTons(before.freeTons);
-          if (compareTons(wanted, free) > 0)
-            throw invalid(
-              'tons',
-              `Solo hay ${formatTons(free)} libres: lo asignado y no cargado se destina después de reducir esa asignación.`,
-            );
-        }
+        const free = parseTons(before.freeTons);
+        if (compareTons(wanted, free) > 0)
+          throw invalid(
+            'tons',
+            `Solo hay ${formatTons(free)} libres: lo asignado y no cargado se destina después de reducir esa asignación.`,
+          );
         if (targetId) {
           const target = locked.find((v) => v.id === targetId)!;
           if (target.status === 'closed')
@@ -391,7 +368,6 @@ export class VesselsController {
           tons: input.tons,
           kind: input.kind,
           targetVesselId: targetId ?? null,
-          targetAllocationId,
           reason: input.reason,
           createdBy: req.auth.userId,
           createdAt: this.clock.now(),
@@ -407,7 +383,7 @@ export class VesselsController {
           before,
           reason: input.reason,
           body: (t) => loadSurplus(t, id),
-          touched: { vessels: targetId ? [id, targetId] : [id], declarations: touchedDeclarations },
+          touched: { vessels: targetId ? [id, targetId] : [id] },
         };
       },
       201,

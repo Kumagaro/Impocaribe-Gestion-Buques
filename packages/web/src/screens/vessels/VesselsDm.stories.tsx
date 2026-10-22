@@ -215,7 +215,6 @@ const vessels = (selected: VesselDto | null, extra: Partial<VesselsModel> = {}):
   exceeds: null,
   exceedsNo: noop,
   kindOptions: [
-    { value: 'allocate', label: 'Asignar a una DM' },
     { value: 'transfer', label: 'Transferir a otro buque' },
     { value: 'loss', label: 'Merma o pérdida' },
   ],
@@ -226,7 +225,6 @@ const vessels = (selected: VesselDto | null, extra: Partial<VesselsModel> = {}):
     kind: field('kind', 'transfer'),
     tons: field('tons', '1750'),
     targetVesselId: field('targetVesselId', id(12)),
-    targetDeclarationId: field('targetDeclarationId'),
     reason: field('reason', 'Se completa la carga de Ocean Pride'),
   },
   disposeSummary: [],
@@ -259,12 +257,11 @@ export const SobranteYDestinos: StoryObj = {
         dispositions: [
           {
             id: id(51),
-            kind: 'allocate',
+            kind: 'loss',
             tons: '600.000',
             incoming: false,
             otherVesselId: null,
-            targetDeclarationId: id(21),
-            reason: 'Completa el pedido de la DM 00431',
+            reason: 'Mermas por humedad confirmadas en la báscula',
             createdBy: 'Mario Delgado',
             createdAt: '2026-10-12T15:00:00.000Z',
           },

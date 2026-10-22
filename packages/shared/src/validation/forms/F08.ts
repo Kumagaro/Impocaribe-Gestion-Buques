@@ -70,11 +70,12 @@ export const editAllocationSchema = z.object({
   expectedVersion: version,
 });
 
-export const SURPLUS_KINDS = ['allocate', 'transfer', 'loss'] as const;
+/** Decisión del responsable (T068, 2026-10-22): no se «asigna a DM» al cerrar, porque un buque cerrado no admite
+ * órdenes; lo que deba cargarse se asigna y se emite antes de cerrar, por el flujo normal. */
+export const SURPLUS_KINDS = ['transfer', 'loss'] as const;
 export type SurplusKind = (typeof SURPLUS_KINDS)[number];
 
 export const SURPLUS_KIND_LABEL: Record<SurplusKind, string> = {
-  allocate: 'Asignar a una DM',
   transfer: 'Transferir a otro buque',
   loss: 'Merma o pérdida',
 };
@@ -85,14 +86,11 @@ export const surplusDispositionSchema = z
     kind: z.enum(SURPLUS_KINDS, { error: 'Elija el tipo de destino.' }),
     tons,
     targetVesselId: z.union([z.literal('').transform(() => null), z.uuid(), z.null()]).optional(),
-    targetDeclarationId: z.union([z.literal('').transform(() => null), z.uuid(), z.null()]).optional(),
     reason: reasonSchema,
   })
   .superRefine((v, ctx) => {
     if (v.kind === 'transfer' && !v.targetVesselId)
       ctx.addIssue({ code: 'custom', path: ['targetVesselId'], message: 'Elija el buque destino.' });
-    if (v.kind === 'allocate' && !v.targetDeclarationId)
-      ctx.addIssue({ code: 'custom', path: ['targetDeclarationId'], message: 'Elija la DM.' });
   });
 
 /** F-08, advertencia: sin total la DM queda pendiente. */

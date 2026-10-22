@@ -300,9 +300,9 @@ Como Operador, quiero que cada campo me diga qué está mal y qué debo revisar 
 - **RF-BUQ-08. Cierre del buque.** Una Apoderada o un Operador cierra el buque cuando termina la extracción. Un buque cerrado no admite asignaciones ni órdenes nuevas, pero sí correcciones y anulaciones de sus órdenes. Para cerrarlo, **todo su sobrante debe tener destino registrado**, con motivo:
   - el sobrante es el restante físico: lo libre para asignar más lo asignado a DM y no cargado;
   - destinos posibles, que pueden combinarse hasta cubrir todo el sobrante:
-    1. **Asignar a DM pendientes** por el flujo normal de asignación (5.7), antes de cerrar.
-    2. **Transferir a otro buque abierto:** el total del buque destino aumenta en esas toneladas y ambos buques registran la transferencia con motivo.
-    3. **Registrar como merma o pérdida:** con motivo obligatorio y **solo por una Apoderada**.
+    1. **Transferir a otro buque abierto:** el total del buque destino aumenta en esas toneladas y ambos buques registran la transferencia con motivo.
+    2. **Registrar como merma o pérdida:** con motivo obligatorio y **solo por una Apoderada**.
+  - Lo que deba cargarse para una DM se asigna y se emite **antes de cerrar**, por el flujo normal de asignación (5.7): un buque cerrado no admite órdenes, así que asignar a una DM no es un destino del sobrante (decisión del responsable, 2026-10-22).
   - Las toneladas ya asignadas a una DM y no cargadas solo pueden destinarse después de reducir esa asignación (RF-ASG-03).
 - **RF-BUQ-09.** Si después del cierre una anulación o corrección devuelve toneladas al buque, ese nuevo sobrante también debe recibir destino, y se emite la alerta AL-17 hasta que lo tenga.
 

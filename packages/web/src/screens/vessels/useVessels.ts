@@ -7,6 +7,7 @@ import {
   editVesselSchema,
   etaWarning,
   SURPLUS_KIND_LABEL,
+  SURPLUS_KINDS,
   surplusDispositionSchema,
   tonsSchema,
   vesselSchema,
@@ -193,12 +194,11 @@ export function useVessels() {
   // ---------- Destino del sobrante (F-10) ----------
   const dispose = useValidatedForm({
     schema: surplusDispositionSchema,
-    defaultValues: { kind: 'transfer', tons: '', targetVesselId: '', targetDeclarationId: '', reason: '' },
+    defaultValues: { kind: 'transfer', tons: '', targetVesselId: '', reason: '' },
     labels: {
       kind: 'Tipo de destino',
       tons: 'Toneladas',
       targetVesselId: 'Buque destino',
-      targetDeclarationId: 'DM',
       reason: 'Motivo',
     },
     onSubmit: async (values) => {
@@ -357,23 +357,23 @@ export function useVessels() {
     },
 
     /** F-10: la merma solo la registra una Apoderada. */
-    kindOptions: (['allocate', 'transfer', 'loss'] as const)
-      .filter((k) => k !== 'loss' || role === 'apoderada')
-      .map((k) => ({ value: k, label: SURPLUS_KIND_LABEL[k] })),
+    kindOptions: SURPLUS_KINDS.filter((k) => k !== 'loss' || role === 'apoderada').map((k) => ({
+      value: k,
+      label: SURPLUS_KIND_LABEL[k],
+    })),
     disposeKind,
     targetVesselOptions: vessels
       .filter((v) => v.status === 'open' && v.id !== selected?.id)
       .map((v) => ({ value: v.id, label: vesselLabel(v) })),
     openDispose: () => {
       base.setNotice(null);
-      dispose.reset({ kind: 'transfer', tons: '', targetVesselId: '', targetDeclarationId: '', reason: '' });
+      dispose.reset({ kind: 'transfer', tons: '', targetVesselId: '', reason: '' });
       setMode('dispose');
     },
     disposeFields: {
       kind: dispose.field('kind'),
       tons: dispose.field('tons'),
       targetVesselId: dispose.field('targetVesselId'),
-      targetDeclarationId: dispose.field('targetDeclarationId'),
       reason: dispose.field('reason'),
     },
     disposeSummary: dispose.summary,
