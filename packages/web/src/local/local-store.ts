@@ -4,7 +4,7 @@ import { SYNC_ENTITIES, type SyncChange, type SyncEntity } from '@impocaribe/sha
 import type { LocalDatabase, Platform, SqlExecutor } from '../platform/platform';
 
 const entityTable = (name: string) =>
-  `CREATE TABLE ${name} (id TEXT PRIMARY KEY, payload TEXT NOT NULL, ref_date TEXT, seq INTEGER NOT NULL)`;
+  `CREATE TABLE "${name}" (id TEXT PRIMARY KEY, payload TEXT NOT NULL, ref_date TEXT, seq INTEGER NOT NULL)`;
 
 /** Migraciones propias de la copia local, en orden; PRAGMA user_version guarda cuántas se aplicaron. */
 const MIGRATIONS: string[][] = [
@@ -17,6 +17,12 @@ const MIGRATIONS: string[][] = [
   ['client', 'carrier', 'truck', 'trailer', 'driver'].map(entityTable),
   // T066: buques y DM con sus saldos.
   ['vessel', 'declaration'].map(entityTable),
+  // T079 y T087: órdenes y borradores del servidor; y los borradores que solo viven en este dispositivo (RF-ORD-06),
+  // que la sincronización no toca.
+  [
+    ...['order', 'draft'].map(entityTable),
+    'CREATE TABLE local_drafts (id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at TEXT NOT NULL)',
+  ],
 ];
 export const LOCAL_SCHEMA_VERSION = MIGRATIONS.length;
 
@@ -34,9 +40,10 @@ export interface SyncMeta {
 type Change = Omit<SyncChange, 'seq'> & { seq: number };
 
 /** El nombre de la tabla, solo de la lista conocida: nunca se arma SQL con lo que llega de la red. */
-function tableOf(entity: string): SyncEntity {
+function tableOf(entity: string): string {
   if (!(SYNC_ENTITIES as readonly string[]).includes(entity)) throw new Error(`Entidad desconocida: ${entity}`);
-  return entity as SyncEntity;
+  // Entre comillas: `order` es palabra reservada de SQL.
+  return `"${entity}"`;
 }
 
 async function applyIn(tx: SqlExecutor, changes: Change[], seq: number): Promise<void> {

@@ -31,6 +31,7 @@ import { changeLog, syncState } from '../db/schema/sync.ts';
 import { sessions, users } from '../db/schema/users.ts';
 import { CATALOG_ENTITIES, loadCatalog } from '../catalogs/catalogs.repo.ts';
 import { loadDeclarations, loadVessels } from '../vessels/vessels.repo.ts';
+import { readDrafts, readOrders } from '../orders/orders.repo.ts';
 import { Contract } from '../http/contract.ts';
 import type { DeviceRequest } from '../http/device.guard.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
@@ -61,8 +62,9 @@ interface SnapshotRow {
 /** De dónde sale cada entidad en la instantánea, con el mismo DTO que publica el registro de cambios. */
 interface SnapshotSource {
   entityType: SyncEntity;
+  /** `self`: lo de la propia sesión (borradores privados); `page` recibe el usuario. */
   audience: string;
-  page(tx: Tx, after: string | null, limit: number): Promise<SnapshotRow[]>;
+  page(tx: Tx, after: string | null, limit: number, userId: string): Promise<SnapshotRow[]>;
 }
 
 const SOURCES: SnapshotSource[] = [
@@ -125,6 +127,31 @@ const SOURCES: SnapshotSource[] = [
     async page(tx, after, limit) {
       const rows = await loadDeclarations(tx, { after, limit });
       return rows.map((r) => ({ id: r.id, payload: r, refDate: r.deadlineStartDate }));
+    },
+  },
+  // T079 y T076: las órdenes para todos; los borradores compartidos para los editores y los privados para su autor.
+  {
+    entityType: 'order',
+    audience: 'all',
+    async page(tx, after, limit) {
+      const rows = await readOrders(tx, { after, limit });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: r.current.loadingDate }));
+    },
+  },
+  {
+    entityType: 'draft',
+    audience: 'editors',
+    async page(tx, after, limit) {
+      const rows = await readDrafts(tx, { after, limit, visibility: 'shared' });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: null }));
+    },
+  },
+  {
+    entityType: 'draft',
+    audience: 'self',
+    async page(tx, after, limit, userId) {
+      const rows = await readDrafts(tx, { after, limit, visibility: 'private', ownerId: userId });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: null }));
     },
   },
 ];
@@ -253,7 +280,7 @@ export class SyncController {
     @Query(new ZodValidationPipe(syncSnapshotQuerySchema)) query: z.output<typeof syncSnapshotQuerySchema>,
   ): Promise<z.infer<typeof syncSnapshotResponseSchema>> {
     const audiences = audiencesFor(req.auth.role, req.auth.userId);
-    const visible = SOURCES.filter((s) => audiences.includes(s.audience));
+    const visible = SOURCES.filter((s) => s.audience === 'self' || audiences.includes(s.audience));
     let cursor = decodeCursor(query.cursor, visible.length);
     return this.db.transaction(
       async (tx) => {
@@ -262,7 +289,7 @@ export class SyncController {
         while (cursor.source < visible.length && records.length < SNAPSHOT_PAGE) {
           const source = visible[cursor.source]!;
           const limit = SNAPSHOT_PAGE - records.length;
-          const rows = await source.page(tx, cursor.after, limit);
+          const rows = await source.page(tx, cursor.after, limit, req.auth.userId);
           records.push(
             ...rows.map((r) => ({
               entityType: source.entityType,

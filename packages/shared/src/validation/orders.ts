@@ -126,3 +126,11 @@ export const saveDraftSchema = z.object({
 export const syncDraftsSchema = z.object({
   drafts: z.array(z.object({ clientDraftId: z.uuid(), payload: draftPayloadSchema })).max(200),
 });
+
+/** RF-ORD-21: el PDF de una versión, original o copia, en base64 dentro del JSON (como las imágenes de F3). */
+export const pdfFileSchema = z.object({
+  kind: z.enum(['original', 'copy']),
+  fileName: z.string(),
+  mime: z.literal('application/pdf'),
+  base64: z.string(),
+});

@@ -23,6 +23,9 @@ import { CATALOG_CONTROLLERS } from './catalogs/catalogs.controller.ts';
 import { AllocationsController, DeclarationsController } from './vessels/declarations.controller.ts';
 import { DeclarationExpiry } from './vessels/expiry.ts';
 import { VesselsController } from './vessels/vessels.controller.ts';
+import { DraftsController } from './orders/drafts.controller.ts';
+import { OrdersController } from './orders/orders.controller.ts';
+import { PdfService } from './orders/pdf-engine.ts';
 import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
@@ -45,6 +48,8 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     VesselsController,
     DeclarationsController,
     AllocationsController,
+    OrdersController,
+    DraftsController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -55,6 +60,8 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     Realtime,
     ChangeLogPurge,
     DeclarationExpiry,
+    // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
+    { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).
     { provide: DEVICE_GUARD_ENABLED, useValue: true },
     {

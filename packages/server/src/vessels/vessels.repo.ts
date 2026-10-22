@@ -105,7 +105,7 @@ export async function loadDeclarations(tx: Tx, f: Filter = {}): Promise<Declarat
         rows.map((r) => r.id),
       ),
     )
-    .orderBy(asc(allocations.createdAt));
+    .orderBy(asc(allocations.createdAt), asc(allocations.id));
   return rows.map((d) => ({
     ...d,
     expiredAt: iso(d.expiredAt),

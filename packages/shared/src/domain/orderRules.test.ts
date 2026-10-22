@@ -153,3 +153,133 @@ describe('RF-ORD-17: corregir', () => {
     ]);
   });
 });
+
+describe('RF-ORD-13: cada problema con su mensaje exacto y su campo', () => {
+  const inactive = { ...base.trailers[0]!, active: false };
+  it.each([
+    [
+      { hasOfficialSeal: false },
+      {
+        code: 'MISSING_OFFICIAL_SIGNATURE',
+        message: 'Falta la firma o el cuño oficial: una Apoderada debe cargarlos en Empresa antes de emitir.',
+      },
+    ],
+    [
+      { declaration: { number: '00431', status: 'pending_total' as const } },
+      {
+        code: 'DECLARATION_PENDING_TOTAL',
+        message: 'La DM 00431 no tiene total: no admite órdenes.',
+        field: 'declarationId',
+      },
+    ],
+    [
+      { declaration: { number: '00431', status: 'expired' as const } },
+      {
+        code: 'DECLARATION_EXPIRED',
+        message: 'La DM 00431 está vencida: reactívela para emitir órdenes.',
+        field: 'declarationId',
+      },
+    ],
+    [
+      { declaration: { number: '00431', status: 'closed' as const } },
+      {
+        code: 'DECLARATION_CLOSED',
+        message: 'La DM 00431 está cerrada: ya se cargó todo su total.',
+        field: 'declarationId',
+      },
+    ],
+    [
+      { vessel: { name: 'Eagle 1', status: 'closed' as const, arrivalDate: '2026-08-28' } },
+      {
+        code: 'VESSEL_CLOSED',
+        message: 'El buque Eagle 1 está cerrado: no admite órdenes nuevas.',
+        field: 'allocationId',
+      },
+    ],
+    [
+      { vessel: { name: 'Eagle 1', status: 'open' as const, arrivalDate: null } },
+      {
+        code: 'VESSEL_NOT_ARRIVED',
+        message: 'El buque Eagle 1 no tiene fecha de arribo real: regístrela antes de emitir.',
+        field: 'allocationId',
+      },
+    ],
+    [
+      { loadingDate: '2026-08-28' },
+      {
+        code: 'LOADING_DATE_BEFORE_ISSUE',
+        message: 'La fecha de carga no puede ser anterior a hoy.',
+        field: 'loadingDate',
+      },
+    ],
+    [
+      { loadingDate: '2026-09-06' },
+      {
+        code: 'LOADING_DATE_TOO_FAR',
+        message: 'La fecha de carga admite como máximo 7 días desde hoy.',
+        field: 'loadingDate',
+        details: { maxDays: 7 },
+      },
+    ],
+    [
+      { recipient: { name: 'Almacén Central', active: false } },
+      {
+        code: 'INACTIVE_RESOURCE',
+        message: 'El destinatario Almacén Central está inactivo: elija otro.',
+        field: 'recipientId',
+      },
+    ],
+    [
+      { truck: { ...base.truck, active: false } },
+      { code: 'INACTIVE_RESOURCE', message: 'El camión W011612 está inactivo: elija otro.', field: 'truckId' },
+    ],
+    [
+      { driver: { ...base.driver, active: false } },
+      {
+        code: 'INACTIVE_RESOURCE',
+        message: 'El chofer Juan Carlos Miranda está inactivo: elija otro.',
+        field: 'driverId',
+      },
+    ],
+    [
+      { trailers: [inactive] },
+      { code: 'INACTIVE_RESOURCE', message: 'El remolque W006877 está inactivo: elija otro.', field: 'trailerIds' },
+    ],
+    [
+      { driver: { ...base.driver, carrierId: 'otro' } },
+      {
+        code: 'DRIVER_CARRIER_MISMATCH',
+        message: 'El chofer Juan Carlos Miranda no es del transportista del camión W011612.',
+        field: 'driverId',
+      },
+    ],
+    [
+      { trailers: [{ ...base.trailers[0]!, carrierId: 'otro' }] },
+      {
+        code: 'TRAILER_CARRIER_MISMATCH',
+        message: 'El remolque W006877 no es del transportista del camión W011612.',
+        field: 'trailerIds',
+      },
+    ],
+    [
+      { tons: t('30.5') },
+      {
+        code: 'CAPACITY_REQUIRES_OVERRIDE',
+        message: 'La orden pasa la capacidad de los remolques (30,000 t) por 0,500 t.',
+        field: 'tons',
+        details: { capacityTons: '30.000', excessTons: '0.500' },
+      },
+    ],
+    [
+      { sameDayOrders: 1 },
+      {
+        code: 'SAME_DAY_REQUIRES_OVERRIDE',
+        message: 'El camión W011612 ya tiene otra orden con esa fecha de carga.',
+        field: 'truckId',
+        details: { orders: 1 },
+      },
+    ],
+  ] as [Partial<OrderCheckInput>, object][])('%#: %o', (input, problem) => {
+    expect(checkOrder({ ...base, ...input })).toEqual([problem]);
+  });
+});

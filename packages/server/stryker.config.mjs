@@ -21,6 +21,9 @@ export default {
     // T064 y T067: asignación y vencimiento.
     'src/vessels/allocate.ts',
     'src/vessels/expiry.ts',
+    // T079 a T082: emitir, corregir y anular.
+    'src/orders/order-context.ts',
+    'src/orders/orders.controller.ts',
     '!src/**/*.test.ts',
   ],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.

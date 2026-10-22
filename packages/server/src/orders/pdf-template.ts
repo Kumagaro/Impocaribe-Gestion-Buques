@@ -9,7 +9,7 @@ export interface DocumentImages {
   stamp: { mime: string; base64: string };
 }
 
-export type DocumentMark = 'ANULADA' | 'COPIA' | null;
+export type DocumentMark = 'ANULADA' | 'COPIA';
 
 const esc = (s: string | null | undefined) =>
   (s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -17,7 +17,7 @@ const esc = (s: string | null | undefined) =>
 const ln = (value: string | null | undefined, min = 70) =>
   `<span class="ln" style="min-width:${min}px">${esc(value)}</span>`;
 
-export function orderDocumentHtml(s: OrderSnapshot, images: DocumentImages, mark: DocumentMark): string {
+export function orderDocumentHtml(s: OrderSnapshot, images: DocumentImages, marks: DocumentMark[] = []): string {
   const img = (i: { mime: string; base64: string }, alt: string) =>
     `<img src="data:${esc(i.mime)};base64,${i.base64.replace(/[^A-Za-z0-9+/=]/g, '')}" alt="${alt}">`;
   return `<!doctype html>
@@ -45,7 +45,7 @@ export function orderDocumentHtml(s: OrderSnapshot, images: DocumentImages, mark
 </style></head>
 <body><div class="paper">
   ${s.versionNo > 1 ? `<div class="version">Versión ${s.versionNo}</div>` : ''}
-  ${mark ? `<div class="mark">${mark}</div>` : ''}
+  ${marks.map((m, i) => `<div class="mark" style="top:${120 + i * 70}px">${m}</div>`).join('')}
   <h1>"ORDEN DE CARGA"</h1>
   <div class="row"><span>Fecha de Emisión: ${ln(pdfIssueDate(s.issueDate))}</span>
     <span class="push">No. de Orden: ${ln(s.number, 160)}</span></div>

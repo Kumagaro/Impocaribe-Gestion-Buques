@@ -1,6 +1,7 @@
 // T078 · DT-06, RNF-21, plan §10.7: una sola instancia de Chromium (chrome-headless-shell, el de menor consumo) y una
 // sola página a la vez (cola). Se abre con la primera emisión y se cierra tras 10 minutos sin emisiones; cada
 // documento tiene 10 segundos para generarse.
+import { Injectable, type OnApplicationShutdown } from '@nestjs/common';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -104,5 +105,13 @@ export class PdfEngine {
     const b = this.browser;
     this.browser = null;
     if (b) await (await b.catch(() => null))?.close().catch(() => undefined);
+  }
+}
+
+/** El motor como servicio del servidor: se cierra con él (plan §10.7). */
+@Injectable()
+export class PdfService extends PdfEngine implements OnApplicationShutdown {
+  onApplicationShutdown(): Promise<void> {
+    return this.close();
   }
 }

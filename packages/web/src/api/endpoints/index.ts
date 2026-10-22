@@ -8,5 +8,6 @@ import './sync';
 import './company';
 import './catalogs';
 import './vessels';
+import './orders';
 
 export { apiRegistry, type Endpoint } from '../client';
