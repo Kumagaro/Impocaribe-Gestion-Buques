@@ -598,36 +598,36 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T082
   - *Estado (2026-10-22):* hecha. Secuencias aleatorias de emitir, corregir y anular: nunca saldo negativo y numeración 1..n sin huecos ni repeticiones.
 
-- [ ] **T085. Maquetas de P-13 a P-16**, incluida la vista previa del documento y el formulario por pasos de teléfono.
+- [x] **T085. Maquetas de P-13 a P-16**, incluida la vista previa del documento y el formulario por pasos de teléfono.
   - *Depende:* T017
-  - *Estado (2026-10-22):* `docs/maquetas/T085-ordenes.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
+  - *Estado (2026-10-22):* `docs/maquetas/T085-ordenes.html` (claro y oscuro, tres clases), aprobada por el responsable el 2026-10-22.
 
-- [ ] **T086. (PP) Pantalla P-13 Nueva orden**, con el transportista primero, que filtra camiones y choferes, y las advertencias ADV-01 a ADV-04 y ADV-07 en sus campos.
+- [x] **T086. (PP) Pantalla P-13 Nueva orden**, con el transportista primero, que filtra camiones y choferes, y las advertencias ADV-01 a ADV-04 y ADV-07 en sus campos.
   - *Cubre:* HU-01, RF-ORD-03 a 05, 12, 13, RF-VAL-08
   - *Depende:* T079, T085, T058, T072
   - *Pruebas E2E adicionales:* sobregiro, capacidad, camión repetido, fecha de carga fuera de rango; emisión verificada en la base y en la copia local de otro usuario.
-  - *Estado (2026-10-22):* hecha, a la espera de que el responsable apruebe la maqueta T085 y las referencias visuales (`Pantallas/Órdenes`). `web/src/screens/orders/`: elecciones encadenadas desde la copia local, panel de saldo con las mismas comprobaciones del servidor y las advertencias, excepciones con motivo (también las dos seguidas), vista previa A4, autoguardado como borrador local y orden emitida con la descarga del original. 7 pruebas de componente y E2E (sobregiro, capacidad, camión repetido, emisión en la base y original idéntico al archivado). Atajo: el máximo de días de la fecha de carga se toma por defecto (7) en la interfaz hasta que la configuración se replique (F7); el servidor decide con el real.
+  - *Estado (2026-10-22):* hecha; pantallas y referencias visuales (`Pantallas/Órdenes`) aprobadas por el responsable el 2026-10-22. `web/src/screens/orders/`: elecciones encadenadas desde la copia local, panel de saldo con las mismas comprobaciones del servidor y las advertencias, excepciones con motivo (también las dos seguidas), vista previa A4, autoguardado como borrador local y orden emitida con la descarga del original. 7 pruebas de componente y E2E (sobregiro, capacidad, camión repetido, emisión en la base y original idéntico al archivado). Atajo: el máximo de días de la fecha de carga se toma por defecto (7) en la interfaz hasta que la configuración se replique (F7); el servidor decide con el real.
 
-- [ ] **T087. (PP) Borradores locales y pantalla P-14 Borradores.**
+- [x] **T087. (PP) Borradores locales y pantalla P-14 Borradores.**
   - *Cubre:* RF-ORD-06 a 11, HU-06
   - *Depende:* T086, T047
-  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-14 con Míos (de este dispositivo y privados) y Compartidos (autor, edición y bloqueo); los locales suben como privados al recuperar la conexión (RF-ORD-08). E2E: un borrador abierto por otra persona se ve en edición (EST-06).
+  - *Estado (2026-10-22):* hecha y aprobada por el responsable el 2026-10-22. P-14 con Míos (de este dispositivo y privados) y Compartidos (autor, edición y bloqueo); los locales suben como privados al recuperar la conexión (RF-ORD-08). E2E: un borrador abierto por otra persona se ve en edición (EST-06).
 
-- [ ] **T088. (PP) Pantalla P-15 Orden**, con el visor del PDF y la línea de tiempo de versiones.
+- [x] **T088. (PP) Pantalla P-15 Orden**, con el visor del PDF y la línea de tiempo de versiones.
   - *Cubre:* HU-02, RF-ORD-21, 22, RF-BIT-04, RF-CON-08
   - *Depende:* T082, T083, T085
-  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-15 con el documento congelado de la versión vigente (también sin conexión), versiones con sus cambios y la descarga original o copia. E2E: copia para quien no emitió (el original idéntico se prueba en T086).
+  - *Estado (2026-10-22):* hecha y aprobada por el responsable el 2026-10-22. P-15 con el documento congelado de la versión vigente (también sin conexión), versiones con sus cambios y la descarga original o copia. E2E: copia para quien no emitió (el original idéntico se prueba en T086).
 
-- [ ] **T089. (PP) Pantalla P-16 Corregir y Anular.**
+- [x] **T089. (PP) Pantalla P-16 Corregir y Anular.**
   - *Cubre:* RF-ORD-17 a 19, RF-DM-11
   - *Depende:* T088
-  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-16: corregir con la DM y el buque fijos y los cambios resaltados; anular con lo que repone. E2E: la versión 2 cambia el saldo por la diferencia y la anulación lo repone.
+  - *Estado (2026-10-22):* hecha y aprobada por el responsable el 2026-10-22. P-16: corregir con la DM y el buque fijos y los cambios resaltados; anular con lo que repone. E2E: la versión 2 cambia el saldo por la diferencia y la anulación lo repone.
 
-- [ ] **T090. Comparación visual del PDF.**
+- [x] **T090. Comparación visual del PDF.**
   - *Cubre:* RF-PDF-01
   - *Depende:* T083
   - *Terminado:* referencias aprobadas por el responsable.
-  - *Estado (2026-10-22):* hecha, a la espera de que el responsable apruebe las referencias (`e2e/visual/references/documento-orden--*.png`: original, versión 2, ANULADA y COPIA). Se compara la plantilla HTML que el servidor convierte en PDF, dibujada en A4 con Chrome for Testing fijo, porque Chromium sin interfaz no muestra PDF.
+  - *Estado (2026-10-22):* hecha; referencias (`e2e/visual/references/documento-orden--*.png`: original, versión 2, ANULADA y COPIA) aprobadas por el responsable el 2026-10-22. Se compara la plantilla HTML que el servidor convierte en PDF, dibujada en A4 con Chrome for Testing fijo, porque Chromium sin interfaz no muestra PDF.
 
 - [x] **T091. Reproducción del Excel.**
   - *Cubre:* spec §11.5, Const. art. XIII.8
