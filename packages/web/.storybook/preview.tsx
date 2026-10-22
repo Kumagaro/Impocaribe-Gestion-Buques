@@ -9,6 +9,7 @@ import '../src/screens/diagnostics/diagnostics.css';
 import '../src/screens/company/company.css';
 import '../src/screens/settings/settings.css';
 import '../src/screens/catalogs/catalogs.css';
+import '../src/screens/orders/orders.css';
 import { MotionProvider } from '../src/motion/MotionProvider';
 import { DeviceClassProvider } from '../src/ui/device';
 import { installTokens } from '../src/ui/theme';

@@ -164,3 +164,19 @@ describe('meta, borrado y ventana de 12 meses', () => {
     expect(await store.list('user_admin')).toEqual([{ id: A }]);
   });
 });
+
+describe('RF-ORD-06: borradores de este dispositivo', () => {
+  it('se guardan, se reemplazan, se listan del más reciente al más antiguo y sobreviven al borrado de la copia', async () => {
+    const store = await open();
+    await store.saveLocalDraft('a', { tons: '17,28' }, '2026-08-29T10:00:00.000Z');
+    await store.saveLocalDraft('b', { tons: '5' }, '2026-08-29T11:00:00.000Z');
+    await store.saveLocalDraft('a', { tons: '18' }, '2026-08-29T12:00:00.000Z');
+    await store.clear();
+    expect(await store.localDrafts()).toEqual([
+      { id: 'a', payload: { tons: '18' }, updatedAt: '2026-08-29T12:00:00.000Z' },
+      { id: 'b', payload: { tons: '5' }, updatedAt: '2026-08-29T11:00:00.000Z' },
+    ]);
+    await store.deleteLocalDraft('a');
+    expect((await store.localDrafts()).map((d) => d.id)).toEqual(['b']);
+  });
+});

@@ -122,3 +122,8 @@ export function useServerNow(): () => Date {
   const skew = useSyncStatus().clockSkewMs ?? 0;
   return () => new Date(session.now().getTime() - skew);
 }
+
+/** La copia local, para lo que no es una lista replicada (los borradores de este dispositivo, RF-ORD-06). */
+export function useLocalStore(): LocalStore | null {
+  return useSync()?.store ?? null;
+}

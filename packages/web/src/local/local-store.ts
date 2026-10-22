@@ -156,6 +156,28 @@ export class LocalStore {
     return this.write(() => this.db.transaction(clearIn));
   }
 
+  /** RF-ORD-06: los borradores que solo viven en este dispositivo (ni la sincronización ni el cierre de sesión los tocan). */
+  async localDrafts<T>(): Promise<{ id: string; payload: T; updatedAt: string }[]> {
+    const rows = await this.db.query<{ id: string; payload: string; updated_at: string }>(
+      'SELECT id, payload, updated_at FROM local_drafts ORDER BY updated_at DESC',
+    );
+    return rows.map((r) => ({ id: r.id, payload: JSON.parse(r.payload) as T, updatedAt: r.updated_at }));
+  }
+
+  saveLocalDraft(id: string, payload: unknown, updatedAt: string): Promise<void> {
+    return this.write(() =>
+      this.db.execute('INSERT OR REPLACE INTO local_drafts (id, payload, updated_at) VALUES (?, ?, ?)', [
+        id,
+        JSON.stringify(payload),
+        updatedAt,
+      ]),
+    );
+  }
+
+  deleteLocalDraft(id: string): Promise<void> {
+    return this.write(() => this.db.execute('DELETE FROM local_drafts WHERE id = ?', [id]));
+  }
+
   /** Plan §5.9, "cada día": quita lo que tiene fecha de referencia anterior a `cutoff` (AAAA-MM-DD). */
   prune(cutoff: string): Promise<void> {
     return this.write(() =>
