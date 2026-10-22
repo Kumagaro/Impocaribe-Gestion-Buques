@@ -71,8 +71,20 @@ export async function gather(
   lock: boolean,
 ) {
   const [alloc] = await tx.select().from(allocations).where(eq(allocations.id, ref.allocationId));
-  if (!alloc || alloc.declarationId !== ref.declarationId)
+  if (!alloc || alloc.declarationId !== ref.declarationId) {
+    // Una DM sin total no tiene buques (D11): se dice eso, que es la causa, y no «elija un buque».
+    const [d] = await tx
+      .select({ number: customsDeclarations.number, total: customsDeclarationVersions.totalTons })
+      .from(customsDeclarations)
+      .innerJoin(customsDeclarationVersions, eq(customsDeclarationVersions.id, customsDeclarations.currentVersionId))
+      .where(eq(customsDeclarations.id, ref.declarationId));
+    if (!d) throw invalid('declarationId', 'Elija una DM de la lista.');
+    if (d.total === null)
+      throw new AppError('DECLARATION_PENDING_TOTAL', `La DM ${d.number} no tiene total: no admite órdenes.`, {
+        fields: { declarationId: `La DM ${d.number} no tiene total: no admite órdenes.` },
+      });
     throw invalid('allocationId', 'Elija un buque asignado a esta DM.');
+  }
   // DT-09: buque, DM, asignación y, si es una corrección, la orden.
   const vesselQ = tx.select().from(vessels).where(eq(vessels.id, alloc.vesselId));
   const [vessel] = lock ? await vesselQ.for('update') : await vesselQ;
