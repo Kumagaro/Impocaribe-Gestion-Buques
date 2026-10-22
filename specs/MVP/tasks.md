@@ -639,26 +639,33 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T092. Motor de alertas.**
   - *Cubre:* RF-ALR-03, 05
   - *Depende:* T042
+  - *Estado (2026-10-22):* hecha. `server/src/db/schema/alerts.ts` y `drizzle/0011_alerts.sql`: tabla `alerts` (sin `DELETE`) con clave única parcial de las abiertas (una de condición no se repite mientras sigue abierta) y un disparador que avisa `impocaribe_alert` al confirmar. `server/src/alerts/alerts.ts`: alertas de evento (`raiseEvent`) y de condición (`openCondition`, `resolveMissing`), replicadas a la audiencia de quien las ve (todos, editores, Apoderada y, en AL-08, el autor). `GET /alerts` y `POST /alerts/:id/attend` (solo de evento y según la tabla AL, con nombre y hora en la bitácora). El WebSocket manda `alert.created` (tipo y referencia) solo a los roles que la ven o a su destinatario, también al token de dispositivo. Catálogo compartido `shared/domain/alerts.ts`. 11 pruebas de integración. Pendiente de la mutación del servidor (`alerts.ts` y `conditions.ts` añadidos), que el responsable correrá a mano.
 
 - [ ] **T093. Alertas por eventos.**
   - *Depende:* T092, T079, T064, T030
+  - *Estado (2026-10-22):* hecha. AL-02 al registrar una DM con otras pendientes (las lista); AL-04 al vencer; AL-05 ante un intento real de emitir o corregir bloqueado por sobregiro (en una transacción aparte, porque la escritura se revierte; la simulación no la dispara); AL-06 y AL-07 solo cuando la excepción hizo falta; AL-10 en la asignación parcial; AL-11 en cada recuperación, exitosa o fallida. El restablecimiento de emergencia (RF-INS-11) la emitirá cuando exista (F11). Pendiente de la mutación del servidor.
 
 - [ ] **T094. Alertas por condición y tiempo** (AL-01, 03, 04, 08, 09, 12, 16, 17, 18, 19 y 23).
   - *Depende:* T092, T067, T068
+  - *Estado (2026-10-22):* hecha para AL-01, 03, 08, 09, 16, 17 y 18 (`server/src/alerts/conditions.ts`); AL-04 es de evento y sale del vencimiento (T093). La pasada corre al arrancar, cada 10 minutos, 1,5 s después de cada cambio sincronizado y al medir la hora de un dispositivo (AL-18), con un candado para que no se solapen. AL-12, 19, 20, 21 y 23 llegan con respaldos, restauración y energía (F9 y F10). Pendiente de la mutación del servidor.
 
-- [ ] **T095. Maquetas de P-17**, incluido el panel lateral de alertas de escritorio.
+- [x] **T095. Maquetas de P-17**, incluido el panel lateral de alertas de escritorio.
   - *Depende:* T017
+  - *Estado (2026-10-22):* `docs/maquetas/T095-alertas.html` (claro y oscuro, tres clases y el panel lateral), aprobada por el responsable el 2026-10-22.
 
-- [ ] **T096. (PP) Pantalla P-17 Alertas**, con el contador y la campana animada en los tres `AppShell`.
+- [x] **T096. (PP) Pantalla P-17 Alertas**, con el contador y la campana animada en los tres `AppShell`.
   - *Cubre:* RF-ALR-01 a 05, HU-07
   - *Depende:* T093, T094, T095, T046
+  - *Estado (2026-10-22):* hecha; pantallas y referencias visuales (`Pantallas/Alertas`, 30) aprobadas por el responsable el 2026-10-22. `web/src/screens/alerts/`: lista con las de este dispositivo arriba, filtros por estado, tipo y DM o buque (en TEL, en una hoja), lista y detalle en TAB, página completa en ESC y el panel lateral desde la campana en cualquier pantalla; abrir el origen y Atender según la tabla AL. Contador en los tres `AppShell` con la campana que se agita y la fila nueva resaltada (MOV-02, MOV-08). Historias `Pantallas/Alertas` y sus referencias visuales, 10 pruebas de componente y E2E (`e2e/alerts.e2e.ts`, pasa en las tres clases): la alerta de otra persona en menos de 5 s y el Operador sin AL-05.
 
-- [ ] **T097. Alertas locales** (AL-13, 14 y 15).
+- [x] **T097. Alertas locales** (AL-13, 14 y 15).
   - *Depende:* T047
+  - *Estado (2026-10-22):* hecha para AL-13 (sin conexión) y AL-14 (borradores sin subir, que además llegan a la banda de sin conexión); no salen del dispositivo. AL-15 llega con la publicación de versiones (T113 y T114).
 
-- [ ] **T098. Notificaciones del sistema con la app abierta.**
+- [x] **T098. Notificaciones del sistema con la app abierta.**
   - *Cubre:* RF-ALR-01, 02
   - *Depende:* T096
+  - *Estado (2026-10-22):* hecha. Con la app abierta, cada `alert.created` sale por `platform.notify` con solo el tipo y la referencia; con la app cerrada, en F10 (servicio de Android y bandeja de Windows).
 
 ## F8. Tablero, búsqueda y bitácora
 

@@ -4,6 +4,8 @@ import { systemClock, type Clock } from '@impocaribe/shared';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { config } from './config.ts';
 import { createAppPool } from './db/db.ts';
+import { AlertsController } from './alerts/alerts.controller.ts';
+import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
 import { SessionGuard } from './auth/session.guard.ts';
@@ -28,7 +30,16 @@ import { OrdersController } from './orders/orders.controller.ts';
 import { PdfService } from './orders/pdf-engine.ts';
 import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
-import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
+import {
+  ALERT_CONDITIONS_ENABLED,
+  CLOCK,
+  DATA_DIR,
+  DB,
+  DEVICE_GUARD_ENABLED,
+  DEVICE_REGISTRY,
+  MIN_APP_VERSION,
+  SERVER_INFO,
+} from './tokens.ts';
 
 @Module({
   controllers: [
@@ -50,6 +61,7 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     AllocationsController,
     OrdersController,
     DraftsController,
+    AlertsController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -60,6 +72,8 @@ import { CLOCK, DATA_DIR, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VER
     Realtime,
     ChangeLogPurge,
     DeclarationExpiry,
+    { provide: ALERT_CONDITIONS_ENABLED, useValue: true },
+    AlertConditions,
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

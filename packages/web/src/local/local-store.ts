@@ -23,6 +23,8 @@ const MIGRATIONS: string[][] = [
     ...['order', 'draft'].map(entityTable),
     'CREATE TABLE local_drafts (id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at TEXT NOT NULL)',
   ],
+  // T092: las alertas que ve este usuario (RF-ALR-05).
+  [entityTable('alert')],
 ];
 export const LOCAL_SCHEMA_VERSION = MIGRATIONS.length;
 

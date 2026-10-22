@@ -24,6 +24,9 @@ export default {
     // T079 a T082: emitir, corregir y anular.
     'src/orders/order-context.ts',
     'src/orders/orders.controller.ts',
+    // T092 a T094: el motor de alertas y las de condición.
+    'src/alerts/alerts.ts',
+    'src/alerts/conditions.ts',
     '!src/**/*.test.ts',
   ],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.

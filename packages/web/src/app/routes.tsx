@@ -12,6 +12,8 @@ import { NewOrderScreen } from '../screens/orders/NewOrder.screen';
 import { OrderScreen } from '../screens/orders/Order.screen';
 import { CorrectOrderScreen } from '../screens/orders/CorrectOrder.screen';
 import { DraftsScreen } from '../screens/orders/Drafts.screen';
+import { AlertsPanel, AlertsScreen } from '../screens/alerts/Alerts.screen';
+import { useAlertFeed } from '../screens/alerts/useAlertFeed';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
@@ -45,6 +47,7 @@ function SignedInShell() {
   const { session, state } = useAppSession();
   const sync = useSyncStatus();
   const online = useOnline();
+  const alerts = useAlertFeed();
   const user = state.session!.user;
   const expiresAt = Date.parse(state.session!.expiresAt);
 
@@ -62,11 +65,11 @@ function SignedInShell() {
   const status: ShellStatus = {
     online,
     asOf: sync.syncedAt ? havanaDateTime(new Date(sync.syncedAt)) : 'sin datos',
-    pendingDrafts: 0,
+    pendingDrafts: alerts.drafts,
     syncing: sync.syncing,
-    // shortcut: energía (F10) y alertas (F7) llegan con sus fases; hasta entonces, con corriente y sin alertas.
+    // shortcut: la energía llega con F10; hasta entonces, con corriente.
     power: null,
-    alerts: 0,
+    alerts: alerts.open,
     clockSkewMinutes:
       sync.clockSkewMs !== null && Math.abs(sync.clockSkewMs) > SKEW_LIMIT_MS
         ? Math.round(Math.abs(sync.clockSkewMs) / 60_000)
@@ -79,6 +82,7 @@ function SignedInShell() {
       isServerPc={state.pairing!.isServerPc}
       theme={state.preferences.theme}
       onThemeChange={(theme) => void session.setPreferences({ theme })}
+      alertsPanel={(onClose) => <AlertsPanel onClose={onClose} />}
     />
   );
 }
@@ -115,6 +119,7 @@ export const appRoutes: RouteObject[] = [
               { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
               { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
               { path: '/borradores', handle: { title: 'Borradores' }, element: <DraftsScreen /> },
+              { path: '/alertas', handle: { title: 'Alertas' }, element: <AlertsScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },
               { path: '/ordenes/:id', handle: { title: 'Orden' }, element: <OrderScreen /> },
               {

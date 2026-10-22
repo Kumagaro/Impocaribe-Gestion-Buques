@@ -20,10 +20,13 @@ import {
   syncStateSchema,
   type SyncEntity,
 } from '@impocaribe/shared/validation';
-import { and, asc, eq, gt, inArray, lt, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, gte, inArray, lt, lte, or, sql, type SQL } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { z } from 'zod';
 import type { Tx } from '../audit/audit-log.ts';
+import { AlertConditions } from '../alerts/conditions.ts';
+import { readAlerts } from '../alerts/alerts.ts';
+import { alerts } from '../db/schema/alerts.ts';
 import { ALL_ROLES } from '../auth/auth.controller.ts';
 import type { AuthedRequest } from '../auth/session.guard.ts';
 import { devices } from '../db/schema/devices.ts';
@@ -64,7 +67,7 @@ interface SnapshotSource {
   entityType: SyncEntity;
   /** `self`: lo de la propia sesión (borradores privados); `page` recibe el usuario. */
   audience: string;
-  page(tx: Tx, after: string | null, limit: number, userId: string): Promise<SnapshotRow[]>;
+  page(tx: Tx, after: string | null, limit: number, userId: string, now: Date): Promise<SnapshotRow[]>;
 }
 
 const SOURCES: SnapshotSource[] = [
@@ -156,6 +159,33 @@ const SOURCES: SnapshotSource[] = [
   },
 ];
 
+/**
+ * T092: las alertas por la audiencia de quien las ve (alertAudiences): las abiertas y las de los últimos 30 días, como
+ * el registro de cambios.
+ */
+function alertSource(audience: string, where: (userId: string) => SQL): SnapshotSource {
+  return {
+    entityType: 'alert',
+    audience,
+    async page(tx, after, limit, userId, now) {
+      const recent = new Date(now.getTime() - CHANGE_LOG_DAYS * DAY_MS);
+      const rows = await readAlerts(tx, {
+        after,
+        limit,
+        where: and(where(userId), or(eq(alerts.status, 'open'), gte(alerts.createdAt, recent)))!,
+      });
+      return rows.map((r) => ({ id: r.id, payload: r, refDate: r.createdAt.slice(0, 10) }));
+    },
+  };
+}
+const hasRole = (role: string) => sql`${role} = ANY(${alerts.audienceRoles})`;
+SOURCES.push(
+  alertSource('all', () => hasRole('lectura')),
+  alertSource('editors', () => and(hasRole('operador'), sql`NOT ${hasRole('lectura')}`)!),
+  alertSource('apoderada', () => sql`NOT ${hasRole('operador')}`),
+  alertSource('self', (userId) => eq(alerts.targetUserId, userId)),
+);
+
 const resync = () =>
   new AppError('RESYNC_REQUIRED', 'La copia local de este dispositivo está desactualizada: se va a reconstruir.');
 const badCursor = () =>
@@ -190,6 +220,7 @@ export class SyncController {
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
     @Inject(CLOCK) private readonly clock: Clock,
+    private readonly alertConditions: AlertConditions,
   ) {}
 
   /**
@@ -207,6 +238,8 @@ export class SyncController {
         .update(devices)
         .set({ clockOffsetMs: deviceTime - now.getTime() })
         .where(eq(devices.id, deviceId));
+      // AL-18: se abre (o se resuelve) en la próxima pasada, sin esperar a la de cada 10 minutos.
+      this.alertConditions.soon();
     }
     const [state] = await this.db.select().from(syncState);
     return {
@@ -289,7 +322,7 @@ export class SyncController {
         while (cursor.source < visible.length && records.length < SNAPSHOT_PAGE) {
           const source = visible[cursor.source]!;
           const limit = SNAPSHOT_PAGE - records.length;
-          const rows = await source.page(tx, cursor.after, limit, req.auth.userId);
+          const rows = await source.page(tx, cursor.after, limit, req.auth.userId, this.clock.now());
           records.push(
             ...rows.map((r) => ({
               entityType: source.entityType,

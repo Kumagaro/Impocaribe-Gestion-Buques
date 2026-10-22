@@ -9,7 +9,7 @@ import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AppModule } from '../src/app.module.ts';
 import { configureApp } from '../src/app.ts';
-import { CLOCK, DATA_DIR, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
+import { ALERT_CONDITIONS_ENABLED, CLOCK, DATA_DIR, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
 import { listenForTests } from './listen.ts';
 import type { SuiteDb } from './suite-db.ts';
 
@@ -60,6 +60,9 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     .useValue(dataDir)
     .overrideProvider(DB)
     .useValue(drizzle(suite.app))
+    // Las pruebas de alertas llaman a evaluateConditions con su reloj; en segundo plano movería los seq de las demás.
+    .overrideProvider(ALERT_CONDITIONS_ENABLED)
+    .useValue(false)
     .compile();
   // rawBody como en producción (createApp): la firma del dispositivo y la idempotencia usan el cuerpo tal como llegó.
   const app = configureApp(

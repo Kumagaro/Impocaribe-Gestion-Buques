@@ -78,6 +78,13 @@
       "when": 1792679950311,
       "tag": "0010_orders_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792689615746,
+      "tag": "0011_alerts",
+      "breakpoints": true
     }
   ]
 }

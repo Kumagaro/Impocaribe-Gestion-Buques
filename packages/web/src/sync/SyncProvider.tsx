@@ -1,6 +1,6 @@
 // T046 · Const. art. VII y plan §7.1: las pantallas leen de la copia local con TanStack Query; cada sincronización
 // invalida solo las consultas de las entidades que cambiaron y marca sus filas para el resaltado de MOV-02.
-import { can } from '@impocaribe/shared';
+import { ALERTS, can, type AlertType } from '@impocaribe/shared';
 import type { DraftPayload, SyncEntity } from '@impocaribe/shared/validation';
 import { draftsApi } from '../api/endpoints/orders';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,6 +51,16 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       for (const entity of entities) void queryClient.invalidateQueries({ queryKey: ['local', entity] });
     });
   }, [value, queryClient]);
+
+  // T098 · RF-ALR-01, 02: con la app abierta, cada alerta nueva sale también como notificación del sistema, con solo
+  // el tipo y la referencia.
+  useEffect(() => {
+    if (!value) return;
+    return value.engine.onAlert((a) => {
+      const label = ALERTS[a.type as AlertType]?.label ?? 'Alerta';
+      void session.notify({ title: `Alerta: ${label}`, body: a.title }).catch(() => undefined);
+    });
+  }, [value, session]);
 
   // RF-ORD-08: al recuperar la conexión, los borradores de este dispositivo suben como privados de su autor.
   const online = useSyncExternalStore(value?.engine.subscribe ?? noop, () => value?.engine.status().online ?? false);

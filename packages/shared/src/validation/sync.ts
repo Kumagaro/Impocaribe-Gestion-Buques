@@ -15,6 +15,7 @@ export const SYNC_ENTITIES = [
   'declaration',
   'order',
   'draft',
+  'alert',
 ] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 
@@ -78,5 +79,7 @@ export const wsServerMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('session.revoked') }),
   z.object({ type: z.literal('device.revoked') }),
   z.object({ type: z.literal('sync.epoch_changed') }),
+  /** RF-ALR-01: aviso inmediato; el detalle llega también por sincronización. */
+  z.object({ type: z.literal('alert.created'), id: z.uuid(), alertType: z.string(), title: z.string() }),
 ]);
 export type WsServerMessage = z.infer<typeof wsServerMessageSchema>;

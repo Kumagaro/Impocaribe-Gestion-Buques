@@ -61,6 +61,13 @@ export interface SyncDeps {
 
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
+/** El aviso inmediato de una alerta (RF-ALR-02: tipo y referencia). */
+export interface AlertNotice {
+  id: string;
+  type: string;
+  title: string;
+}
+
 export class SyncEngine {
   private current: SyncStatus = {
     stage: 'idle',
@@ -73,6 +80,7 @@ export class SyncEngine {
   };
   private readonly statusListeners = new Set<() => void>();
   private readonly changeListeners = new Set<(c: SyncChanged) => void>();
+  private readonly alertListeners = new Set<(a: AlertNotice) => void>();
   private running: Promise<void> | null = null;
   private again = false;
   private socket: PlatformSocket | null = null;
@@ -94,6 +102,12 @@ export class SyncEngine {
   onChange(listener: (c: SyncChanged) => void): () => void {
     this.changeListeners.add(listener);
     return () => this.changeListeners.delete(listener);
+  }
+
+  /** RF-ALR-01: cada alerta nueva que ve esta sesión, en cuanto el servidor avisa (su detalle llega sincronizando). */
+  onAlert(listener: (a: AlertNotice) => void): () => void {
+    this.alertListeners.add(listener);
+    return () => this.alertListeners.delete(listener);
   }
 
   /** Arranca: sincroniza, abre el WebSocket y pregunta cada 60 s. */
@@ -262,6 +276,8 @@ export class SyncEngine {
       this.reconnectMs = RECONNECT_FIRST_MS;
       void this.syncNow();
     } else if (msg.type === 'sync.available' || msg.type === 'sync.epoch_changed') void this.syncNow();
+    else if (msg.type === 'alert.created')
+      for (const l of this.alertListeners) l({ id: msg.id, type: msg.alertType, title: msg.title });
     else if (msg.type === 'session.revoked') this.revoked('session');
     else if (msg.type === 'device.revoked') this.revoked('device');
   }

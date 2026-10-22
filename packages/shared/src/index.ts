@@ -19,3 +19,4 @@ export * from './domain/balances.ts';
 export * from './domain/numbering.ts';
 export * from './domain/pdfFormat.ts';
 export * from './domain/orderRules.ts';
+export * from './domain/alerts.ts';

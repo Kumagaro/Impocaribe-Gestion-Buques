@@ -84,6 +84,17 @@ export function sheet(reduced: boolean): MotionPreset {
   };
 }
 
+/** MOV-04 en escritorio: el panel lateral entra desde la derecha (P-17, alertas); reducido, fundido. */
+export function panel(reduced: boolean): MotionPreset {
+  if (reduced) return fade(D.reducedFade);
+  return {
+    initial: { x: '100%' },
+    animate: { x: 0 },
+    exit: { x: '100%' },
+    transition: { duration: s(D.sheet), ease: EASE_OUT },
+  };
+}
+
 /** MOV-04 en tablet y escritorio: escala de 96 % a 100 % con fundido (200 ms). */
 export function dialog(reduced: boolean): MotionPreset {
   if (reduced) return fade(D.reducedFade);

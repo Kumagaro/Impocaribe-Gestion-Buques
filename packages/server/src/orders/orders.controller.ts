@@ -18,12 +18,15 @@ import {
 import {
   AppError,
   checkOrder,
+  compareTons,
+  formatTons,
   deadlineAt,
   formatOrderNumber,
   havanaDate,
   parseTons,
   tonsToApi,
   type Clock,
+  type OrderProblem,
 } from '@impocaribe/shared';
 import {
   adv01,
@@ -45,10 +48,12 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Response } from 'express';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
+import { raiseEvent } from '../alerts/alerts.ts';
 import { recordAudit, type Tx } from '../audit/audit-log.ts';
 import { ALL_ROLES } from '../auth/auth.controller.ts';
 import type { AuthedRequest } from '../auth/session.guard.ts';
 import { drafts, loadOrders, loadOrderVersions, loadOrderVersionTrailers } from '../db/schema/orders.ts';
+import { users } from '../db/schema/users.ts';
 import { vessels } from '../db/schema/vessels.ts';
 import { readStoredFile, storeFile } from '../files/files.ts';
 import { auditedWrite } from '../http/audited-write.ts';
@@ -155,7 +160,7 @@ export class OrdersController {
     await this.write(req, res, 'order.issue', null, 201, async (tx) => {
       const c = await gather(tx, this.clock, input, input, true);
       const problems = checkOrder(c.check(null));
-      if (problems.length) throw problemsError(problems);
+      if (problems.length) throw problemsError(problems, blockedOn(c));
       // Const. art. VI: el contador vive en la fila del buque, bloqueada; UNIQUE(vessel_id, seq) es la segunda barrera.
       const seq = c.vessel.lastOrderSeq + 1;
       await tx.update(vessels).set({ lastOrderSeq: seq }).where(eq(vessels.id, c.vessel.id));
@@ -218,7 +223,7 @@ export class OrdersController {
       const c = await gather(tx, this.clock, { ...order, orderId: id }, input, true);
       await this.assertOpen(tx, id, input.expectedVersion);
       const problems = checkOrder(c.check({ currentTons: parseTons(current.tons), firstIssueDate: first }));
-      if (problems.length) throw problemsError(problems);
+      if (problems.length) throw problemsError(problems, blockedOn(c));
       await this.replace(tx, current.id);
       await this.addVersion(tx, req, c, input, id, order.number, current.versionNo + 1, 'official', input.reason);
       if (parseTons(input.tons).lessThan(parseTons(current.tons)))
@@ -377,11 +382,59 @@ export class OrdersController {
         const done = await fn(tx);
         const body = await readOrder(tx, done.id);
         await replicateOrders(tx, this.clock, done.touched);
-        // shortcut: las alertas AL-05 (sobregiro), AL-06 y AL-07 (excepciones) y AL-17 llegan con el motor de alertas (F7).
         return { status, body, entityId: done.id, before: done.before, after: done.after };
       },
-    );
+    ).catch(async (err: unknown) => {
+      await this.alertOverdraft(req, action, err);
+      throw err;
+    });
     res.status(result.status).json(result.body);
+  }
+
+  /** RF-ORD-14 y AL-05: un intento real bloqueado por sobregiro avisa a las Apoderadas (la escritura ya se revirtió). */
+  private async alertOverdraft(req: AuthedRequest, action: string, err: unknown) {
+    if (!(err instanceof AppError)) return;
+    const details = err.details as { problems?: OrderProblem[]; declarationId?: string; declarationNumber?: string };
+    const overdraft = details?.problems?.find((p) => p.code === 'OVERDRAFT_ALLOCATION');
+    const declarationId = details?.declarationId;
+    if (!overdraft || !declarationId) return;
+    await this.db.transaction(async (tx) =>
+      raiseEvent(tx, this.clock, {
+        type: 'AL-05',
+        title: `Sobregiro bloqueado en la DM ${details.declarationNumber}`,
+        detail: `${await userName(tx, req.auth.userId)} intentó ${action === 'order.issue' ? 'emitir' : 'corregir'} una orden: ${overdraft.message}`,
+        entity: { type: 'declaration', id: declarationId },
+      }),
+    );
+  }
+
+  /** AL-06 y AL-07: la orden salió con una decisión de excepción que de verdad hizo falta (D4, D5). */
+  private async alertOverrides(
+    tx: Tx,
+    req: AuthedRequest,
+    c: OrderContext,
+    f: OrderFields,
+    orderId: string,
+    number: string,
+  ) {
+    const who = await userName(tx, req.auth.userId);
+    const entity = { type: 'order', id: orderId };
+    const capacity = capacityOf(c);
+    if (f.overrides?.capacity && compareTons(parseTons(f.tons), capacity) > 0)
+      await raiseEvent(tx, this.clock, {
+        type: 'AL-06',
+        title: `Orden ${number} por encima de la capacidad`,
+        detail: `${who} la emitió con ${formatTons(parseTons(f.tons))}; los remolques admiten ${formatTons(capacity)}. Motivo: ${f.overrides.capacity}`,
+        entity,
+      });
+    const sameDay = c.check(null).sameDayOrders;
+    if (f.overrides?.sameDay && sameDay > 0)
+      await raiseEvent(tx, this.clock, {
+        type: 'AL-07',
+        title: `Camión ${c.truck.plate} con dos órdenes el ${f.loadingDate.split('-').reverse().join('/')}`,
+        detail: `${who} emitió la orden ${number} aunque el camión ya tenía otra con esa fecha de carga. Motivo: ${f.overrides.sameDay}`,
+        entity,
+      });
   }
 
   /** La orden con su versión vigente y la fecha de emisión de la versión 1 (sin bloquear: gather bloquea en orden). */
@@ -479,6 +532,7 @@ export class OrdersController {
       })),
     );
     await tx.update(loadOrders).set({ currentVersionId: v!.id }).where(eq(loadOrders.id, orderId));
+    await this.alertOverrides(tx, req, c, f, orderId, number);
   }
 
   private async copyTrailers(tx: Tx, from: string, to: string) {
@@ -499,3 +553,14 @@ export class OrdersController {
 }
 
 const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+
+/** Lo que AL-05 necesita de una emisión rechazada: la DM. */
+const blockedOn = (c: OrderContext) => ({
+  declarationId: c.declarationRow.id,
+  declarationNumber: c.declarationRow.number,
+});
+
+async function userName(tx: Tx, id: string) {
+  const [u] = await tx.select({ name: users.fullName }).from(users).where(eq(users.id, id));
+  return u!.name;
+}

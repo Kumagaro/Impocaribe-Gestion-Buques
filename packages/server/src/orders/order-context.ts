@@ -52,11 +52,11 @@ const invalid = (field: string, message: string) =>
   new AppError('VALIDATION_ERROR', 'Hay 1 campo por corregir.', { fields: { [field]: message } });
 
 /** El primer problema como error, con todos en los detalles y cada uno en su campo. */
-export function problemsError(problems: OrderProblem[]): AppError {
+export function problemsError(problems: OrderProblem[], context: Record<string, unknown> = {}): AppError {
   const first = problems[0]!;
   const fields: Record<string, string> = {};
   for (const p of problems) if (p.field) fields[p.field] ??= p.message;
-  return new AppError(first.code, first.message, { ...first.details, fields, problems });
+  return new AppError(first.code, first.message, { ...first.details, ...context, fields, problems });
 }
 
 /**

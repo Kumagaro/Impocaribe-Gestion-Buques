@@ -14,6 +14,7 @@ import {
 } from '@impocaribe/shared';
 import { exceedsVesselText, type DeclarationDto, type VesselDto } from '@impocaribe/shared/validation';
 import { and, eq } from 'drizzle-orm';
+import { raiseEvent } from '../alerts/alerts.ts';
 import type { Tx } from '../audit/audit-log.ts';
 import { allocationChanges, allocations, type customsDeclarations } from '../db/schema/vessels.ts';
 import { loadDeclaration, loadVessel, lockDeclaration, lockVessels } from './vessels.repo.ts';
@@ -134,6 +135,12 @@ export async function allocate(tx: Tx, clock: Clock, input: AllocateInput): Prom
     createdBy: input.userId,
     createdAt: now,
   });
-  // shortcut: la alerta AL-10 de la asignación parcial llega con el motor de alertas (F7).
+  if (partial)
+    await raiseEvent(tx, clock, {
+      type: 'AL-10',
+      title: `Asignación parcial de la DM ${declaration.number} en ${vessel.name}`,
+      detail: `Se pidieron ${formatTons(wanted)} y el buque solo tenía ${formatTons(amount)} libres. Motivo: ${input.reason ?? 'sin motivo'}`,
+      entity: { type: 'declaration', id: declaration.id },
+    });
   return { allocationId: row!.id, vessel, declaration, tons: amount, partial };
 }

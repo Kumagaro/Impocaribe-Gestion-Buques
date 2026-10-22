@@ -2,9 +2,19 @@
 // lo demás vuelve libre a su buque. La tarea corre al arrancar y cada 10 minutos; ninguna regla depende de que ya haya
 // pasado (el estado se calcula con la hora del servidor).
 import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
-import { addDays, compareTons, DEADLINE_DAYS, havanaDate, parseTons, type Clock } from '@impocaribe/shared';
+import {
+  addDays,
+  compareTons,
+  DEADLINE_DAYS,
+  formatTons,
+  havanaDate,
+  parseTons,
+  subTons,
+  type Clock,
+} from '@impocaribe/shared';
 import { and, asc, eq, isNull, lte } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { raiseEvent } from '../alerts/alerts.ts';
 import { recordAudit, type Tx } from '../audit/audit-log.ts';
 import { allocationChanges, allocations, customsDeclarations, vAllocationBalance } from '../db/schema/vessels.ts';
 import { CLOCK, DB } from '../tokens.ts';
@@ -90,7 +100,12 @@ export async function expireDue(db: NodePgDatabase, clock: Clock): Promise<numbe
         after,
         reason: EXPIRE_REASON,
       });
-      // shortcut: la alerta AL-04 llega con el motor de alertas (F7).
+      await raiseEvent(tx, clock, {
+        type: 'AL-04',
+        title: `DM ${before.number} vencida`,
+        detail: `Se desactivó al empezar el día 31. Lo asignado y no cargado (${formatTons(subTons(parseTons(before.allocatedTons), parseTons(after.allocatedTons)))}) volvió libre a sus buques.`,
+        entity: { type: 'declaration', id },
+      });
       await replicate(tx, clock, { declarations: [id], vessels: vesselIds });
       return true;
     });

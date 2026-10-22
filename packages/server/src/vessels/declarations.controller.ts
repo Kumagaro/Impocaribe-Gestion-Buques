@@ -43,6 +43,8 @@ import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
 import { CLOCK, DB } from '../tokens.ts';
+import { raiseEvent } from '../alerts/alerts.ts';
+import { openDeclarations } from '../alerts/conditions.ts';
 import { allocate, assertDeclarationOpen, assertVesselOpen, statusNow } from './allocate.ts';
 import { releaseToLoaded } from './expiry.ts';
 import {
@@ -207,6 +209,16 @@ export class DeclarationsController {
           });
           if (done.partial) partialReason = input.allocation.reason;
         }
+        // AL-02: se registró mientras había otras pendientes (RF-DM-10); se listan.
+        const others = (await openDeclarations(tx, this.clock.now())).filter((o) => o.pending && o.id !== d!.id);
+        if (others.length)
+          await raiseEvent(tx, this.clock, {
+            type: 'AL-02',
+            title: `DM ${input.number} registrada con ${others.length} pendiente${others.length === 1 ? '' : 's'}`,
+            detail: `Pendientes: ${others.map((o) => o.number).join(', ')}.`,
+            entity: { type: 'declaration', id: d!.id },
+            payload: { pending: others.map((o) => ({ id: o.id, number: o.number })) },
+          });
         return {
           id: d!.id,
           body: (t) => loadDeclaration(t, d!.id),

@@ -1,4 +1,5 @@
 // T025 · Elige la presentación de la estructura según la clase de dispositivo (plan §7.3).
+import type { ReactNode } from 'react';
 import { Outlet } from 'react-router';
 import { useDeviceClass } from '../ui/device';
 import { ToastProvider } from '../ui/presentation';
@@ -19,12 +20,15 @@ export function AppShell({
   isServerPc = false,
   theme,
   onThemeChange,
+  alertsPanel,
 }: {
   user: ShellUser;
   status: ShellStatus;
   isServerPc?: boolean;
   theme?: ThemePreference;
   onThemeChange?: (theme: ThemePreference) => void;
+  /** ESC (P-17): el panel lateral de alertas que abre la campana; sin él, la campana lleva a /alertas. */
+  alertsPanel?: (onClose: () => void) => ReactNode;
 }) {
   const model = useAppShell({
     user,
@@ -33,12 +37,19 @@ export function AppShell({
     ...(theme ? { theme } : {}),
     ...(onThemeChange ? { onThemeChange } : {}),
   });
-  const View = VIEWS[useDeviceClass()];
+  const device = useDeviceClass();
+  const View = VIEWS[device];
   return (
     <ToastProvider>
-      <View model={model} status={status}>
-        <Outlet />
-      </View>
+      {device === 'desktop' ? (
+        <AppShellDesktop model={model} status={status} {...(alertsPanel ? { alertsPanel } : {})}>
+          <Outlet />
+        </AppShellDesktop>
+      ) : (
+        <View model={model} status={status}>
+          <Outlet />
+        </View>
+      )}
     </ToastProvider>
   );
 }

@@ -202,6 +202,23 @@ describe('avisos y reconexión (plan §6.4)', () => {
     server.sockets[0]!.receive({ type });
     await vi.waitFor(() => expect(onRevoked).toHaveBeenCalledWith(kind));
   });
+
+  it('alert.created avisa a quien escucha con el tipo y la referencia (RF-ALR-01, 02)', async () => {
+    const server = createSyncServer();
+    const { engine } = await setup(server);
+    const heard = vi.fn();
+    const off = engine.onAlert(heard);
+    engine.start();
+    await vi.waitFor(() => expect(server.sockets).toHaveLength(1));
+    server.sockets[0]!.receive({ type: 'alert.created', id: id(5), alertType: 'AL-05', title: 'Sobregiro bloqueado' });
+    await vi.waitFor(() =>
+      expect(heard).toHaveBeenCalledWith({ id: id(5), type: 'AL-05', title: 'Sobregiro bloqueado' }),
+    );
+    off();
+    server.sockets[0]!.receive({ type: 'alert.created', id: id(6), alertType: 'AL-05', title: 'Otro' });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('reconstruir la copia (RF-CON-09)', () => {

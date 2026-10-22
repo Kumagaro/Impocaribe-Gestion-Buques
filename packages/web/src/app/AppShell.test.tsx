@@ -2,6 +2,7 @@ import type { Role } from '@impocaribe/shared';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
+import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderUi } from '../../test/render';
 import type { DeviceClass } from '../ui/device';
@@ -25,12 +26,27 @@ function renderShell({
   status = ONLINE,
   isServerPc = false,
   path = '/',
-}: { device?: DeviceClass; role?: Role; status?: ShellStatus; isServerPc?: boolean; path?: string } = {}) {
+  alertsPanel,
+}: {
+  device?: DeviceClass;
+  role?: Role;
+  status?: ShellStatus;
+  isServerPc?: boolean;
+  path?: string;
+  alertsPanel?: (onClose: () => void) => ReactNode;
+} = {}) {
   const page = (title: string) => ({ handle: { title }, element: <p>Pantalla {title}</p> });
   const router = createMemoryRouter(
     [
       {
-        element: <AppShell user={{ ...USER, role }} status={status} isServerPc={isServerPc} />,
+        element: (
+          <AppShell
+            user={{ ...USER, role }}
+            status={status}
+            isServerPc={isServerPc}
+            {...(alertsPanel ? { alertsPanel } : {})}
+          />
+        ),
         children: [
           { path: '/', ...page('Tablero') },
           { path: '/dm', ...page('DM') },
@@ -210,5 +226,30 @@ describe('Elementos globales (ui-spec §1.2)', () => {
       document.documentElement.getAttribute('data-theme'),
       within(banner).getByRole('button', { name: 'Tema: claro' }).tagName,
     ]).toEqual(['light', 'BUTTON']);
+  });
+});
+
+describe('Campana de alertas (P-17)', () => {
+  const status = { ...ONLINE, alerts: 2 };
+  it('en escritorio abre el panel lateral sin salir de la pantalla, y se cierra', async () => {
+    const router = renderShell({
+      status,
+      alertsPanel: (onClose) => (
+        <div role="dialog" aria-label="Panel de alertas">
+          <button onClick={onClose}>Cerrar</button>
+        </div>
+      ),
+    });
+    await userEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Alertas, 2 abiertas' }));
+    expect(screen.getByRole('dialog', { name: 'Panel de alertas' })).not.toBeNull();
+    expect(router.state.location.pathname).toBe('/');
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(screen.queryByRole('dialog', { name: 'Panel de alertas' })).toBeNull();
+  });
+
+  it('en tablet lleva a Alertas', async () => {
+    const router = renderShell({ device: 'tablet', status, alertsPanel: () => <p>Panel</p> });
+    await userEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Alertas, 2 abiertas' }));
+    expect(router.state.location.pathname).toBe('/alertas');
   });
 });

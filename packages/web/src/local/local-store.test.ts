@@ -18,6 +18,7 @@ describe('esquema', () => {
       await store.db.query<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
     ).map((t) => t.name);
     expect(tables).toEqual([
+      'alert',
       'carrier',
       'client',
       'declaration',

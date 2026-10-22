@@ -23,12 +23,29 @@ export const AUTH_TIMEOUT_MS = 10_000;
 /** Cierre por token inválido o vencido: la app no reintenta con ese token. */
 export const CLOSE_UNAUTHORIZED = 4401;
 
-const CHANNELS = ['impocaribe_sync', 'impocaribe_epoch', 'impocaribe_session', 'impocaribe_device'] as const;
+const CHANNELS = [
+  'impocaribe_sync',
+  'impocaribe_epoch',
+  'impocaribe_session',
+  'impocaribe_device',
+  'impocaribe_alert',
+] as const;
+
+/** Lo que manda el trigger de la migración 0011 al insertar una alerta. */
+interface AlertNotice {
+  id: string;
+  type: string;
+  title: string;
+  roles: string[];
+  target: string | null;
+}
 
 interface Client {
   socket: WebSocket;
   sessionId: string;
   deviceId: string;
+  userId: string;
+  role: string;
   /** `app` recibe todo; el token de dispositivo (DT-05) solo session.revoked (y alert.created, con las alertas). */
   kind: 'app' | 'device';
   alive: boolean;
@@ -42,6 +59,7 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
   private listener: pg.PoolClient | null = null;
   private pinger: NodeJS.Timeout | undefined;
   private closing = false;
+  private readonly syncListeners = new Set<() => void>();
 
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
@@ -69,6 +87,12 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
     for (const c of this.clients) c.socket.terminate();
     this.wss.close();
     this.listener?.release(true);
+  }
+
+  /** Avisa de cada cambio sincronizado (lo usa el evaluador de alertas, T094). */
+  onSync(fn: () => void): () => void {
+    this.syncListeners.add(fn);
+    return () => this.syncListeners.delete(fn);
   }
 
   /** Un cliente dedicado a LISTEN; si se cae la conexión, se rehace. */
@@ -126,6 +150,8 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
       .select({
         sessionId: sessions.id,
         deviceId: sessions.deviceId,
+        userId: users.id,
+        role: users.role,
         kind: sessions.kind,
         expiresAt: sessions.expiresAt,
         active: users.active,
@@ -135,12 +161,17 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
       .innerJoin(devices, and(eq(devices.id, sessions.deviceId), isNull(devices.revokedAt)))
       .where(and(eq(sessions.tokenHash, hashToken(token)), isNull(sessions.revokedAt)));
     if (!row || !row.active || row.expiresAt <= this.clock.now()) return null;
-    return { sessionId: row.sessionId, deviceId: row.deviceId, kind: row.kind };
+    return { sessionId: row.sessionId, deviceId: row.deviceId, userId: row.userId, role: row.role, kind: row.kind };
   }
 
   private dispatch(channel: string, payload: string): void {
+    if (channel === 'impocaribe_sync') for (const fn of this.syncListeners) fn();
+    const alert = channel === 'impocaribe_alert' ? (JSON.parse(payload) as AlertNotice) : null;
     for (const c of this.clients) {
-      if (channel === 'impocaribe_sync' && c.kind === 'app')
+      // RF-ALR-05: solo a quien la ve; también al token de dispositivo (DT-05). RF-ALR-02: tipo y referencia.
+      if (alert && (alert.roles.includes(c.role) || alert.target === c.userId))
+        this.send(c, { type: 'alert.created', id: alert.id, alertType: alert.type, title: alert.title });
+      else if (channel === 'impocaribe_sync' && c.kind === 'app')
         this.send(c, { type: 'sync.available', seq: Number(payload) });
       else if (channel === 'impocaribe_epoch' && c.kind === 'app') this.send(c, { type: 'sync.epoch_changed' });
       else if (channel === 'impocaribe_session' && c.sessionId === payload) this.drop(c, { type: 'session.revoked' });

@@ -9,5 +9,6 @@ import './company';
 import './catalogs';
 import './vessels';
 import './orders';
+import './alerts';
 
 export { apiRegistry, type Endpoint } from '../client';

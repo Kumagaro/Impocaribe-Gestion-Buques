@@ -148,6 +148,11 @@ export class AppSession {
     return this.platform.saveFile(name, data);
   }
 
+  /** T098 · RF-ALR-02: notificación del sistema con la app abierta; solo el tipo y la referencia. */
+  notify(notification: { title: string; body: string }): Promise<void> {
+    return this.platform.notify(notification);
+  }
+
   secureScreen(enabled: boolean): Promise<void> {
     return this.platform.secureScreen(enabled);
   }

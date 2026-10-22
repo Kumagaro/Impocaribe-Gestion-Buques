@@ -7,6 +7,7 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Request, Response } from 'express';
 import type { z } from 'zod';
+import { raiseEvent } from '../alerts/alerts.ts';
 import { auditedTransaction, recordAudit, recordRejected, type Tx } from '../audit/audit-log.ts';
 import { recoveryAttempts, recoveryCodes, users } from '../db/schema/users.ts';
 import { Contract } from '../http/contract.ts';
@@ -101,8 +102,23 @@ export class RecoveryController {
   private async attempt(tx: Tx, input: RecoverInput, deviceId: string | null): Promise<WriteResult> {
     const now = this.clock.now();
     const entry = { action: 'auth.recover', entityType: 'user', ...(deviceId ? { deviceId } : {}) };
+    // RF-REC-05: cada intento, exitoso o fallido, avisa a las Apoderadas (AL-11).
+    const alert = (title: string, detail: string, userId?: string) =>
+      raiseEvent(tx, this.clock, {
+        type: 'AL-11',
+        title,
+        detail,
+        ...(userId ? { entity: { type: 'user', id: userId } } : {}),
+      });
     const refuse = async (error: AppError, userId?: string): Promise<WriteResult> => {
       await recordRejected(tx, this.clock, userId ? { ...entry, userId, entityId: userId } : entry, error);
+      await alert(
+        `Recuperación de contraseña fallida de «${input.username}»`,
+        error.code === 'RECOVERY_LOCKED'
+          ? 'La recuperación de este usuario quedó bloqueada 1 hora por intentos fallidos.'
+          : 'Los datos o el código de recuperación no coinciden.',
+        userId,
+      );
       return { status: error.status, body: error.toBody() };
     };
     const [user] = await tx.select().from(users).where(eq(users.username, input.username)).for('update');
@@ -155,6 +171,11 @@ export class RecoveryController {
       entityId: user.id,
       after: { closedSessions: closed.length },
     });
+    await alert(
+      `${user.fullName} recuperó su contraseña`,
+      'Usó un código de recuperación; se cerraron todas sus sesiones.',
+      user.id,
+    );
     return { status: 204, body: null };
   }
 
