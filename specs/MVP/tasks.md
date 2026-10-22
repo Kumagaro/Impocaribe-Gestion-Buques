@@ -408,7 +408,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T045
   - *Estado (2026-10-19):* cerrar sesión detiene la sincronización y borra la copia local; `session.revoked` por WebSocket o `SESSION_EXPIRED` llevan al login, y `device.revoked` (o `DEVICE_REVOKED` en cualquier petición) olvida además el emparejamiento.
 
-> **Pendiente de F2 (2026-10-20):** la mutación del servidor (`src/sync/**` e `idempotency.ts`) no se ha pasado; el responsable la correrá a mano junto con la de F3, F4 y F5.
+> **Pendiente de F2 (2026-10-20):** la mutación del servidor (`src/sync/**` e `idempotency.ts`) no se ha pasado; el responsable la correrá a mano junto con la de F3 a F6.
 
 ## F3. Empresa, firma, cuño y configuración
 
@@ -532,88 +532,107 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 ## F6. Órdenes, numeración y PDF
 
-- [ ] **T073. Validación de emisión y corrección**, incluido que chofer, camión y remolques sean del mismo transportista (`DRIVER_CARRIER_MISMATCH`, `TRAILER_CARRIER_MISMATCH`).
+- [x] **T073. Validación de emisión y corrección**, incluido que chofer, camión y remolques sean del mismo transportista (`DRIVER_CARRIER_MISMATCH`, `TRAILER_CARRIER_MISMATCH`).
   - *Cubre:* RF-ORD-13, 17, RF-DM-07, 11, D3, D4, D5
   - *Depende:* T060
   - *Terminado:* mutación ≥ 90 %.
+  - *Estado (2026-10-22):* hecha. `shared/domain/orderRules.ts` (`checkOrder`): todas las validaciones de RF-ORD-13 y de la corrección, con su mensaje exacto y su campo, en el orden de la tabla; la usan el servidor (dentro de la transacción) y la interfaz (panel de comprobaciones). Mutación de shared: 100 %.
 
-- [ ] **T074. Advertencias de negocio y aviso legal.** Funciones puras de ADV-01 a ADV-07, de la advertencia del carné (AAMMDD) y del aviso legal del plazo, en `shared/validation/warnings.ts`.
+- [x] **T074. Advertencias de negocio y aviso legal.** Funciones puras de ADV-01 a ADV-07, de la advertencia del carné (AAMMDD) y del aviso legal del plazo, en `shared/validation/warnings.ts`.
   - *Cubre:* RF-VAL-08, RF-DM-13
   - *Depende:* T073
   - *Pruebas:* límites exactos calculados a mano: quedarían 1,000 t (sin ADV-02) y 0,999 t (con ADV-02); 95 % exacto (sin ADV-03) y 95,001 % (con ADV-03); días 24 y 25 para ADV-01; 3 y 4 órdenes del chofer para ADV-07; 5 % y 4,999 % libre para ADV-06; carné `84011905548` sin advertencia y `84133105548` con advertencia.
   - *Terminado:* mutación ≥ 90 %.
+  - *Estado (2026-10-22):* hecha. `shared/validation/warnings.ts` con ADV-01 a ADV-04, ADV-06 y ADV-07 y la del contenedor (y reexporta las del carné y el nombre parecido; el aviso legal sigue en F06), probadas en los límites exactos de la tarea. Mutación: 92,6 %.
 
 - [ ] **T075. Tablas de órdenes.**
   - *Cubre:* RF-ORD-01, 02, Const. art. III
   - *Depende:* T064
+  - *Estado (2026-10-22):* hecha. `server/src/db/schema/orders.ts` y la migración 0010: versiones de solo inserción (un disparador solo deja pasar de oficial a reemplazada), índice de apoyo para D5, la vista de saldo con lo cargado de verdad y el arribo real fijo en cuanto el buque tiene órdenes. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T076. Borradores en el servidor.**
   - *Cubre:* RF-ORD-06 a 11, D9
   - *Depende:* T075, T014
+  - *Estado (2026-10-22):* hecha. `orders/drafts.controller.ts`: guardar (idempotente por `clientDraftId`), subir en lote como privados, editar, compartir, bloquear con latido de 10 min, liberar (forzado solo A) y descartar. Revisión de seguridad: un borrador privado ajeno no existe para los demás, y emitir desde un borrador exige poder editarlo. Réplica: compartidos a los editores, privados a su autor. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
-- [ ] **T077. Plantilla del PDF A4**, con los formatos del documento actual (`pdfFormat.ts`, plan §8.1).
+- [x] **T077. Plantilla del PDF A4**, con los formatos del documento actual (`pdfFormat.ts`, plan §8.1).
   - *Cubre:* RF-PDF-01
   - *Depende:* T003
   - *Pruebas:* `29.08.2026`, `30/08/2026`, `17.280` y `1 125.000` exactos, calculados a mano.
+  - *Estado (2026-10-22):* hecha. `shared/domain/pdfFormat.ts` (los ejemplos exactos de la spec) y `server/src/orders/pdf-template.ts` (el formato del prototipo, sin bultos y con toneladas; marcas ANULADA y COPIA; «Versión n»). Mutación de pdfFormat: 92,6 %.
 
-- [ ] **T078. Motor de PDF**, con una sola instancia de Chromium y una página a la vez, que se abre con la primera emisión y se cierra tras 10 minutos sin emisiones (plan §10.7).
+- [x] **T078. Motor de PDF**, con una sola instancia de Chromium y una página a la vez, que se abre con la primera emisión y se cierra tras 10 minutos sin emisiones (plan §10.7).
   - *Cubre:* DT-06, RNF-21
   - *Depende:* T077, T050
   - *Pruebas adicionales:* tras 10 minutos sin emisiones, Chromium está cerrado y la siguiente emisión lo vuelve a abrir y genera el PDF correctamente; dos emisiones simultáneas se encolan sin abrir dos instancias.
+  - *Estado (2026-10-22):* hecha. Decisión: `playwright-core` (ya estaba en el proyecto, sin descargas nuevas) en vez de Puppeteer, con el mismo `chrome-headless-shell` que pide el plan; su ruta en producción se indica con `IMPOCARIBE_CHROMIUM` (la pondrá el instalador, T126). Una instancia, una página a la vez, 10 s por documento y cierre a los 10 min sin emisiones, con las pruebas pedidas contra Chromium real.
 
 - [ ] **T079. Emitir orden.**
   - *Cubre:* RF-ORD-03, 12 a 16, RF-EMP-03, 04, RF-DM-07, 08, HU-01, D8, RF-ORD-23, RF-ORD-24, D15
   - *Depende:* T073, T076, T078, T051, T066
   - *Pruebas adicionales:* emitir a las 23:59:59 del día 30 pasa y a las 00:00:00 del día 31 se rechaza aunque la tarea de vencimiento no haya corrido; un reintento tras perder la respuesta devuelve la misma orden.
+  - *Estado (2026-10-22):* hecha. `orders/orders.controller.ts` y `order-context.ts`: bloqueos de DT-09, validación compartida, número en la fila del buque, documento congelado, PDF generado y archivado en la transacción (si falla no se consume el número), idempotencia y bitácora también de los rechazos; `POST /orders/check` para la simulación. Pruebas de las 23:59:59 del día 30 y del reintento. Las alertas AL-05 a AL-07 llegan con F7. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T080. Concurrencia de emisión.**
   - *Cubre:* D1, D2, Const. art. II y VI, RNF-07
   - *Depende:* T079
+  - *Estado (2026-10-22):* hecha. Seis emisiones a la vez por más de lo que queda: tres pasan, tres dan sobregiro, números 1 a 3 sin huecos y saldo exacto. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T081. Corregir.**
   - *Cubre:* RF-ORD-17, 18, 20, RF-DM-09, 11, HU-02.1
   - *Depende:* T079
   - *Pruebas adicionales:* reducir toneladas en una DM vencida libera la diferencia al buque; con buque cerrado abre AL-17.
+  - *Estado (2026-10-22):* hecha. Versión n+1 con el mismo número, la anterior reemplazada, saldo por diferencia, fecha de carga contra la versión 1, DM vencida sin aumentar y la reducción libre al buque (`void_release`). AL-17 llega con F7. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T082. Anular.**
   - *Cubre:* RF-ORD-19, RF-EMP-03, RF-BUQ-09, HU-02.2
   - *Depende:* T081, T068
+  - *Estado (2026-10-22):* hecha. Versión anulada con el documento de la anterior, PDF marcado con la firma y el cuño de esa versión, saldo repuesto y sin más versiones. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
 - [ ] **T083. Descargas del PDF.**
   - *Cubre:* RF-ORD-21
   - *Depende:* T079
+  - *Estado (2026-10-22):* hecha. El original (el archivado, idéntico byte a byte) para quien emitió la versión durante 24 h; si no, una copia generada del documento congelado con la marca COPIA (y ANULADA si corresponde); cada descarga en la bitácora. El PDF viaja en base64 dentro del JSON, como las imágenes de F3. Pendiente de la mutación del servidor, que el responsable correrá a mano.
 
-- [ ] **T084. Propiedades de órdenes.**
+- [x] **T084. Propiedades de órdenes.**
   - *Depende:* T082
+  - *Estado (2026-10-22):* hecha. Secuencias aleatorias de emitir, corregir y anular: nunca saldo negativo y numeración 1..n sin huecos ni repeticiones.
 
 - [ ] **T085. Maquetas de P-13 a P-16**, incluida la vista previa del documento y el formulario por pasos de teléfono.
   - *Depende:* T017
+  - *Estado (2026-10-22):* `docs/maquetas/T085-ordenes.html` (claro y oscuro, tres clases), a la espera de la aprobación del responsable.
 
 - [ ] **T086. (PP) Pantalla P-13 Nueva orden**, con el transportista primero, que filtra camiones y choferes, y las advertencias ADV-01 a ADV-04 y ADV-07 en sus campos.
   - *Cubre:* HU-01, RF-ORD-03 a 05, 12, 13, RF-VAL-08
   - *Depende:* T079, T085, T058, T072
   - *Pruebas E2E adicionales:* sobregiro, capacidad, camión repetido, fecha de carga fuera de rango; emisión verificada en la base y en la copia local de otro usuario.
+  - *Estado (2026-10-22):* hecha, a la espera de que el responsable apruebe la maqueta T085 y las referencias visuales (`Pantallas/Órdenes`). `web/src/screens/orders/`: elecciones encadenadas desde la copia local, panel de saldo con las mismas comprobaciones del servidor y las advertencias, excepciones con motivo (también las dos seguidas), vista previa A4, autoguardado como borrador local y orden emitida con la descarga del original. 7 pruebas de componente y E2E (sobregiro, capacidad, camión repetido, emisión en la base y original idéntico al archivado). Atajo: el máximo de días de la fecha de carga se toma por defecto (7) en la interfaz hasta que la configuración se replique (F7); el servidor decide con el real.
 
 - [ ] **T087. (PP) Borradores locales y pantalla P-14 Borradores.**
   - *Cubre:* RF-ORD-06 a 11, HU-06
   - *Depende:* T086, T047
+  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-14 con Míos (de este dispositivo y privados) y Compartidos (autor, edición y bloqueo); los locales suben como privados al recuperar la conexión (RF-ORD-08). E2E: un borrador abierto por otra persona se ve en edición (EST-06).
 
 - [ ] **T088. (PP) Pantalla P-15 Orden**, con el visor del PDF y la línea de tiempo de versiones.
   - *Cubre:* HU-02, RF-ORD-21, 22, RF-BIT-04, RF-CON-08
   - *Depende:* T082, T083, T085
+  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-15 con el documento congelado de la versión vigente (también sin conexión), versiones con sus cambios y la descarga original o copia. E2E: copia para quien no emitió (el original idéntico se prueba en T086).
 
 - [ ] **T089. (PP) Pantalla P-16 Corregir y Anular.**
   - *Cubre:* RF-ORD-17 a 19, RF-DM-11
   - *Depende:* T088
+  - *Estado (2026-10-22):* hecha, a la espera de la misma aprobación. P-16: corregir con la DM y el buque fijos y los cambios resaltados; anular con lo que repone. E2E: la versión 2 cambia el saldo por la diferencia y la anulación lo repone.
 
 - [ ] **T090. Comparación visual del PDF.**
   - *Cubre:* RF-PDF-01
   - *Depende:* T083
   - *Terminado:* referencias aprobadas por el responsable.
+  - *Estado (2026-10-22):* hecha, a la espera de que el responsable apruebe las referencias (`e2e/visual/references/documento-orden--*.png`: original, versión 2, ANULADA y COPIA). Se compara la plantilla HTML que el servidor convierte en PDF, dibujada en A4 con Chrome for Testing fijo, porque Chromium sin interfaz no muestra PDF.
 
-- [ ] **T091. Reproducción del Excel.**
+- [x] **T091. Reproducción del Excel.**
   - *Cubre:* spec §11.5, Const. art. XIII.8
   - *Depende:* T082, T016
+  - *Estado (2026-10-22):* hecha. `orders/excel.int.test.ts`: las 92 filas del fixture, en su fecha, dan exactamente lo calculado a mano (41 emitidas, 1 emitida y anulada, 50 rechazadas con su código; saldos de las 12 DM y del buque; última orden EAGLE1-2026-V1-0042).
 
 ## F7. Alertas
 
