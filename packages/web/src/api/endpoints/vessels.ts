@@ -17,6 +17,7 @@ import {
   vesselHistorySchema,
   vesselSchema,
   vesselSurplusSchema,
+  trackingFileSchema,
 } from '@impocaribe/shared/validation';
 import { z } from 'zod';
 import { defineEndpoint } from '../client';
@@ -64,14 +65,7 @@ export const vesselsApi = {
     path: '/vessels/:id/surplus-dispositions',
     input: surplusDispositionSchema,
     output: vesselSurplusSchema,
-    errors: [
-      'VESSEL_CLOSED',
-      'ALLOCATION_EXCEEDS_VESSEL',
-      'ALLOCATION_EXCEEDS_DECLARATION',
-      'DECLARATION_PENDING_TOTAL',
-      'DECLARATION_EXPIRED',
-      'DECLARATION_CLOSED',
-    ],
+    errors: ['VESSEL_CLOSED'],
     roles: EDITORS,
   }),
   close: defineEndpoint({
@@ -88,6 +82,14 @@ export const vesselsApi = {
 export const declarationsApi = {
   list: defineEndpoint({ method: 'GET', path: '/declarations', output: z.array(declarationDtoSchema), roles: ALL }),
   one: defineEndpoint({ method: 'GET', path: '/declarations/:id', output: declarationDtoSchema, roles: ALL }),
+  /** T103 · RF-TAB-06: el seguimiento de la DM en PDF. */
+  tracking: defineEndpoint({
+    method: 'GET',
+    path: '/declarations/:id/tracking.pdf',
+    output: trackingFileSchema,
+    errors: ['PDF_RENDER_FAILED'],
+    roles: ALL,
+  }),
   create: defineEndpoint({
     method: 'POST',
     path: '/declarations',
