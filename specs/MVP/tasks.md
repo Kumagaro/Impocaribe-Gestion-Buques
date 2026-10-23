@@ -669,8 +669,9 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 ## F8. Tablero, búsqueda y bitácora
 
-- [ ] **T099. Maquetas de P-06, P-12, P-25 y P-32.**
+- [x] **T099. Maquetas de P-06, P-12, P-25 y P-32.**
   - *Depende:* T017
+  - *Estado (2026-10-23):* `docs/maquetas/T099-tablero-consultas.html` (claro y oscuro, tres clases), aprobada por el responsable el 2026-10-23.
 
 - [ ] **T100. (PP) Pantalla P-06 Tablero**, con las cifras por buque según RF-TAB-01 y las etapas de RF-TAB-04.
   - *Cubre:* RF-TAB-01, HU-03, RF-TAB-04
