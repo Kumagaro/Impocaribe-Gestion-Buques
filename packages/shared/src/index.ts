@@ -20,3 +20,5 @@ export * from './domain/numbering.ts';
 export * from './domain/pdfFormat.ts';
 export * from './domain/orderRules.ts';
 export * from './domain/alerts.ts';
+export * from './domain/auditActions.ts';
+export * from './domain/stages.ts';

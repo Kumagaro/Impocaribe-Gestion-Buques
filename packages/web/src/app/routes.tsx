@@ -12,8 +12,12 @@ import { NewOrderScreen } from '../screens/orders/NewOrder.screen';
 import { OrderScreen } from '../screens/orders/Order.screen';
 import { CorrectOrderScreen } from '../screens/orders/CorrectOrder.screen';
 import { DraftsScreen } from '../screens/orders/Drafts.screen';
+import { OrderListScreen } from '../screens/orders/OrderList.screen';
 import { AlertsPanel, AlertsScreen } from '../screens/alerts/Alerts.screen';
 import { useAlertFeed } from '../screens/alerts/useAlertFeed';
+import { AuditScreen } from '../screens/audit/Audit.screen';
+import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
+import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
@@ -87,10 +91,6 @@ function SignedInShell() {
   );
 }
 
-function Pending({ what }: { what: string }) {
-  return <EmptyState title={what} description="Esta parte de la app aún no está disponible." />;
-}
-
 export const appRoutes: RouteObject[] = [
   {
     element: <SessionGate />,
@@ -113,13 +113,16 @@ export const appRoutes: RouteObject[] = [
               </SyncGate>
             ),
             children: [
-              { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
+              { path: '/', handle: { title: 'Tablero' }, element: <DashboardScreen /> },
               { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
               { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
               { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
               { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
               { path: '/borradores', handle: { title: 'Borradores' }, element: <DraftsScreen /> },
               { path: '/alertas', handle: { title: 'Alertas' }, element: <AlertsScreen /> },
+              { path: '/bitacora', handle: { title: 'Bitácora' }, element: <AuditScreen /> },
+              { path: '/buscar', handle: { title: 'Buscar' }, element: <SearchScreen /> },
+              { path: '/ordenes', handle: { title: 'Órdenes' }, element: <OrderListScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },
               { path: '/ordenes/:id', handle: { title: 'Orden' }, element: <OrderScreen /> },
               {

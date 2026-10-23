@@ -232,6 +232,7 @@ export class OrdersController {
         id,
         before: { versionNo: current.versionNo, tons: current.tons },
         after: { versionNo: current.versionNo + 1, tons: input.tons, reason: input.reason },
+        reason: input.reason,
         touched: { orders: [id], vessels: [order.vesselId], declarations: [order.declarationId] },
       };
     });
@@ -300,6 +301,7 @@ export class OrdersController {
         id,
         before: { versionNo: current.versionNo, tons: current.tons },
         after: { versionNo: current.versionNo + 1, status: 'voided', reason: input.reason },
+        reason: input.reason,
         touched: { orders: [id], vessels: [order.vesselId], declarations: [order.declarationId] },
       };
     });
@@ -363,6 +365,7 @@ export class OrdersController {
       id: string;
       before?: unknown;
       after: unknown;
+      reason?: string;
       touched: { orders?: string[]; vessels?: string[]; declarations?: string[]; drafts?: string[] };
     }>,
   ) {
@@ -382,7 +385,7 @@ export class OrdersController {
         const done = await fn(tx);
         const body = await readOrder(tx, done.id);
         await replicateOrders(tx, this.clock, done.touched);
-        return { status, body, entityId: done.id, before: done.before, after: done.after };
+        return { status, body, entityId: done.id, before: done.before, after: done.after, reason: done.reason };
       },
     ).catch(async (err: unknown) => {
       await this.alertOverdraft(req, action, err);

@@ -1,0 +1,105 @@
+/* T100 · P-06 Tablero, de la maqueta T099 (docs/maquetas/T099-tablero-consultas.html). */
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.dash-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dash-filter {
+  max-width: 320px;
+  width: 100%;
+}
+.dash-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.dash-grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.dash-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 46%);
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+}
+.dash-carousel > * {
+  scroll-snap-align: start;
+}
+.dash-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+.dash-progress .ui-progress {
+  flex: 1;
+}
+.dash-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.dash-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-2);
+  font-size: var(--t-sm);
+}
+.dash-fold summary {
+  cursor: pointer;
+  font-weight: 620;
+  padding: 6px 0;
+}
+.dash-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.dash-stages li::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+}
+.dash-stages li[data-state='done'] {
+  color: var(--ink-2);
+}
+.dash-stages li[data-state='done']::before {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+.dash-stages li[data-state='now'] {
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+.dash-stages li[data-state='now']::before {
+  border-color: var(--accent);
+}

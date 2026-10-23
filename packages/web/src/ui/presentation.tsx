@@ -1,10 +1,10 @@
 // T023 · Piezas de presentación (plan §7.2) y los estados obligatorios de ui-spec §2 (EST-01 a EST-06).
 import { Inbox, Info, TriangleAlert, X } from 'lucide-react';
-import { m } from 'motion/react';
-import { createContext, useCallback, useContext, useEffect, useId, useState, type ReactNode } from 'react';
+import { animate, m } from 'motion/react';
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { useReducedMotionPreference } from '../motion/MotionProvider';
-import { listItem, progressSpring, skeletonShimmer } from '../motion/presets';
+import { listItem, numberTween, progressSpring, skeletonShimmer } from '../motion/presets';
 import { Button, IconButton } from './controls';
 import { useTouch } from './device';
 
@@ -38,6 +38,28 @@ export function StatCard({ label, value, note }: { label: string; value: ReactNo
       {note && <div className="ui-stat__note">{note}</div>}
     </div>
   );
+}
+
+/** MOV-03: una cifra que cuenta desde el valor anterior cuando cambia (por la orden de otro usuario); reducido, salta. */
+export function LiveNumber({ value, format }: { value: number; format: (n: number) => string }) {
+  const reduced = useReducedMotionPreference();
+  const [shown, setShown] = useState(value);
+  const last = useRef(value);
+  useEffect(() => {
+    const from = last.current;
+    last.current = value;
+    if (reduced || from === value) {
+      setShown(value);
+      return;
+    }
+    const run = animate(from, value, {
+      ...numberTween(reduced),
+      onUpdate: setShown,
+      onComplete: () => setShown(value),
+    });
+    return () => run.stop();
+  }, [value, reduced]);
+  return <span data-motion={reduced ? 'static' : 'count'}>{format(shown)}</span>;
 }
 
 export function ProgressBar({ label, value, tone = 'info' }: { label: string; value: number; tone?: Tone }) {

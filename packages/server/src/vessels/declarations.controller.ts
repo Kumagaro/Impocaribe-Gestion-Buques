@@ -21,8 +21,9 @@ import {
   editAllocationSchema,
   editDeclarationSchema,
   reactivateDeclarationSchema,
+  trackingFileSchema,
 } from '@impocaribe/shared/validation';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Response } from 'express';
 import { z } from 'zod';
@@ -37,8 +38,13 @@ import {
   customsDeclarations,
   customsDeclarationVersions,
   vAllocationBalance,
+  vessels,
   vVesselBalance,
 } from '../db/schema/vessels.ts';
+import { loadOrders } from '../db/schema/orders.ts';
+import { PdfService } from '../orders/pdf-engine.ts';
+import { readOrders } from '../orders/orders.repo.ts';
+import { trackingHtml } from './tracking.ts';
 import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
@@ -117,6 +123,7 @@ export async function writeVessels(
         entityId: done.id,
         before: done.before,
         after: done.reason ? { ...(body as object), reason: done.reason } : body,
+        reason: done.reason,
       };
     },
   );
@@ -128,6 +135,7 @@ export class DeclarationsController {
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
     @Inject(CLOCK) private readonly clock: Clock,
+    @Inject(PdfService) private readonly pdf: PdfService,
   ) {}
 
   @Get()
@@ -140,6 +148,56 @@ export class DeclarationsController {
   @Contract({ output: declarationDtoSchema, roles: ALL_ROLES })
   one(@Param('id', ParseUUIDPipe) id: string) {
     return this.db.transaction((tx) => loadDeclaration(tx, id));
+  }
+
+  /** T103 · RF-TAB-06: el seguimiento de la DM en PDF. */
+  @Get(':id/tracking.pdf')
+  @Contract({ output: trackingFileSchema, errors: ['PDF_RENDER_FAILED'], roles: ALL_ROLES })
+  async tracking(@Param('id', ParseUUIDPipe) id: string): Promise<z.infer<typeof trackingFileSchema>> {
+    const data = await this.db.transaction(
+      async (tx) => {
+        const declaration = await loadDeclaration(tx, id);
+        const [client] = await tx
+          .select({ name: clients.name })
+          .from(clients)
+          .where(eq(clients.id, declaration.clientId));
+        const vesselRows = declaration.allocations.length
+          ? await tx
+              .select({ id: vessels.id, name: vessels.name })
+              .from(vessels)
+              .where(
+                inArray(
+                  vessels.id,
+                  declaration.allocations.map((a) => a.vesselId),
+                ),
+              )
+          : [];
+        const orderIds = await tx
+          .select({ id: loadOrders.id })
+          .from(loadOrders)
+          .where(eq(loadOrders.declarationId, id));
+        return {
+          declaration,
+          clientName: client!.name,
+          vesselNames: Object.fromEntries(vesselRows.map((v) => [v.id, v.name])),
+          orders: orderIds.length ? await readOrders(tx, { ids: orderIds.map((o) => o.id) }) : [],
+        };
+      },
+      { accessMode: 'read only' },
+    );
+    let pdf: Buffer;
+    try {
+      pdf = await this.pdf.render(trackingHtml(data, this.clock));
+    } catch (err) {
+      throw new AppError('PDF_RENDER_FAILED', 'No se pudo generar el seguimiento en PDF. Inténtelo de nuevo.', {
+        cause: String(err),
+      });
+    }
+    return {
+      fileName: `seguimiento-DM-${data.declaration.number}.pdf`,
+      mime: 'application/pdf',
+      base64: pdf.toString('base64'),
+    };
   }
 
   /** RF-DM-01 a 03: la fecha la pone el servidor; la asignación inicial es opcional. */

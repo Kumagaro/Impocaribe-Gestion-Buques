@@ -1,8 +1,10 @@
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderUi } from '../../test/render';
 import {
+  LiveNumber,
   Badge,
   Card,
   EmptyState,
@@ -39,6 +41,32 @@ describe('ProgressBar (MOV-03)', () => {
     );
     const now = (name: string) => screen.getByRole('progressbar', { name }).getAttribute('aria-valuenow');
     expect([now('Avance del buque'), now('Pasado'), now('Negativo')]).toEqual(['41.9', '100', '0']);
+  });
+});
+
+describe('LiveNumber (MOV-03)', () => {
+  const fmt = (n: number) => n.toFixed(3);
+  function Harness() {
+    const [value, setValue] = useState(10);
+    return (
+      <>
+        <LiveNumber value={value} format={fmt} />
+        <button onClick={() => setValue(27.28)}>Cambiar</button>
+      </>
+    );
+  }
+
+  it('cuenta desde el valor anterior y termina exacto', async () => {
+    renderUi(<Harness />);
+    expect(screen.getByText('10.000').getAttribute('data-motion')).toBe('count');
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
+    await vi.waitFor(() => expect(screen.getByText('27.280')).not.toBeNull());
+  });
+
+  it('con movimiento reducido salta al valor nuevo', async () => {
+    renderUi(<Harness />, { reduceMotion: true });
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
+    expect(screen.getByText('27.280').getAttribute('data-motion')).toBe('static');
   });
 });
 

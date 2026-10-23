@@ -202,3 +202,35 @@
     position: static;
   }
 }
+
+/* T102 · P-32 Órdenes (maqueta T099). */
+.order-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.order-totals b {
+  font-size: var(--t-xl);
+  font-variant-numeric: tabular-nums;
+}
+.order-totals span {
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+}
+.order-list-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 16px;
+  align-items: start;
+}
+.order-day {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}

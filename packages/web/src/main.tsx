@@ -19,6 +19,9 @@ import './screens/settings/settings.css';
 import './screens/catalogs/catalogs.css';
 import './screens/orders/orders.css';
 import './screens/alerts/alerts.css';
+import './screens/audit/audit.css';
+import './screens/dashboard/dashboard.css';
+import './screens/search/search.css';
 
 installTokens();
 

@@ -10,5 +10,6 @@ import './catalogs';
 import './vessels';
 import './orders';
 import './alerts';
+import './consultas';
 
 export { apiRegistry, type Endpoint } from '../client';

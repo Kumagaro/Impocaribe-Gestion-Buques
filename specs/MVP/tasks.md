@@ -677,26 +677,32 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-TAB-01, HU-03, RF-TAB-04
   - *Depende:* T096, T099
   - *Pruebas E2E adicionales:* con dos usuarios, el saldo cambia con animación en menos de 5 segundos; los números coinciden con las vistas SQL en el escenario Excel.
+  - *Estado (2026-10-23):* hecha, pendiente de que el responsable apruebe las referencias visuales (`Pantallas/Tablero y consultas`). `web/src/screens/dashboard/`: filtro de buque (con un buque, las cifras de sus asignaciones), contratado, extraído y pendiente con cifras vivas (MOV-03, `LiveNumber`), órdenes oficiales, borradores (A y O) y anuladas, «Requieren atención» (AL-01, 03 y 04 abiertas), tabla ordenable por DM con su etapa (RF-TAB-04, `shared/domain/stages.ts`) y las alertas de hoy; TAB con la ficha y sus etapas; TEL en carrusel y tarjetas. 4 pruebas de componente; E2E: la orden de otra persona cambia la fila de su DM en menos de 5 s. Los números salen de las vistas SQL vía la copia local; su coincidencia con el escenario Excel ya la prueba `excel.int.test.ts` (T091).
 
 - [ ] **T101. (PP) Pantalla P-12 Buscar** y archivo en línea, incluida la búsqueda por la parte final del número de orden.
+  - *Estado (2026-10-23):* hecha, pendiente de aprobación de las referencias. `GET /archive/orders` y `/archive/declarations` (lo de más de 12 meses, mismo corte que la copia local). P-12 busca en la copia local por DM, cliente, marca y número de orden (completo o su parte final, en todos los buques), con la ficha de la DM (etapas, saldos, asignaciones, órdenes, «Nueva orden para esta DM» y el seguimiento en PDF) y «Buscar en el archivo» con conexión. Decisión de alcance: la búsqueda vive en la página `/buscar` en las tres clases (la lupa y `/` llevan ahí), no desplegada bajo la cabecera de TAB y ESC como en la maqueta. 16 pruebas de componente; E2E: la orden por su número y una DM de hace 14 meses solo con el archivo.
   - *Cubre:* RF-TAB-03, RF-CON-07, HU-10
   - *Depende:* T072, T099
 
 - [ ] **T102. (PP) Pantalla P-32 Órdenes**, con filtros, totales del rango y filtro rápido "Hoy".
+  - *Estado (2026-10-23):* hecha, pendiente de aprobación de las referencias. «Hoy» por defecto, «Esta semana» y «Rango» (por fecha de carga o de emisión), filtros por estado, buque, DM, cliente, transportista y chofer, cantidad y toneladas del rango (las anuladas no suman), tabla ordenable con la orden al lado (abrir y descargar el PDF) en ESC, lista y orden en TAB y tarjetas por día en TEL. 8 pruebas de componente; E2E: la orden de otra persona aparece en «Hoy» y el filtro por chofer coincide con la base.
   - *Cubre:* RF-TAB-07, HU-17
   - *Depende:* T100
 
 - [ ] **T103. [∥] Seguimiento en PDF.**
+  - *Estado (2026-10-23):* hecha. `GET /declarations/:id/tracking.pdf` (`server/src/vessels/tracking.ts`): etapa, saldos, plazo, asignaciones por buque y órdenes con su estado, con el motor de PDF de las órdenes. Se descarga desde la ficha de P-12.
   - *Cubre:* RF-TAB-06
   - *Depende:* T078
 
 - [ ] **T104. (PP) Bitácora:** endpoint y pantalla P-25.
+  - *Estado (2026-10-23):* hecha, pendiente de aprobación de las referencias. `GET /audit` (todos los roles; por usuario, fechas de La Habana, grupo de acciones y DM u orden, también por la parte final; páginas de 50) con nombres de usuario, dispositivo y entidad. El motivo de correcciones, anulaciones y cambios con motivo se guarda ahora también en su columna (`auditedWrite`). P-25 con filtros F-17, tabla con el detalle antes → después (TAB y ESC) o tarjetas (TEL); sin conexión explica que se consulta en el servidor. 5 pruebas de integración (con el archivo y el seguimiento) y 6 de componente; E2E: filtrar por la orden y ver su emisión y su corrección.
   - *Cubre:* RF-BIT-03, HU-13
   - *Depende:* T013, T099, T041
 
 ## F9. Respaldo y restauración
 
 - [ ] **T105. Cifrado de respaldos** y confirmación periódica de la contraseña (RF-RES-08): confirmar verificando que descifra la clave privada, aplazar hasta 3 veces y AL-23.
+  - *Decisiones del responsable (2026-10-23):* (1) la restauración usa una segunda conexión de mantenimiento con el rol dueño de la base, con sus credenciales protegidas como las del rol de la app, solo para respaldar y restaurar; (2) cambiar la contraseña de respaldo vuelve a cifrar la misma clave privada, así los respaldos anteriores se restauran con la contraseña nueva; (3) las pruebas de integración hacen respaldos y restauraciones reales con pg_dump y pg_restore.
   - *Cubre:* DT-07, RF-RES-04, RF-RES-08
   - *Depende:* T051
 

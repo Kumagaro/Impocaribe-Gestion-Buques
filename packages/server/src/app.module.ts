@@ -5,6 +5,8 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { config } from './config.ts';
 import { createAppPool } from './db/db.ts';
 import { AlertsController } from './alerts/alerts.controller.ts';
+import { ArchiveController } from './archive/archive.controller.ts';
+import { AuditController } from './audit/audit.controller.ts';
 import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
@@ -62,6 +64,8 @@ import {
     OrdersController,
     DraftsController,
     AlertsController,
+    AuditController,
+    ArchiveController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
