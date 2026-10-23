@@ -16,6 +16,7 @@ import { OrderListScreen } from '../screens/orders/OrderList.screen';
 import { AlertsPanel, AlertsScreen } from '../screens/alerts/Alerts.screen';
 import { useAlertFeed } from '../screens/alerts/useAlertFeed';
 import { AuditScreen } from '../screens/audit/Audit.screen';
+import { BackupPasswordPrompt } from '../screens/backups/BackupPasswordPrompt';
 import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
 import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
@@ -80,14 +81,17 @@ function SignedInShell() {
         : null,
   };
   return (
-    <AppShell
-      user={{ name: user.fullName, role: user.role }}
-      status={status}
-      isServerPc={state.pairing!.isServerPc}
-      theme={state.preferences.theme}
-      onThemeChange={(theme) => void session.setPreferences({ theme })}
-      alertsPanel={(onClose) => <AlertsPanel onClose={onClose} />}
-    />
+    <>
+      <BackupPasswordPrompt />
+      <AppShell
+        user={{ name: user.fullName, role: user.role }}
+        status={status}
+        isServerPc={state.pairing!.isServerPc}
+        theme={state.preferences.theme}
+        onThemeChange={(theme) => void session.setPreferences({ theme })}
+        alertsPanel={(onClose) => <AlertsPanel onClose={onClose} />}
+      />
+    </>
   );
 }
 

@@ -702,6 +702,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 ## F9. Respaldo y restauración
 
 - [ ] **T105. Cifrado de respaldos** y confirmación periódica de la contraseña (RF-RES-08): confirmar verificando que descifra la clave privada, aplazar hasta 3 veces y AL-23.
+  - *Estado (2026-10-23):* hecha. `server/src/backups/crypto.ts`: par X25519 (pública en `system_settings`, privada sellada con argon2id + AES-256-GCM) y archivos `.icbak` cifrados por flujo con una clave efímera (ECDH + HKDF, cabecera autenticada). `/backups/password`: estado, definir o cambiar (exige la actual y vuelve a sellar la misma clave), confirmar (abre la clave privada) y aplazar hasta 3 veces. Diálogo tras el login de una Apoderada (ui-spec §1.2); sin aplazamientos se cierra con «Ahora no» y AL-23 sigue abierta (evaluador de condiciones). Definirla desde la pantalla llega con P-24 (T112). 5 pruebas del cifrado, 4 de integración, 6 de reglas y F-16 y 4 de componente. Pendiente de la mutación del servidor.
   - *Decisiones del responsable (2026-10-23):* (1) la restauración usa una segunda conexión de mantenimiento con el rol dueño de la base, con sus credenciales protegidas como las del rol de la app, solo para respaldar y restaurar; (2) cambiar la contraseña de respaldo vuelve a cifrar la misma clave privada, así los respaldos anteriores se restauran con la contraseña nueva; (3) las pruebas de integración hacen respaldos y restauraciones reales con pg_dump y pg_restore.
   - *Cubre:* DT-07, RF-RES-04, RF-RES-08
   - *Depende:* T051

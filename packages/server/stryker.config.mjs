@@ -27,6 +27,8 @@ export default {
     // T092 a T094: el motor de alertas y las de condición.
     'src/alerts/alerts.ts',
     'src/alerts/conditions.ts',
+    // T105 a T110: respaldos, restauración y numeración.
+    'src/backups/**/*.ts',
     '!src/**/*.test.ts',
   ],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.

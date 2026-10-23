@@ -2,11 +2,21 @@
 // abre las que faltan y resuelve las que ya no se cumplen, todo en una transacción. La corre AlertsService al arrancar,
 // cada 10 minutos y poco después de cada cambio sincronizado.
 import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
-import { compareTons, deadlineAt, formatTons, parseTons, type AlertType, type Clock } from '@impocaribe/shared';
+import {
+  compareTons,
+  CONFIRM_EVERY_DAYS,
+  confirmationOverdue,
+  deadlineAt,
+  formatTons,
+  parseTons,
+  type AlertType,
+  type Clock,
+} from '@impocaribe/shared';
 import { and, asc, eq, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Tx } from '../audit/audit-log.ts';
-import { officialSignatures, officialStamps } from '../db/schema/company.ts';
+import { officialSignatures, officialStamps, systemSettings } from '../db/schema/company.ts';
+import { passwordState } from '../backups/backup-password.controller.ts';
 import { devices } from '../db/schema/devices.ts';
 import { drafts, loadOrders } from '../db/schema/orders.ts';
 import {
@@ -21,8 +31,8 @@ import { Realtime } from '../sync/realtime.ts';
 import { ALERT_CONDITIONS_ENABLED, CLOCK, DB } from '../tokens.ts';
 import { openCondition, replicateAlerts, resolveMissing, type AlertInput } from './alerts.ts';
 
-/** Las que evalúa esta pasada. AL-12, 19, 20, 21 y 23 llegan con respaldos, restauración y energía (F9, F10). */
-export const EVALUATED: AlertType[] = ['AL-01', 'AL-03', 'AL-08', 'AL-09', 'AL-16', 'AL-17', 'AL-18'];
+/** Las que evalúa esta pasada. AL-12, 19, 20 y 21 llegan con respaldos, restauración y energía (F9, F10). */
+export const EVALUATED: AlertType[] = ['AL-01', 'AL-03', 'AL-08', 'AL-09', 'AL-16', 'AL-17', 'AL-18', 'AL-23'];
 
 const DAY_MS = 86_400_000;
 /** AL-09: días sin órdenes. */
@@ -189,6 +199,18 @@ async function otherConditions(tx: Tx, now: Date): Promise<Wanted[]> {
         title: `La hora de ${d.name} está desfasada`,
         detail: `Difiere ${Math.round(Math.abs(d.offset) / 60_000)} min de la del servidor. Corríjala en el dispositivo.`,
         entity: { type: 'device', id: d.id },
+      },
+    ]);
+
+  // AL-23 · RF-RES-08: 90 días sin confirmar la contraseña de respaldo (aunque se haya aplazado al iniciar sesión).
+  const [settings] = await tx.select().from(systemSettings);
+  if (settings && confirmationOverdue(passwordState(settings), now))
+    out.push([
+      'AL-23',
+      {
+        type: 'AL-23',
+        title: 'Contraseña de respaldo sin confirmar',
+        detail: `Lleva más de ${CONFIRM_EVERY_DAYS} días sin que una Apoderada la escriba. Si nadie la recuerda, los respaldos no se podrán restaurar.`,
       },
     ]);
   return out;

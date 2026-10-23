@@ -22,3 +22,4 @@ export * from './domain/orderRules.ts';
 export * from './domain/alerts.ts';
 export * from './domain/auditActions.ts';
 export * from './domain/stages.ts';
+export * from './domain/backupPassword.ts';

@@ -7,6 +7,7 @@ import { createAppPool } from './db/db.ts';
 import { AlertsController } from './alerts/alerts.controller.ts';
 import { ArchiveController } from './archive/archive.controller.ts';
 import { AuditController } from './audit/audit.controller.ts';
+import { BackupPasswordController } from './backups/backup-password.controller.ts';
 import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
@@ -66,6 +67,7 @@ import {
     AlertsController,
     AuditController,
     ArchiveController,
+    BackupPasswordController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },

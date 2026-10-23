@@ -4,6 +4,7 @@ import {
   char,
   check,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   smallint,
@@ -84,6 +85,15 @@ export const systemSettings = pgTable(
     deadlineLegalNotice: text('deadline_legal_notice'),
     currentSignatureId: uuid('current_signature_id').references((): AnyPgColumn => officialSignatures.id),
     currentStampId: uuid('current_stamp_id').references((): AnyPgColumn => officialStamps.id),
+    /** T105 · DT-07: clave pública X25519 (spki, base64) con la que se cifra cada respaldo. */
+    backupPublicKey: text('backup_public_key'),
+    /** La clave privada sellada con la contraseña de respaldo (SealedKey); la contraseña no se guarda. */
+    backupPrivateKey: jsonb('backup_private_key'),
+    backupPasswordSetAt: timestamp('backup_password_set_at', { withTimezone: true }),
+    /** RF-RES-08: la última vez que una Apoderada la escribió bien. */
+    backupPasswordConfirmedAt: timestamp('backup_password_confirmed_at', { withTimezone: true }),
+    backupConfirmPostpones: smallint('backup_confirm_postpones').notNull().default(0),
+    backupConfirmPostponedUntil: timestamp('backup_confirm_postponed_until', { withTimezone: true }),
     rowVersion: integer('row_version').notNull().default(1),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
