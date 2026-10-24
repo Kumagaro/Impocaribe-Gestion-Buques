@@ -6,6 +6,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { systemSettings } from '../db/schema/company.ts';
 import { BACKUPS_ENABLED, CLOCK, DATA_DIR, DB, MAINTENANCE_DB_URL, PG_BIN } from '../tokens.ts';
 import { copyExternal, lastRuns, runBackup, type BackupDeps } from './backup.ts';
+import { Maintenance } from './maintenance.ts';
 import { due } from './schedule.ts';
 
 const TICK_MS = 60_000;
@@ -25,6 +26,7 @@ export class BackupScheduler implements OnApplicationBootstrap, OnApplicationShu
     @Inject(MAINTENANCE_DB_URL) maintenanceUrl: string,
     @Inject(PG_BIN) pgBin: string,
     @Inject(BACKUPS_ENABLED) private readonly enabled: boolean,
+    private readonly maintenance: Maintenance,
   ) {
     this.deps = { db, clock, dataDir, maintenanceUrl, pgBin };
   }
@@ -41,7 +43,7 @@ export class BackupScheduler implements OnApplicationBootstrap, OnApplicationShu
 
   /** Una vuelta del programador; pública para las pruebas. */
   async tick(): Promise<void> {
-    if (this.busy) return;
+    if (this.busy || this.maintenance.active) return;
     this.busy = true;
     try {
       const { db, clock } = this.deps;

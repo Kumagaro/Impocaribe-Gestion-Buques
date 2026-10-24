@@ -9,7 +9,9 @@ import { ArchiveController } from './archive/archive.controller.ts';
 import { AuditController } from './audit/audit.controller.ts';
 import { BackupPasswordController } from './backups/backup-password.controller.ts';
 import { BackupsController } from './backups/backups.controller.ts';
+import { RestoresController } from './backups/restores.controller.ts';
 import { BackupScheduler } from './backups/scheduler.ts';
+import { Maintenance } from './backups/maintenance.ts';
 import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
@@ -74,6 +76,7 @@ import {
     ArchiveController,
     BackupPasswordController,
     BackupsController,
+    RestoresController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -90,6 +93,7 @@ import {
     { provide: PG_BIN, useFactory: () => process.env.IMPOCARIBE_PG_BIN ?? '' },
     { provide: BACKUPS_ENABLED, useValue: true },
     BackupScheduler,
+    Maintenance,
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

@@ -93,6 +93,7 @@ const ISSUE_ERRORS = [
   'CAPACITY_REQUIRES_OVERRIDE',
   'SAME_DAY_REQUIRES_OVERRIDE',
   'PDF_RENDER_FAILED',
+  'NUMBERING_CONFIRMATION_REQUIRED',
 ] as const;
 const DAY_MS = 86_400_000;
 
@@ -159,6 +160,11 @@ export class OrdersController {
   ) {
     await this.write(req, res, 'order.issue', null, 201, async (tx) => {
       const c = await gather(tx, this.clock, input, input, true);
+      if (c.numberingPending)
+        throw new AppError(
+          'NUMBERING_CONFIRMATION_REQUIRED',
+          'Tras la restauración, una Apoderada debe confirmar en Respaldos el último número impreso de cada buque antes de emitir.',
+        );
       const problems = checkOrder(c.check(null));
       if (problems.length) throw problemsError(problems, blockedOn(c));
       // Const. art. VI: el contador vive en la fila del buque, bloqueada; UNIQUE(vessel_id, seq) es la segunda barrera.

@@ -48,7 +48,7 @@ export function runPg(pgBin: string, name: string, url: string, args: string[]):
   const password = decodeURIComponent(u.password);
   u.password = '';
   return new Promise((resolve, reject) => {
-    const child = spawn(tool(pgBin, name), [...args, `--dbname=${u.toString()}`], {
+    const child = spawn(tool(pgBin, name), [`--dbname=${u.toString()}`, ...args], {
       env: { ...process.env, PGPASSWORD: password },
       windowsHide: true,
     });

@@ -715,9 +715,11 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T107. Restauración y numeración.**
   - *Cubre:* RF-RES-03, 06, D12
   - *Depende:* T106, T045
+  - *Estado (2026-10-24):* hecha. `server/src/backups/restore.ts` y `POST /restores` (Apoderada, contraseña de respaldo y «RESTAURAR»): modo mantenimiento (503 `RESTORE_IN_PROGRESS` salvo estado y descubrimiento; las tareas en segundo plano paran), respaldo `pre_restore`, `pg_restore --clean` en una sola transacción (si falla, la base queda como estaba) y los archivos. Se reponen el historial de respaldos y restauraciones, los dispositivos (emparejados y revocados después del respaldo) y las claves de respaldo. D12: el contador de cada buque toma el mayor entre el restaurado y el de antes; las órdenes que ya no están quedan en `lost_orders` con sus versiones, remolques, firma, cuño y archivos. Época nueva, todas las sesiones revocadas y `backup.restore` en la bitácora restaurada. Decisiones: el estado de antes se lee de la base viva justo antes de restaurar (equivale al `pre_restore`, sin base temporal); solo se restaura un respaldo de la misma versión del esquema (va en su cabecera); restaurar entre versiones, con F10. AL-19 mientras queden órdenes perdidas pendientes. 6 pruebas de integración con pg_dump y pg_restore reales (la orden siguiente es la 0004 tras perder la 0002 y la 0003). Pendiente de la mutación del servidor.
 
 - [ ] **T108. Modo de confirmación de numeración.**
   - *Depende:* T107
+  - *Estado (2026-10-24):* hecha. Si no se pudo hacer el respaldo previo, la restauración marca `numbering_confirmation_required`: emitir responde `NUMBERING_CONFIRMATION_REQUIRED` hasta que una Apoderada confirma el último número impreso de cada buque abierto (`GET/POST /restores/numbering`, nunca menor que el restaurado); el contador toma el mayor. Prueba de integración: confirmado el 7, la siguiente orden es la 0008. La pantalla, con P-24 (T112).
 
 - [ ] **T109. Recuperar órdenes perdidas.**
   - *Cubre:* RF-RES-07

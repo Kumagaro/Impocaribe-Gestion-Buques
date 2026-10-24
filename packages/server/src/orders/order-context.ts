@@ -144,6 +144,8 @@ export async function gather(
   const status = statusNow(declaration, declarationRow, clock);
   return {
     today,
+    /** T108: tras restaurar sin el estado anterior, hasta confirmar la numeración no se emite. */
+    numberingPending: settings!.numberingConfirmationRequired,
     vessel,
     declarationRow,
     declaration,

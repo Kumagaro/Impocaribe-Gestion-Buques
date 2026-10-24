@@ -154,7 +154,7 @@ export function useScenario(clock: ManualClock, start: string) {
        ALTER TABLE load_order_versions ENABLE TRIGGER USER; ALTER TABLE load_order_version_trailers ENABLE TRIGGER USER;
        ALTER TABLE customs_declaration_versions ENABLE TRIGGER USER; ALTER TABLE allocation_changes ENABLE TRIGGER USER;
        ALTER TABLE vessel_surplus_dispositions ENABLE TRIGGER USER; ALTER TABLE vessels ENABLE TRIGGER USER;
-       TRUNCATE alerts, users, files CASCADE; TRUNCATE idempotency_keys;
+       TRUNCATE alerts, users, files CASCADE; TRUNCATE idempotency_keys, restores;
        TRUNCATE truck_default_trailers, drivers, trucks, trailers, recipients, clients, carriers CASCADE;
        INSERT INTO system_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
        ALTER TABLE audit_log DISABLE TRIGGER USER; TRUNCATE audit_log; ALTER TABLE audit_log ENABLE TRIGGER USER;

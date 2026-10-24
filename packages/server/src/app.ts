@@ -5,6 +5,7 @@ import { AppError, isBelowMinVersion } from '@impocaribe/shared';
 import { json, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
+import { Maintenance } from './backups/maintenance.ts';
 import { HttpErrorFilter } from './http/http-error.filter.ts';
 import { MIN_APP_VERSION } from './tokens.ts';
 
@@ -54,6 +55,16 @@ export function configureApp(app: INestApplication): INestApplication {
     const error = new AppError(
       'VALIDATION_ERROR',
       'Falta la cabecera Idempotency-Key: cada intento del usuario debe llevar un UUID propio.',
+    );
+    res.status(error.status).json(error.toBody());
+  });
+  // T107: durante una restauración solo responden el estado y el descubrimiento.
+  const maintenance = app.get(Maintenance);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!maintenance.active || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();
+    const error = new AppError(
+      'RESTORE_IN_PROGRESS',
+      'El servidor se está restaurando desde un respaldo. Espere unos minutos.',
     );
     res.status(error.status).json(error.toBody());
   });
