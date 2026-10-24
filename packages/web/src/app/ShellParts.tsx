@@ -3,6 +3,7 @@ import { CircleUserRound, Monitor, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { IconButton } from '../ui/controls';
+import { UpdateBand } from '../screens/updates/UpdateParts';
 import { OfflineBanner } from '../ui/presentation';
 import type { ThemePreference } from '../ui/tokens';
 
@@ -28,6 +29,7 @@ export function ShellBands({ status }: { status: ShellStatus }) {
   return (
     <>
       <OfflineBanner online={status.online} asOf={status.asOf} pendingDrafts={status.pendingDrafts} />
+      <UpdateBand />
       {status.clockSkewMinutes != null && (
         <div role="status" className="ui-band" data-tone="warn">
           La hora de este dispositivo difiere {status.clockSkewMinutes} min de la del servidor. Ajústela: las fechas y

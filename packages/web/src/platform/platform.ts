@@ -83,6 +83,14 @@ export interface LanStatus {
   peersVisible: boolean;
 }
 
+/** T114: el instalador publicado en el servidor (T113). */
+export interface UpdatePackage {
+  /** Dirección completa de la descarga en el servidor emparejado. */
+  url: string;
+  version: string;
+  sha256: string;
+}
+
 export interface Platform {
   /** Cómo se habla con el servidor: https en las apps (DT-18); http solo en el navegador de pruebas. */
   serverScheme?: 'http' | 'https';
@@ -101,7 +109,11 @@ export interface Platform {
   secureScreen(enabled: boolean): Promise<void>;
   /** Lee un QR con la cámara (TEL y TAB, P-01); null si se cancela. Sin cámara, no existe. */
   scanQr?(): Promise<string | null>;
-  installUpdate(downloadUrl: string): Promise<void>;
+  /**
+   * RF-UPD-05: descarga la versión del servidor local (por el transporte nativo, DT-19), comprueba su huella y pide al
+   * sistema instalarla, con la confirmación del usuario. El navegador de pruebas no la tiene.
+   */
+  installUpdate?(update: UpdatePackage, onProgress?: (received: number, total: number) => void): Promise<void>;
 }
 
 let current: Platform | null = null;

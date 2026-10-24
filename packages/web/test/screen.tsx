@@ -9,7 +9,7 @@ import { getSyncChanges, getSyncSnapshot, getSyncState } from '../src/api/endpoi
 import { SyncGate } from '../src/sync/SyncGate';
 import { SyncProvider } from '../src/sync/SyncProvider';
 import type { PairingRecord } from '../src/connection/pairing';
-import type { DeviceInfo, PlatformDiscovery } from '../src/platform/platform';
+import type { DeviceInfo, Platform, PlatformDiscovery } from '../src/platform/platform';
 import { createTestPlatform, type TestPlatform } from '../src/platform/test-platform';
 import { AppSession, type StoredSession } from '../src/session/app-session';
 import { SessionProvider } from '../src/session/SessionProvider';
@@ -60,6 +60,8 @@ export async function renderScreen(
     local?: { entityType: SyncEntity; entityId: string; payload: unknown }[];
     /** Con sesión y `false`: el servidor no responde (RF-CON-05). */
     online?: boolean;
+    /** T114: la instalación de una versión que haría la app (por defecto solo se registra). */
+    installUpdate?: Platform['installUpdate'];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -73,6 +75,7 @@ export async function renderScreen(
     ...(options.discovery ? { discovery: options.discovery } : {}),
     ...(options.deviceInfo ? { deviceInfo: options.deviceInfo } : {}),
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
+    ...(options.installUpdate ? { installUpdate: options.installUpdate } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

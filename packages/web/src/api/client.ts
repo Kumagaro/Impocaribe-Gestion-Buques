@@ -116,7 +116,7 @@ export function createApiClient(options: ApiClientOptions) {
     }
     const token = await options.getToken();
     if (token) h.Authorization = `Bearer ${token}`;
-    if (req.body !== undefined) h['Content-Type'] = 'application/json';
+    if (req.body !== undefined && !(req.body instanceof FormData)) h['Content-Type'] = 'application/json';
     if (WRITES.has(endpoint.method)) h['Idempotency-Key'] = req.idempotencyKey ?? crypto.randomUUID();
     return h;
   }
@@ -138,15 +138,17 @@ export function createApiClient(options: ApiClientOptions) {
   return {
     async request<E extends Endpoint>(endpoint: E, req: RequestOptions<Input<E>> = {}): Promise<Output<E>> {
       let res: Response;
-      // El cuerpo se serializa una sola vez: la firma (DT-24) cubre exactamente lo que se envía.
+      // El cuerpo se serializa una sola vez: la firma (DT-24) cubre exactamente lo que se envía. T114: un archivo va en
+      // multipart (FormData); la firma cubre el cuerpo vacío y el servidor comprueba la huella del archivo.
       const target = url(endpoint, req);
-      const body = req.body !== undefined ? JSON.stringify(req.body) : '';
+      const form = req.body instanceof FormData ? req.body : null;
+      const body = form || req.body === undefined ? '' : JSON.stringify(req.body);
       const sent = await headers(endpoint, req, target, body);
       try {
         res = await options.transport(target, {
           method: endpoint.method,
           headers: sent,
-          ...(req.body !== undefined ? { body } : {}),
+          ...(form ? { body: form } : req.body !== undefined ? { body } : {}),
         });
       } catch {
         throw new ApiError(0, 'OFFLINE', OFFLINE_MESSAGE);

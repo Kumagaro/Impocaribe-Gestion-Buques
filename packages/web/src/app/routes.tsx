@@ -2,7 +2,7 @@
 // (T025). Cada pantalla se añade aquí con su tarea.
 import { havanaDateTime } from '@impocaribe/shared';
 import { useEffect } from 'react';
-import type { RouteObject } from 'react-router';
+import { useLocation, useNavigate, type RouteObject } from 'react-router';
 import { CarriersScreen } from '../screens/catalogs/Carriers.screen';
 import { ClientsScreen } from '../screens/catalogs/Clients.screen';
 import { FleetScreen } from '../screens/catalogs/Fleet.screen';
@@ -18,6 +18,7 @@ import { useAlertFeed } from '../screens/alerts/useAlertFeed';
 import { AuditScreen } from '../screens/audit/Audit.screen';
 import { BackupPasswordPrompt } from '../screens/backups/BackupPasswordPrompt';
 import { BackupsScreen } from '../screens/backups/Backups.screen';
+import { ReleasesScreen } from '../screens/updates/Releases.screen';
 import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
 import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
@@ -28,6 +29,8 @@ import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
 import { SettingsScreen } from '../screens/settings/Settings.screen';
 import { SetupScreen } from '../screens/setup/Setup.screen';
+import { AppUpdateProvider, useAppUpdate } from '../screens/updates/AppUpdateProvider';
+import { UpgradeRequired } from '../screens/updates/UpdateParts';
 import { UsersScreen } from '../screens/users/Users.screen';
 import { SessionGate } from '../session/SessionGate';
 import { useAppSession } from '../session/SessionProvider';
@@ -44,7 +47,9 @@ const SKEW_LIMIT_MS = 5 * 60_000;
 function SignedIn() {
   return (
     <SyncProvider>
-      <SignedInShell />
+      <AppUpdateProvider>
+        <SignedInShell />
+      </AppUpdateProvider>
     </SyncProvider>
   );
 }
@@ -54,6 +59,9 @@ function SignedInShell() {
   const sync = useSyncStatus();
   const online = useOnline();
   const alerts = useAlertFeed();
+  const update = useAppUpdate();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const user = state.session!.user;
   const expiresAt = Date.parse(state.session!.expiresAt);
 
@@ -81,6 +89,9 @@ function SignedInShell() {
         ? Math.round(Math.abs(sync.clockSkewMs) / 60_000)
         : null,
   };
+  // EST-07 (RF-UPD-04): por debajo de la mínima solo se ven los borradores locales.
+  if (update?.requiredMin && pathname !== '/borradores')
+    return <UpgradeRequired drafts={alerts.drafts} onDrafts={() => void navigate('/borradores')} />;
   return (
     <>
       <BackupPasswordPrompt />
@@ -127,6 +138,7 @@ export const appRoutes: RouteObject[] = [
               { path: '/alertas', handle: { title: 'Alertas' }, element: <AlertsScreen /> },
               { path: '/bitacora', handle: { title: 'Bitácora' }, element: <AuditScreen /> },
               { path: '/respaldos', handle: { title: 'Respaldos y restauración' }, element: <BackupsScreen /> },
+              { path: '/versiones', handle: { title: 'Versiones de la app' }, element: <ReleasesScreen /> },
               { path: '/buscar', handle: { title: 'Buscar' }, element: <SearchScreen /> },
               { path: '/ordenes', handle: { title: 'Órdenes' }, element: <OrderListScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },

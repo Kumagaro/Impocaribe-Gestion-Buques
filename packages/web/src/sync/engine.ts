@@ -68,6 +68,12 @@ export interface AlertNotice {
   title: string;
 }
 
+export interface AppUpdateNotice {
+  platform: 'windows' | 'android';
+  version: string;
+  mandatory: boolean;
+}
+
 export class SyncEngine {
   private current: SyncStatus = {
     stage: 'idle',
@@ -81,6 +87,7 @@ export class SyncEngine {
   private readonly statusListeners = new Set<() => void>();
   private readonly changeListeners = new Set<(c: SyncChanged) => void>();
   private readonly alertListeners = new Set<(a: AlertNotice) => void>();
+  private readonly appUpdateListeners = new Set<(u: AppUpdateNotice) => void>();
   private running: Promise<void> | null = null;
   private again = false;
   private socket: PlatformSocket | null = null;
@@ -108,6 +115,12 @@ export class SyncEngine {
   onAlert(listener: (a: AlertNotice) => void): () => void {
     this.alertListeners.add(listener);
     return () => this.alertListeners.delete(listener);
+  }
+
+  /** T114 · AL-15: se publicó una versión de la app o se marcó la mínima (cada app mira si es la suya). */
+  onAppUpdate(listener: (u: AppUpdateNotice) => void): () => void {
+    this.appUpdateListeners.add(listener);
+    return () => this.appUpdateListeners.delete(listener);
   }
 
   /** Arranca: sincroniza, abre el WebSocket y pregunta cada 60 s. */
@@ -278,6 +291,9 @@ export class SyncEngine {
     } else if (msg.type === 'sync.available' || msg.type === 'sync.epoch_changed') void this.syncNow();
     else if (msg.type === 'alert.created')
       for (const l of this.alertListeners) l({ id: msg.id, type: msg.alertType, title: msg.title });
+    else if (msg.type === 'app.update')
+      for (const l of this.appUpdateListeners)
+        l({ platform: msg.platform, version: msg.version, mandatory: msg.mandatory });
     else if (msg.type === 'session.revoked') this.revoked('session');
     else if (msg.type === 'device.revoked') this.revoked('device');
   }

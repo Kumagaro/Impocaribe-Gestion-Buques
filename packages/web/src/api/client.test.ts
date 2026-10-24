@@ -59,6 +59,33 @@ describe('cabeceras de cada petición', () => {
     });
   });
 
+  it('T114: un archivo va en multipart, sin Content-Type propio, y la firma cubre el cuerpo vacío', async () => {
+    const requests: RequestInit[] = [];
+    const client = createApiClient({
+      baseUrl: 'https://servidor:8443/api/v1',
+      appVersion: '1.2.0',
+      getToken: async () => null,
+      getDevice: async () => ({ id: 'tel-1', secret: 'secreto' }),
+      now: () => DEVICE_NOW,
+      transport: async (_url, init) => {
+        requests.push(init);
+        return respond(200, { number: '00431', balance: '593.050' });
+      },
+    });
+    const form = new FormData();
+    form.append('version', '1.4.0');
+    await client.request(getDeclaration, { params: { id: '0192a3b4' }, body: form as never });
+    expect(requests[0]!.body).toBe(form);
+    const sent = headers(requests[0]!);
+    expect(sent['content-type']).toBeUndefined();
+    expect(sent['x-device-signature']).toBe(
+      await signRequest(
+        { method: 'GET', path: '/api/v1/declarations/0192a3b4', time: String(DEVICE_NOW.getTime()), body: '' },
+        'secreto',
+      ),
+    );
+  });
+
   it('T113: la app dice su plataforma, de la que depende la versión mínima', async () => {
     const requests: RequestInit[] = [];
     const client = createApiClient({

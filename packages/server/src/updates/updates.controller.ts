@@ -28,7 +28,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Response } from 'express';
 import { createReadStream } from 'node:fs';
@@ -36,9 +36,11 @@ import { open, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { z } from 'zod';
+import type { Tx } from '../audit/audit-log.ts';
 import { ALL_ROLES } from '../auth/auth.controller.ts';
 import type { AuthedRequest } from '../auth/session.guard.ts';
 import { files } from '../db/schema/company.ts';
+import { devices } from '../db/schema/devices.ts';
 import { appReleases } from '../db/schema/updates.ts';
 import { users } from '../db/schema/users.ts';
 import { hashFile, storeFileFromPath } from '../files/files.ts';
@@ -65,18 +67,35 @@ const looksLike = (p: ReleasePlatform, head: Buffer) =>
   p === 'windows' ? head.subarray(0, 2).toString('latin1') === 'MZ' : head.toString('latin1') === 'PK\x03\x04';
 export const downloadUrl = (p: ReleasePlatform, v: string) => `/api/v1/updates/${p}/${v}/download`;
 
-type Release = typeof appReleases.$inferSelect;
-const dto = (r: Release, sizeBytes: number, publishedByName: string | null): ReleaseDto => ({
-  id: r.id,
-  platform: r.platform,
-  version: r.version,
-  sha256: r.sha256,
-  sizeBytes,
-  notes: r.notes,
-  isMinSupported: r.isMinSupported,
-  publishedByName,
-  publishedAt: r.publishedAt.toISOString(),
-});
+/**
+ * Las versiones con su archivo, quién las publicó y cuántos dispositivos activos de su plataforma se vieron por última
+ * vez con una anterior (T114: lo que deja fuera marcarla como mínima).
+ */
+async function releaseDtos(db: NodePgDatabase | Tx, where?: SQL): Promise<ReleaseDto[]> {
+  const rows = await db
+    .select({ r: appReleases, size: files.sizeBytes, name: users.fullName })
+    .from(appReleases)
+    .innerJoin(files, eq(files.id, appReleases.fileId))
+    .leftJoin(users, eq(users.id, appReleases.publishedBy))
+    .where(where)
+    .orderBy(desc(appReleases.publishedAt), desc(appReleases.id));
+  const seen = await db
+    .select({ platform: devices.platform, version: devices.appVersion })
+    .from(devices)
+    .where(and(isNull(devices.revokedAt), isNotNull(devices.appVersion)));
+  return rows.map(({ r, size, name }) => ({
+    id: r.id,
+    platform: r.platform,
+    version: r.version,
+    sha256: r.sha256,
+    sizeBytes: size,
+    notes: r.notes,
+    isMinSupported: r.isMinSupported,
+    devicesBelow: seen.filter((d) => d.platform === r.platform && compareVersions(d.version!, r.version) < 0).length,
+    publishedByName: name,
+    publishedAt: r.publishedAt.toISOString(),
+  }));
+}
 const invalid = (field: string, message: string) =>
   new AppError('VALIDATION_ERROR', message, { fields: { [field]: message } });
 
@@ -95,21 +114,11 @@ export class UpdatesController {
     private readonly versions: AppVersions,
   ) {}
 
-  private async rows(where?: ReturnType<typeof eq>) {
-    return this.db
-      .select({ r: appReleases, size: files.sizeBytes, name: users.fullName })
-      .from(appReleases)
-      .innerJoin(files, eq(files.id, appReleases.fileId))
-      .leftJoin(users, eq(users.id, appReleases.publishedBy))
-      .where(where)
-      .orderBy(desc(appReleases.publishedAt), desc(appReleases.id));
-  }
-
   /** P-26: las versiones publicadas, la más reciente primero. */
   @Get()
   @Contract({ output: z.array(releaseDtoSchema), roles: ALL_ROLES })
   async list(): Promise<ReleaseDto[]> {
-    return (await this.rows()).map((x) => dto(x.r, x.size, x.name));
+    return releaseDtos(this.db);
   }
 
   /** RF-UPD-02 a 04: la más nueva de la plataforma y si la instalada ya no es compatible. */
@@ -223,10 +232,9 @@ export class UpdatesController {
             await tx.execute(
               sql`SELECT pg_notify('impocaribe_release', ${JSON.stringify({ platform: input.platform, version: input.version, mandatory: false })})`,
             );
-          const [me] = await tx.select({ name: users.fullName }).from(users).where(eq(users.id, userId));
           return {
             status: 201,
-            body: dto(row!, stored.sizeBytes, me?.name ?? null),
+            body: (await releaseDtos(tx, eq(appReleases.id, row!.id)))[0]!,
             entityId: row!.id,
             after: { platform: input.platform, version: input.version, sha256, sizeBytes: stored.sizeBytes },
           };
@@ -262,15 +270,9 @@ export class UpdatesController {
         await tx.execute(
           sql`SELECT pg_notify('impocaribe_release', ${JSON.stringify({ platform: release.platform, version: release.version, mandatory: true })})`,
         );
-        const [x] = await tx
-          .select({ size: files.sizeBytes, name: users.fullName })
-          .from(appReleases)
-          .innerJoin(files, eq(files.id, appReleases.fileId))
-          .leftJoin(users, eq(users.id, appReleases.publishedBy))
-          .where(eq(appReleases.id, id));
         return {
           status: 200,
-          body: dto({ ...release, isMinSupported: true }, x!.size, x!.name),
+          body: (await releaseDtos(tx, eq(appReleases.id, id)))[0]!,
           before: { platform: release.platform, minSupported: before?.version ?? null },
           after: { platform: release.platform, minSupported: release.version },
         };

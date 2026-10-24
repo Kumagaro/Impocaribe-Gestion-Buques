@@ -39,6 +39,8 @@ export const releaseDtoSchema = z.object({
   notes: z.string(),
   /** La versión mínima compatible vigente de su plataforma. */
   isMinSupported: z.boolean(),
+  /** T114: los dispositivos emparejados de su plataforma que se vieron por última vez con una versión anterior. */
+  devicesBelow: z.number().int().nonnegative(),
   publishedByName: z.string().nullable(),
   publishedAt: z.iso.datetime(),
 });

@@ -107,6 +107,5 @@ export function createBrowserPlatform(
     },
     notify: async () => undefined,
     secureScreen: async () => undefined,
-    installUpdate: async () => undefined,
   };
 }

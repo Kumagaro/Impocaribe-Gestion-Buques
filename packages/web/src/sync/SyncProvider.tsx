@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore, t
 import type { LocalStore } from '../local/local-store';
 import { liveRowHighlight } from '../motion/presets';
 import { useAppSession } from '../session/SessionProvider';
-import type { SyncEngine, SyncStatus } from './engine';
+import type { AppUpdateNotice, SyncEngine, SyncStatus } from './engine';
 
 interface SyncContextValue {
   engine: SyncEngine;
@@ -150,6 +150,12 @@ export function useServerNow(): () => Date {
   const { session } = useAppSession();
   const skew = useSyncStatus().clockSkewMs ?? 0;
   return () => new Date(session.now().getTime() - skew);
+}
+
+/** T114 · AL-15: cada aviso de versión publicada o de mínima nueva que llega por el WebSocket. */
+export function useAppUpdateNotices(listener: (u: AppUpdateNotice) => void): void {
+  const engine = useSync()?.engine;
+  useEffect(() => engine?.onAppUpdate(listener), [engine, listener]);
 }
 
 /** La copia local, para lo que no es una lista replicada (los borradores de este dispositivo, RF-ORD-06). */

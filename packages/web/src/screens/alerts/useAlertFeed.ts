@@ -4,6 +4,7 @@ import { havanaDateTime, type AlertType } from '@impocaribe/shared';
 import type { AlertDto } from '@impocaribe/shared/validation';
 import { useEffect, useState } from 'react';
 import { useLocalList, useLocalStore, useSyncStatus } from '../../sync/SyncProvider';
+import { useAppUpdate } from '../updates/AppUpdateProvider';
 
 export interface AlertRow {
   id: string;
@@ -65,6 +66,7 @@ export function useAlertFeed() {
   const { data } = useLocalList<AlertDto>('alert');
   const sync = useSyncStatus();
   const drafts = useLocalDraftCount();
+  const update = useAppUpdate();
   const offline = !sync.online && sync.stage !== 'idle';
   const locals: AlertRow[] = [];
   if (offline)
@@ -84,7 +86,15 @@ export function useAlertFeed() {
         'draft',
       ),
     );
-  // shortcut: AL-15 (versión nueva de la app) llega con la publicación de versiones (T113 y T114).
+  // T114 · AL-15: sigue aquí hasta instalarla, aunque se haya pedido «Más tarde».
+  if (update?.available && update.latest)
+    locals.push(
+      local(
+        'AL-15',
+        'Hay una versión nueva de la app',
+        `La ${update.latest} está lista en el servidor local. Este dispositivo tiene la ${update.current}.`,
+      ),
+    );
   const server = (data ?? []).map(fromServer).sort((a, b) => b.createdAt!.localeCompare(a.createdAt!));
   return {
     loading: data === undefined,

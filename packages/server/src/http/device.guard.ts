@@ -13,7 +13,7 @@ export interface DeviceRecord {
 export interface DeviceRegistry {
   find(deviceId: string): Promise<DeviceRecord | null>;
   /** Anota la última conexión del dispositivo (RF-RED-05). */
-  seen?(deviceId: string): Promise<void>;
+  seen?(deviceId: string, appVersion?: string): Promise<void>;
 }
 
 /** El dispositivo ya verificado de la petición, para la sesión, la bitácora y la idempotencia. */
@@ -80,7 +80,7 @@ export class DeviceGuard implements CanActivate {
     }
     this.seen.set(signature, now.getTime() + 2 * WINDOW_MS);
     (req as DeviceRequest).device = { id: deviceId };
-    await this.registry.seen?.(deviceId);
+    await this.registry.seen?.(deviceId, req.header('x-app-version'));
     return true;
   }
 

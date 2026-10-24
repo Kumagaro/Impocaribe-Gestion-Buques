@@ -21,6 +21,7 @@ import './screens/orders/orders.css';
 import './screens/alerts/alerts.css';
 import './screens/audit/audit.css';
 import './screens/backups/backups.css';
+import './screens/updates/updates.css';
 import './screens/dashboard/dashboard.css';
 import './screens/search/search.css';
 

@@ -14,6 +14,8 @@ export async function createTestPlatform(
     discovery?: PlatformDiscovery;
     /** El texto que "lee" la cámara; sin él, la plataforma no tiene cámara. */
     scanQr?: () => Promise<string | null>;
+    /** La instalación simulada (T114): por defecto solo se registra. */
+    installUpdate?: Platform['installUpdate'];
   } = {},
 ): Promise<TestPlatform> {
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -53,7 +55,7 @@ export async function createTestPlatform(
     saveFile: record('saveFile'),
     notify: record('notify'),
     secureScreen: record('secureScreen'),
-    installUpdate: record('installUpdate'),
+    installUpdate: options.installUpdate ?? record('installUpdate'),
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
   };
 }

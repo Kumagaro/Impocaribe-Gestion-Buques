@@ -44,6 +44,7 @@ describe('AppSession.load', () => {
       pairing: null,
       session: null,
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 
@@ -62,6 +63,7 @@ describe('AppSession.load', () => {
       pairing: PAIRING,
       session: { token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER },
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 });
@@ -152,6 +154,7 @@ describe('cambios de estado', () => {
       pairing: PAIRING,
       session: null,
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 });

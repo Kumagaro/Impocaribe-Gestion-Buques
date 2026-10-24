@@ -16,6 +16,8 @@ export const PREFERENCES_KEY = 'impocaribe.preferences';
 export interface DevicePreferences {
   theme: ThemePreference;
   reduceMotion: boolean;
+  /** T114 · RF-UPD-03: «Más tarde» oculta la banda de esa versión hasta esa hora (el día siguiente). */
+  updateLater?: { version: string; until: string };
 }
 export const DEFAULT_PREFERENCES: DevicePreferences = { theme: 'system', reduceMotion: false };
 
@@ -32,10 +34,18 @@ export interface SessionState {
   pairing: PairingRecord | null;
   session: StoredSession | null;
   preferences: DevicePreferences;
+  /** RF-UPD-04: el servidor respondió 426; hasta actualizar, solo se ven los borradores locales (EST-07). */
+  upgradeRequired: { appVersion: string; minVersion: string } | null;
 }
 
 export class AppSession {
-  private state: SessionState = { status: 'loading', pairing: null, session: null, preferences: DEFAULT_PREFERENCES };
+  private state: SessionState = {
+    status: 'loading',
+    pairing: null,
+    session: null,
+    preferences: DEFAULT_PREFERENCES,
+    upgradeRequired: null,
+  };
   private readonly listeners = new Set<() => void>();
   // Promesas, no resultados: dos llamadas a la vez deben recibir la misma copia y el mismo motor.
   private store: Promise<LocalStore> | null = null;
@@ -48,6 +58,26 @@ export class AppSession {
   ) {}
 
   getState = (): SessionState => this.state;
+
+  /** T114: esta app, para preguntar si hay una versión nueva (RF-UPD-02). */
+  app(): { platform: 'windows' | 'android'; version: string; canInstall: boolean } {
+    return {
+      platform: this.platform.deviceInfo().platform,
+      version: this.appVersion,
+      canInstall: this.platform.installUpdate !== undefined,
+    };
+  }
+
+  /** RF-UPD-05: descarga la versión del servidor emparejado y pide al sistema instalarla. */
+  async installUpdate(
+    update: { downloadUrl: string; version: string; sha256: string },
+    onProgress?: (received: number, total: number) => void,
+  ): Promise<void> {
+    const address = this.state.pairing?.lastAddress;
+    if (!this.platform.installUpdate || !address) throw new Error('Esta app no se puede actualizar desde aquí.');
+    const url = `${this.platform.serverScheme ?? 'https'}://${address.address}:${address.port}${update.downloadUrl}`;
+    await this.platform.installUpdate({ url, version: update.version, sha256: update.sha256 }, onProgress);
+  }
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -191,6 +221,13 @@ export class AppSession {
       transport: this.platform.http,
       onSessionExpired: () => void this.signOut(),
       onDeviceRevoked: () => void this.forgetDevice(),
+      onUpgradeRequired: (details) =>
+        this.set({
+          upgradeRequired: {
+            appVersion: String(details?.appVersion ?? this.appVersion),
+            minVersion: String(details?.minVersion ?? ''),
+          },
+        }),
     });
   }
 }

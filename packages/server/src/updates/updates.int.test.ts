@@ -133,7 +133,14 @@ describe('T113 · versiones de las apps (RF-UPD-01 a 05)', () => {
       headers: { 'X-App-Version': '1.0.0', Authorization: `Bearer ${token('ana')}`, 'Idempotency-Key': randomUUID() },
     });
     expect(marked.status).toBe(200);
-    expect(((await marked.json()) as Body).isMinSupported).toBe(true);
+    const minBody = (await marked.json()) as Body;
+    expect(minBody.isMinSupported).toBe(true);
+    // T114: cada petición anota la versión de la app del dispositivo; todos los de Windows tienen la 1.0.0.
+    const [seen] = await q(
+      `SELECT count(*)::int AS n FROM devices WHERE platform = 'windows' AND revoked_at IS NULL AND app_version = '1.0.0'`,
+    );
+    expect(seen!.n).toBeGreaterThan(0);
+    expect(minBody.devicesBelow).toBe(seen!.n);
     await vi.waitFor(() =>
       expect(messages).toContainEqual({ type: 'app.update', platform: 'windows', version: '1.3.0', mandatory: true }),
     );
