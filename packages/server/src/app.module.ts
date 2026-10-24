@@ -10,6 +10,7 @@ import { AuditController } from './audit/audit.controller.ts';
 import { BackupPasswordController } from './backups/backup-password.controller.ts';
 import { BackupsController } from './backups/backups.controller.ts';
 import { RestoresController } from './backups/restores.controller.ts';
+import { LostOrdersController } from './backups/lost-orders.controller.ts';
 import { BackupScheduler } from './backups/scheduler.ts';
 import { Maintenance } from './backups/maintenance.ts';
 import { AlertConditions } from './alerts/conditions.ts';
@@ -77,6 +78,7 @@ import {
     BackupPasswordController,
     BackupsController,
     RestoresController,
+    LostOrdersController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },

@@ -724,10 +724,12 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T109. Recuperar órdenes perdidas.**
   - *Cubre:* RF-RES-07
   - *Depende:* T107
+  - *Estado (2026-10-24):* hecha. `GET /lost-orders`, `POST /lost-orders/:id/recover` y `/discard` (Apoderada). Recuperar es una transacción con el orden de bloqueos de DT-09: vuelve a registrar la orden con su id, su número, su secuencia, sus fechas, sus versiones, sus remolques, su firma, su cuño y su PDF original (los archivos siguen en la carpeta de datos), y valida el saldo; si no alcanza (o falta el buque, la DM, la asignación o un archivo), responde con el motivo, que queda en `last_error`, y la orden sigue en la lista. Descartar pide motivo y va a la bitácora. AL-19 se resuelve cuando no quedan pendientes. 2 pruebas de integración. Pendiente de la mutación del servidor.
 
 - [ ] **T110. Propiedad de restauración.**
   - *Cubre:* D12
   - *Depende:* T109
+  - *Estado (2026-10-24):* hecha. `restore.property.int.test.ts`: fast-check con secuencias de emitir, respaldar y restaurar a cualquier respaldo (con pg_dump y pg_restore reales); ningún número se repite y cada uno es mayor que todos los emitidos antes, en todas las corridas. Pocas corridas (5) y secuencias cortas, porque cada restauración tarda segundos.
 
 - [ ] **T111. Maquetas de P-24.**
   - *Depende:* T017
