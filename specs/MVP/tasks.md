@@ -733,6 +733,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 - [ ] **T111. Maquetas de P-24.**
   - *Depende:* T017
+  - *Estado (2026-10-24):* `docs/maquetas/T111-respaldos.html` (claro y oscuro, tres clases): estado de los respaldos, lista, contraseña, restauración por pasos, órdenes perdidas y confirmación de la numeración. Pendiente de aprobación del responsable.
 
 - [ ] **T112. (PP) Pantalla P-24 Respaldos y restauración.**
   - *Cubre:* HU-12, RF-RES
