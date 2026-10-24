@@ -17,7 +17,7 @@ import { files, officialSignatures, officialStamps } from '../db/schema/company.
 import { loadOrders, loadOrderVersions, loadOrderVersionTrailers } from '../db/schema/orders.ts';
 import { lostOrders } from '../db/schema/restores.ts';
 import { users } from '../db/schema/users.ts';
-import { allocations, customsDeclarations, vAllocationBalance, vessels } from '../db/schema/vessels.ts';
+import { allocations, customsDeclarations, vAllocationBalance } from '../db/schema/vessels.ts';
 import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
