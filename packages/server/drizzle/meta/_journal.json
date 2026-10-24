@@ -92,6 +92,20 @@
       "when": 1792782600406,
       "tag": "0012_backup_password",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792783221659,
+      "tag": "0013_backups",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792856631341,
+      "tag": "0014_restores",
+      "breakpoints": true
     }
   ]
 }

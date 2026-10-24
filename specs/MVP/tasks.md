@@ -710,6 +710,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T106. Respaldos por hora y diarios.**
   - *Cubre:* RF-RES-01, 02, 05, RNF-14
   - *Depende:* T105, T094, T052
+  - *Estado (2026-10-23):* hecha. `server/src/backups/`: `pg_dump -Fc` con prioridad baja y la contraseña por variable de entorno, con la conexión de mantenimiento (rol dueño); el volcado y la carpeta de archivos van en un paquete propio (`pack.ts`, sin depender de tar) cifrado en `backups/<fecha>-<tipo>.icbak` con su SHA-256; tabla `backups` (sin DELETE: al vencer la retención solo se quita el archivo). Programador cada minuto (DT-08): uno por hora en la jornada de La Habana (inicio y fin incluidos) y el diario a su hora, copiado a la carpeta externa; si la USB no está queda pendiente y se reintenta cada 30 min. Retención: 48 h los de cada hora y 30 los diarios (también en la carpeta externa). Respaldo manual (`POST /backups`) y lista (`GET /backups`). AL-12: sin contraseña, el último falló, más de 2 h sin respaldo bueno en la jornada (desde su inicio), sin carpeta externa o más de 24 h sin copia en ella. 17 pruebas del calendario, 3 del paquete y 6 de integración con pg_dump real (incluida RNF-14: se emiten órdenes mientras se respalda). Pendiente de la mutación del servidor.
 
 - [ ] **T107. Restauración y numeración.**
   - *Cubre:* RF-RES-03, 06, D12

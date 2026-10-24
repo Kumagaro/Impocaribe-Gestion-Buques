@@ -17,6 +17,8 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Tx } from '../audit/audit-log.ts';
 import { officialSignatures, officialStamps, systemSettings } from '../db/schema/company.ts';
 import { passwordState } from '../backups/backup-password.controller.ts';
+import { backupHealthRows } from '../backups/backup.ts';
+import { backupProblems } from '../backups/schedule.ts';
 import { devices } from '../db/schema/devices.ts';
 import { drafts, loadOrders } from '../db/schema/orders.ts';
 import {
@@ -31,8 +33,8 @@ import { Realtime } from '../sync/realtime.ts';
 import { ALERT_CONDITIONS_ENABLED, CLOCK, DB } from '../tokens.ts';
 import { openCondition, replicateAlerts, resolveMissing, type AlertInput } from './alerts.ts';
 
-/** Las que evalúa esta pasada. AL-12, 19, 20 y 21 llegan con respaldos, restauración y energía (F9, F10). */
-export const EVALUATED: AlertType[] = ['AL-01', 'AL-03', 'AL-08', 'AL-09', 'AL-16', 'AL-17', 'AL-18', 'AL-23'];
+/** Las que evalúa esta pasada. AL-19, 20 y 21 llegan con la restauración y la energía (F9, F10). */
+export const EVALUATED: AlertType[] = ['AL-01', 'AL-03', 'AL-08', 'AL-09', 'AL-12', 'AL-16', 'AL-17', 'AL-18', 'AL-23'];
 
 const DAY_MS = 86_400_000;
 /** AL-09: días sin órdenes. */
@@ -202,8 +204,28 @@ async function otherConditions(tx: Tx, now: Date): Promise<Wanted[]> {
       },
     ]);
 
-  // AL-23 · RF-RES-08: 90 días sin confirmar la contraseña de respaldo (aunque se haya aplazado al iniciar sesión).
+  // AL-12 · RF-RES-01, 05: sin contraseña de respaldo, el último falló, atrasado en la jornada o sin copia externa.
   const [settings] = await tx.select().from(systemSettings);
+  if (settings) {
+    const rows = await backupHealthRows(tx);
+    const problems = backupProblems(
+      {
+        passwordDefined: settings.backupPublicKey !== null,
+        lastStatus: rows.last?.status ?? null,
+        lastError: rows.last?.error ?? null,
+        lastOk: rows.lastOk,
+        externalDir: settings.externalBackupDir,
+        lastExternalCopy: rows.lastExternal,
+        since: settings.backupPasswordSetAt,
+        workdayStart: settings.workdayStart,
+        workdayEnd: settings.workdayEnd,
+      },
+      now,
+    );
+    for (const [key, title, detail] of problems) out.push([key, { type: 'AL-12', title, detail }]);
+  }
+
+  // AL-23 · RF-RES-08: 90 días sin confirmar la contraseña de respaldo (aunque se haya aplazado al iniciar sesión).
   if (settings && confirmationOverdue(passwordState(settings), now))
     out.push([
       'AL-23',

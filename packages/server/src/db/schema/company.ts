@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   bigint,
+  boolean,
   char,
   check,
   integer,
@@ -94,6 +95,8 @@ export const systemSettings = pgTable(
     backupPasswordConfirmedAt: timestamp('backup_password_confirmed_at', { withTimezone: true }),
     backupConfirmPostpones: smallint('backup_confirm_postpones').notNull().default(0),
     backupConfirmPostponedUntil: timestamp('backup_confirm_postponed_until', { withTimezone: true }),
+    /** T108 · RF-RES-03 (7): tras restaurar sin respaldo previo, no se emiten órdenes hasta confirmar la numeración. */
+    numberingConfirmationRequired: boolean('numbering_confirmation_required').notNull().default(false),
     rowVersion: integer('row_version').notNull().default(1),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },

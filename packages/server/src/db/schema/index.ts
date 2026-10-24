@@ -9,3 +9,5 @@ export * from './catalogs.ts';
 export * from './vessels.ts';
 export * from './orders.ts';
 export * from './alerts.ts';
+export * from './backups.ts';
+export * from './restores.ts';

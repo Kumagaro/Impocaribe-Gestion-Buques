@@ -189,7 +189,8 @@ beforeEach(async () => {
 
 describe('T092 · motor de alertas (RF-ALR-03, 05)', () => {
   it('una de condición no se repite mientras sigue abierta y se resuelve sola; cada cambio se replica', async () => {
-    expect(await evaluate()).toEqual({ opened: 1, resolved: 0 });
+    // AL-16 y AL-12 (sin contraseña de respaldo, RF-RES-05).
+    expect(await evaluate()).toEqual({ opened: 2, resolved: 0 });
     expect(await evaluate()).toEqual({ opened: 0, resolved: 0 });
     expect(await alertOf('AL-16')).toMatchObject({
       kind: 'condition',
@@ -202,7 +203,10 @@ describe('T092 · motor de alertas (RF-ALR-03, 05)', () => {
     expect(await alertOf('AL-16')).toMatchObject({ status: 'resolved', resolvedAt: '2026-08-29T14:00:00.000Z' });
     // AL-16 la ven A y O: audiencia de editores, una vez al abrirse y otra al resolverse.
     expect(
-      await q(`SELECT audience, payload->>'status' AS status FROM change_log WHERE entity_type = 'alert' ORDER BY seq`),
+      await q(
+        `SELECT audience, payload->>'status' AS status FROM change_log
+          WHERE entity_type = 'alert' AND payload->>'type' = 'AL-16' ORDER BY seq`,
+      ),
     ).toEqual([
       { audience: 'editors', status: 'open' },
       { audience: 'editors', status: 'resolved' },
@@ -370,7 +374,7 @@ describe('T094 · alertas por condición y tiempo', () => {
     clock.advance(24 * 3_600_000);
     await evaluate();
     await login();
-    expect(await seen('ana')).toEqual(['AL-08 open', 'AL-16 open']);
+    expect(await seen('ana')).toEqual(['AL-08 open', 'AL-12 open', 'AL-16 open']);
     expect(await seen('mario')).toEqual(['AL-08 open', 'AL-16 open']);
     expect((await alertOf('AL-08', 'mario')).targetUserId).toBe(
       (await q(`SELECT id FROM users WHERE username = 'mario'`))[0].id,
@@ -388,7 +392,7 @@ describe('T094 · alertas por condición y tiempo', () => {
     await q(`UPDATE vessels SET status = 'closed'`);
     await q(`UPDATE devices SET clock_offset_ms = 360000, last_seen_at = now() WHERE id = 'pc-mario'`);
     await evaluate();
-    expect(await seen('ana')).toEqual(['AL-17 open', 'AL-18 open']);
+    expect(await seen('ana')).toEqual(['AL-12 open', 'AL-17 open', 'AL-18 open']);
     expect(await alertOf('AL-17')).toMatchObject({
       title: 'Buque Eagle 1 con sobrante sin destino',
       detail: 'Quedan 100,000 t sin destino: asígnelas, trasládelas o regístrelas como pérdida.',

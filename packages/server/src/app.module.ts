@@ -8,6 +8,8 @@ import { AlertsController } from './alerts/alerts.controller.ts';
 import { ArchiveController } from './archive/archive.controller.ts';
 import { AuditController } from './audit/audit.controller.ts';
 import { BackupPasswordController } from './backups/backup-password.controller.ts';
+import { BackupsController } from './backups/backups.controller.ts';
+import { BackupScheduler } from './backups/scheduler.ts';
 import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
@@ -35,6 +37,9 @@ import { Realtime } from './sync/realtime.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import {
   ALERT_CONDITIONS_ENABLED,
+  BACKUPS_ENABLED,
+  MAINTENANCE_DB_URL,
+  PG_BIN,
   CLOCK,
   DATA_DIR,
   DB,
@@ -68,6 +73,7 @@ import {
     AuditController,
     ArchiveController,
     BackupPasswordController,
+    BackupsController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -80,6 +86,10 @@ import {
     DeclarationExpiry,
     { provide: ALERT_CONDITIONS_ENABLED, useValue: true },
     AlertConditions,
+    { provide: MAINTENANCE_DB_URL, useFactory: () => config().databaseUrl },
+    { provide: PG_BIN, useFactory: () => process.env.IMPOCARIBE_PG_BIN ?? '' },
+    { provide: BACKUPS_ENABLED, useValue: true },
+    BackupScheduler,
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

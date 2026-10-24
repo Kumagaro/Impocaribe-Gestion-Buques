@@ -11,7 +11,7 @@ import { listenForTests } from '../../test/listen.ts';
 import { createSuiteDb, type SuiteDb } from '../../test/suite-db.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
-import { ALERT_CONDITIONS_ENABLED, CLOCK, DEVICE_GUARD_ENABLED, DB } from '../tokens.ts';
+import { ALERT_CONDITIONS_ENABLED, BACKUPS_ENABLED, CLOCK, DEVICE_GUARD_ENABLED, DB } from '../tokens.ts';
 import { idempotencyRequest, purgeExpiredIdempotencyKeys, withIdempotency } from './idempotency.ts';
 
 // T015 · DT-22, RF-ORD-23, D15: una misma escritura enviada varias veces produce como máximo un efecto.
@@ -81,6 +81,8 @@ beforeAll(async () => {
     .useValue(db)
     // T094: sin la pasada de alertas en segundo plano (escribiría en la base mientras la prueba cierra la app).
     .overrideProvider(ALERT_CONDITIONS_ENABLED)
+    .useValue(false)
+    .overrideProvider(BACKUPS_ENABLED)
     .useValue(false)
     .compile();
   app = configureApp(moduleRef.createNestApplication({ logger: false, rawBody: true }));
