@@ -43,7 +43,8 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   await page.getByRole('button', { name: 'Crear Apoderada' }).click();
 
   const codes = page.getByRole('list', { name: 'Códigos de recuperación' }).getByRole('listitem');
-  await expect(codes).toHaveCount(8);
+  // Crear la Apoderada hace 9 argon2id de 64 MB (contraseña y 8 códigos): en un equipo modesto y ocupado pasa de 20 s.
+  await expect(codes).toHaveCount(8, { timeout: 90_000 });
   await expect(page.getByRole('button', { name: 'Terminar y entrar' })).toBeDisabled();
   await page.getByLabel('Los copié a mano').check();
   await page.getByRole('button', { name: 'Terminar y entrar' }).click();

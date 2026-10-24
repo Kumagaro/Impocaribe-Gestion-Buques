@@ -17,6 +17,7 @@ import { AlertsPanel, AlertsScreen } from '../screens/alerts/Alerts.screen';
 import { useAlertFeed } from '../screens/alerts/useAlertFeed';
 import { AuditScreen } from '../screens/audit/Audit.screen';
 import { BackupPasswordPrompt } from '../screens/backups/BackupPasswordPrompt';
+import { BackupsScreen } from '../screens/backups/Backups.screen';
 import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
 import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
@@ -125,6 +126,7 @@ export const appRoutes: RouteObject[] = [
               { path: '/borradores', handle: { title: 'Borradores' }, element: <DraftsScreen /> },
               { path: '/alertas', handle: { title: 'Alertas' }, element: <AlertsScreen /> },
               { path: '/bitacora', handle: { title: 'Bitácora' }, element: <AuditScreen /> },
+              { path: '/respaldos', handle: { title: 'Respaldos y restauración' }, element: <BackupsScreen /> },
               { path: '/buscar', handle: { title: 'Buscar' }, element: <SearchScreen /> },
               { path: '/ordenes', handle: { title: 'Órdenes' }, element: <OrderListScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },
