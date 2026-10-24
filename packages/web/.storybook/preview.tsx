@@ -14,6 +14,7 @@ import '../src/screens/alerts/alerts.css';
 import '../src/screens/audit/audit.css';
 import '../src/screens/dashboard/dashboard.css';
 import '../src/screens/search/search.css';
+import '../src/screens/backups/backups.css';
 import { MotionProvider } from '../src/motion/MotionProvider';
 import { DeviceClassProvider } from '../src/ui/device';
 import { installTokens } from '../src/ui/theme';
