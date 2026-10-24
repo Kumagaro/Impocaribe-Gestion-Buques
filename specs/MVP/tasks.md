@@ -750,6 +750,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T114. (PP) Pantalla P-26 Versiones y estado EST-07.** Incluye las maquetas de P-26 y P-27.
   - *Cubre:* RF-UPD-02 a 05
   - *Depende:* T113, T097
+  - *Estado (2026-10-24):* maqueta `docs/maquetas/T114-versiones.html` (claro y oscuro): P-26 por plataforma con la mínima, publicar con progreso, marcar la mínima con lo que pasará, la banda de AL-15 con «Actualizar ahora» y «Más tarde», la descarga con progreso, EST-07 en pantalla completa y P-27 nativa; aprobada por el responsable el 2026-10-24.
 
 - [ ] **T115. Electron: base**, con el transporte nativo (DT-19) y el descubrimiento (DNS-SD, difusión y subred).
   - *Cubre:* DT-02, DT-03, RF-CON-01
