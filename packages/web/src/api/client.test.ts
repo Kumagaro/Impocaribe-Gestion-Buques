@@ -59,6 +59,23 @@ describe('cabeceras de cada petición', () => {
     });
   });
 
+  it('T113: la app dice su plataforma, de la que depende la versión mínima', async () => {
+    const requests: RequestInit[] = [];
+    const client = createApiClient({
+      baseUrl: 'https://servidor:8443/api/v1',
+      appVersion: '1.2.0',
+      appPlatform: 'android',
+      getToken: async () => null,
+      now: () => DEVICE_NOW,
+      transport: async (_url, init) => {
+        requests.push(init);
+        return respond(200, { number: '00431', balance: '593.050' });
+      },
+    });
+    await client.request(getDeclaration, { params: { id: '0192a3b4' } });
+    expect(headers(requests[0]!)['x-app-platform']).toBe('android');
+  });
+
   it('una escritura envía el cuerpo JSON y una Idempotency-Key nueva (UUID)', async () => {
     const { client, requests } = setup(respond(201, { number: 'EAGLE1-2026-V1-0001' }));
     await client.request(issueOrder, { body: { tons: '17.280' } });

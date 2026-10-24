@@ -29,6 +29,7 @@ const CHANNELS = [
   'impocaribe_session',
   'impocaribe_device',
   'impocaribe_alert',
+  'impocaribe_release',
 ] as const;
 
 /** Lo que manda el trigger de la migración 0011 al insertar una alerta. */
@@ -38,6 +39,13 @@ interface AlertNotice {
   title: string;
   roles: string[];
   target: string | null;
+}
+
+/** Lo que manda NOTIFY al publicar una versión o marcar la mínima (updates.controller.ts). */
+interface ReleaseNotice {
+  platform: 'windows' | 'android';
+  version: string;
+  mandatory: boolean;
 }
 
 interface Client {
@@ -167,10 +175,13 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
   private dispatch(channel: string, payload: string): void {
     if (channel === 'impocaribe_sync') for (const fn of this.syncListeners) fn();
     const alert = channel === 'impocaribe_alert' ? (JSON.parse(payload) as AlertNotice) : null;
+    // T113 · AL-15: una versión nueva (o la mínima) de una app; cada app mira si es la suya.
+    const release = channel === 'impocaribe_release' ? (JSON.parse(payload) as ReleaseNotice) : null;
     for (const c of this.clients) {
       // RF-ALR-05: solo a quien la ve; también al token de dispositivo (DT-05). RF-ALR-02: tipo y referencia.
       if (alert && (alert.roles.includes(c.role) || alert.target === c.userId))
         this.send(c, { type: 'alert.created', id: alert.id, alertType: alert.type, title: alert.title });
+      else if (release && c.kind === 'app') this.send(c, { type: 'app.update', ...release });
       else if (channel === 'impocaribe_sync' && c.kind === 'app')
         this.send(c, { type: 'sync.available', seq: Number(payload) });
       else if (channel === 'impocaribe_epoch' && c.kind === 'app') this.send(c, { type: 'sync.epoch_changed' });

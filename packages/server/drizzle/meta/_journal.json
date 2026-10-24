@@ -106,6 +106,13 @@
       "when": 1792856631341,
       "tag": "0014_restores",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792867935903,
+      "tag": "0015_app_releases",
+      "breakpoints": true
     }
   ]
 }

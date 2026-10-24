@@ -10,6 +10,8 @@ describe('acciones de la bitácora', () => {
     ['truck.create', 'Crear camión'],
     ['driver.edit', 'Editar chofer'],
     ['client.borrar', 'client.borrar'],
+    ['backup.restore', 'Restaurar un respaldo'],
+    ['release.publish', 'Publicar una versión de la app'],
     ['backup.run', 'backup.run'],
   ])('%s → %s', (action, label) => {
     expect(auditActionLabel(action)).toBe(label);
@@ -22,7 +24,9 @@ describe('acciones de la bitácora', () => {
     ['session.login', 'access'],
     ['settings.edit', 'company'],
     ['alert.attend', 'alert'],
-    ['backup.run', null],
+    ['backup.restore', 'system'],
+    ['release.min_supported', 'system'],
+    ['otra.cosa', null],
   ])('%s es del grupo %s', (action, group) => {
     expect(auditGroupOf(action)).toBe(group);
   });

@@ -13,6 +13,8 @@ import { RestoresController } from './backups/restores.controller.ts';
 import { LostOrdersController } from './backups/lost-orders.controller.ts';
 import { BackupScheduler } from './backups/scheduler.ts';
 import { Maintenance } from './backups/maintenance.ts';
+import { AppVersions } from './updates/app-versions.ts';
+import { UpdatesController } from './updates/updates.controller.ts';
 import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
@@ -79,6 +81,7 @@ import {
     BackupsController,
     RestoresController,
     LostOrdersController,
+    UpdatesController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
@@ -96,6 +99,7 @@ import {
     { provide: BACKUPS_ENABLED, useValue: true },
     BackupScheduler,
     Maintenance,
+    AppVersions,
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

@@ -184,6 +184,7 @@ export class AppSession {
     return createApiClient({
       baseUrl: `${this.platform.serverScheme ?? 'https'}://${address}:${port}/api/v1`,
       appVersion: this.appVersion,
+      appPlatform: this.platform.deviceInfo().platform,
       getToken: async () => this.state.session?.token ?? null,
       getDevice,
       now: this.clock,

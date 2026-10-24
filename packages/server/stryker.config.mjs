@@ -29,6 +29,8 @@ export default {
     'src/alerts/conditions.ts',
     // T105 a T110: respaldos, restauración y numeración.
     'src/backups/**/*.ts',
+    // T113: versiones de las apps y versión mínima.
+    'src/updates/**/*.ts',
     '!src/**/*.test.ts',
   ],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.

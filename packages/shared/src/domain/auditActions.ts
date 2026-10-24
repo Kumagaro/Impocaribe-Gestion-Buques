@@ -9,6 +9,7 @@ export const AUDIT_GROUPS = {
   access: 'Acceso y usuarios',
   company: 'Empresa y configuración',
   alert: 'Alertas',
+  system: 'Respaldos y versiones',
 } as const;
 export type AuditGroup = keyof typeof AUDIT_GROUPS;
 
@@ -22,6 +23,7 @@ export const AUDIT_GROUP_PREFIXES: Record<AuditGroup, readonly string[]> = {
   access: ['auth.', 'session.', 'user.', 'device.', 'setup.'],
   company: ['company.', 'settings.'],
   alert: ['alert.'],
+  system: ['backup.', 'release.'],
 };
 
 const LABELS: Record<string, string> = {
@@ -29,6 +31,8 @@ const LABELS: Record<string, string> = {
   'order.correct': 'Corregir orden',
   'order.void': 'Anular orden',
   'order.download': 'Descargar orden',
+  'order.recover': 'Recuperar orden perdida',
+  'order.lost.discard': 'Descartar orden perdida',
   'draft.save': 'Guardar borrador',
   'draft.sync': 'Subir borradores',
   'draft.edit': 'Editar borrador',
@@ -76,6 +80,14 @@ const LABELS: Record<string, string> = {
   'settings.edit': 'Cambiar la configuración',
   'settings.installation_code': 'Cambiar el código de instalación',
   'alert.attend': 'Atender alerta',
+  'backup.manual': 'Respaldo manual',
+  'backup.password': 'Definir la contraseña de respaldo',
+  'backup.password.confirm': 'Confirmar la contraseña de respaldo',
+  'backup.password.postpone': 'Aplazar la confirmación de la contraseña de respaldo',
+  'backup.restore': 'Restaurar un respaldo',
+  'backup.numbering': 'Confirmar la numeración',
+  'release.publish': 'Publicar una versión de la app',
+  'release.min_supported': 'Marcar la versión mínima',
 };
 
 const CATALOG: Record<string, string> = {

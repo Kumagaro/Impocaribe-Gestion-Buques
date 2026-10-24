@@ -12,5 +12,6 @@ import './orders';
 import './alerts';
 import './consultas';
 import './backups';
+import './updates';
 
 export { apiRegistry, type Endpoint } from '../client';

@@ -81,5 +81,12 @@ export const wsServerMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sync.epoch_changed') }),
   /** RF-ALR-01: aviso inmediato; el detalle llega también por sincronización. */
   z.object({ type: z.literal('alert.created'), id: z.uuid(), alertType: z.string(), title: z.string() }),
+  /** T113 · AL-15: se publicó una versión de la app; `mandatory` si además es la mínima compatible. */
+  z.object({
+    type: z.literal('app.update'),
+    platform: z.enum(['windows', 'android']),
+    version: z.string(),
+    mandatory: z.boolean(),
+  }),
 ]);
 export type WsServerMessage = z.infer<typeof wsServerMessageSchema>;

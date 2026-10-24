@@ -50,6 +50,8 @@ export function defineEndpoint<In extends ZodType = ZodType, Out extends ZodType
 export interface ApiClientOptions {
   baseUrl: string;
   appVersion: string;
+  /** T113: la mínima compatible depende de la plataforma (X-App-Platform); sin ella vale la del servidor. */
+  appPlatform?: 'windows' | 'android';
   getToken(): Promise<string | null>;
   /** El dispositivo emparejado y su secreto (DT-24); null mientras no está emparejado. */
   getDevice?(): Promise<{ id: string; secret: string } | null>;
@@ -100,6 +102,7 @@ export function createApiClient(options: ApiClientOptions) {
     const time = String(nextTime());
     const h: Record<string, string> = {
       'X-App-Version': options.appVersion,
+      ...(options.appPlatform ? { 'X-App-Platform': options.appPlatform } : {}),
       'X-Device-Time': time,
     };
     const device = await options.getDevice?.();

@@ -180,5 +180,8 @@ export function useScenario(clock: ManualClock, start: string) {
     await login();
   }, 60_000);
 
-  return { s, call, post, get, q, login, seal, forOrders };
+  /** El token de la sesión de cada persona (para el WebSocket o una petición armada a mano). */
+  const token = (who: string) => tokens[who]!;
+
+  return { s, call, post, get, q, login, seal, forOrders, token };
 }

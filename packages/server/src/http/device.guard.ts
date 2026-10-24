@@ -20,8 +20,9 @@ export interface DeviceRegistry {
 export type DeviceRequest = Request & { device?: { id: string } };
 
 // Públicas sin dispositivo: estado, descubrimiento y emparejamiento (DT-24). /local/* tampoco lo pide: solo atiende a
-// 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola.
-const EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local)(\/|$)/;
+// 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola. T113: tampoco la consulta y la
+// descarga de versiones, que P-27 usa antes de que la interfaz arranque.
+const EXEMPT = /^\/api\/v1\/((health|discovery|pairing|local)(\/|$)|updates\/(check|[^/]+\/[^/]+\/download)$)/;
 const WINDOW_MS = 5 * 60_000;
 // RF-CON-10: aquí se mide el desfase, así que es la única ruta que se acepta con la hora fuera de la ventana. La firma
 // y el rechazo de repeticiones se comprueban igual.

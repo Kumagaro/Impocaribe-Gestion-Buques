@@ -11,3 +11,4 @@ export * from './orders.ts';
 export * from './alerts.ts';
 export * from './backups.ts';
 export * from './restores.ts';
+export * from './updates.ts';

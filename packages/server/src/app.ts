@@ -7,7 +7,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
 import { Maintenance } from './backups/maintenance.ts';
 import { HttpErrorFilter } from './http/http-error.filter.ts';
-import { MIN_APP_VERSION } from './tokens.ts';
+import { AppVersions } from './updates/app-versions.ts';
 
 // Orígenes de las apps: Electron (app://), y el WebView de Capacitor (plan §6).
 const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://localhost'];
@@ -38,10 +38,17 @@ export function configureApp(app: INestApplication): INestApplication {
   app.use(IMAGE_ROUTES, function imageBodyParser(req: Request, res: Response, next: NextFunction) {
     imageJson(req, res, next);
   });
-  const minVersion = app.get<string>(MIN_APP_VERSION);
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  // T113: la mínima es la de la plataforma de la app (X-App-Platform), que una Apoderada puede subir (RF-UPD-01).
+  const versions = app.get(AppVersions);
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'OPTIONS' || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();
     const version = req.header('x-app-version') ?? '';
+    let minVersion: string;
+    try {
+      minVersion = await versions.minFor(req.header('x-app-platform'));
+    } catch (err) {
+      return next(err);
+    }
     if (!isBelowMinVersion(version, minVersion)) return next();
     const message = version
       ? `Esta versión de la app (${version}) ya no es compatible. Actualícela a la ${minVersion} o superior.`
