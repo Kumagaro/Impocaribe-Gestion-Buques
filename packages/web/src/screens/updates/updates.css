@@ -162,3 +162,7 @@
   margin: 6px 0 0;
   padding-left: 18px;
 }
+.releases-table td.releases-notes {
+  min-width: 24ch;
+  white-space: normal;
+}

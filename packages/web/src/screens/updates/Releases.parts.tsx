@@ -1,6 +1,7 @@
 // T114 · P-26 Versiones de la app (maqueta T114): la versión de este dispositivo, las versiones por plataforma (tabla en
 // TAB y ESC, tarjetas en TEL) con la mínima y sus novedades, publicar (diálogo; hoja en TEL) y marcar la mínima con
 // lo que pasará.
+import { havanaDateTime } from '@impocaribe/shared';
 import { PLATFORM_LABELS, RELEASE_PLATFORMS, type ReleaseDto } from '@impocaribe/shared/validation';
 import { CloudOff, Upload } from 'lucide-react';
 import { useRef } from 'react';
@@ -12,15 +13,9 @@ import { Badge, EmptyState, ErrorState, Notice, Skeleton } from '../../ui/presen
 import { blocked } from '../catalogs/CatalogLayout';
 import type { ReleasesModel } from './useReleases';
 
-const WHEN = new Intl.DateTimeFormat('es-CU', {
-  timeZone: 'America/Havana',
-  day: '2-digit',
-  month: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-const when = (iso: string) => WHEN.format(new Date(iso)).replace(',', '');
+/** «02/10 09:05»: el día y el mes con dos cifras (es-CU no las rellena sin el año). */
+const dropYear = (s: string) => `${s.slice(0, 5)}${s.slice(10)}`;
+const when = (iso: string) => dropYear(havanaDateTime(new Date(iso)));
 const size = (b: number) => `${(b / 1_048_576).toFixed(1).replace('.', ',')} MB`;
 const devices = (n: number) => (n === 1 ? '1 dispositivo' : `${n} dispositivos`);
 

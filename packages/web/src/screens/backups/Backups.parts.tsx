@@ -1,7 +1,7 @@
 // T112 · P-24 Respaldos y restauración (maqueta T111): el estado arriba, las órdenes perdidas mientras queden, la lista
 // de respaldos con «Restaurar» (tabla en TAB y ESC, tarjetas en TEL), la contraseña de respaldo (F-16), la restauración
 // por pasos y la confirmación de la numeración.
-import { CONFIRM_EVERY_DAYS, havanaDate } from '@impocaribe/shared';
+import { CONFIRM_EVERY_DAYS, havanaDate, havanaDateTime } from '@impocaribe/shared';
 import { RESTORE_WORD, type BackupDto, type LostOrderDto } from '@impocaribe/shared/validation';
 import { CloudOff } from 'lucide-react';
 import { Button, PasswordField, TextField } from '../../ui/controls';
@@ -16,11 +16,12 @@ import type { BackupsModel } from './useBackups';
 const fmt = (opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('es-CU', { timeZone: 'America/Havana', hourCycle: 'h23', ...opts });
 const HOUR = fmt({ hour: '2-digit', minute: '2-digit' });
-const SHORT = fmt({ day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const LONG = fmt({ day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const DAY = fmt({ day: '2-digit', month: '2-digit', year: 'numeric' });
 const clean = (s: string) => s.replace(',', '');
-const short = (iso: string) => clean(SHORT.format(new Date(iso)));
+/** «02/10 09:05»: el día y el mes con dos cifras (es-CU no las rellena sin el año). */
+const dropYear = (s: string) => `${s.slice(0, 5)}${s.slice(10)}`;
+const short = (iso: string) => dropYear(havanaDateTime(new Date(iso)));
 const long = (iso: string) => clean(LONG.format(new Date(iso)));
 const day = (d: Date) => DAY.format(d);
 
