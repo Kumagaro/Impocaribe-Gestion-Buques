@@ -807,6 +807,25 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Depende:* T087, T114, T036
   - *Pruebas:* con un WebView 86 simulado se muestra P-27; con 87 arranca la interfaz.
   - *Decisiones del responsable (2026-10-26):* (1) la app Android usa el mismo puente nativo que la de escritorio (los canales de `NATIVE_CHANNELS`, con el mismo filtro de SQL) implementado en un plugin propio, con la copia local en SQLCipher (`sqlcipher-android`) en lugar de `@capacitor-community/sqlite`; (2) el QR se lee con ML Kit con el modelo incluido en el APK (no depende de Play Store, R-10).
+  - *Estado (2026-10-26):* hecha.
+    - **Puente nativo** (plugin `ImpocaribeNative`, `nativo/`): los mismos canales que la PC; los bytes viajan como `{ $bytes: base64 }` (`web/src/platform/capacitor-bridge.ts`). La interfaz arranca con el puente que encuentre (Electron o Capacitor) en `main.tsx`.
+      - transporte con OkHttp que verifica la identidad del servidor como en la PC (DT-18, `ServerIdentity`, portada a Java);
+      - descubrimiento con `NsdManager` y `MulticastLock`, difusión UDP, sondeo y subred;
+      - almacenamiento seguro con una clave AES-GCM del Keystore;
+      - copia local en SQLCipher con el mismo filtro de SQL que la PC (`SqlGuard`).
+    - **P-27 nativa:** `EntryActivity` comprueba el WebView antes de cargar la interfaz; si es anterior a 87 abre `WebViewOutdatedActivity`, que busca el servidor (el emparejado, si lo hay), descarga el instalador publicado con su progreso y su SHA-256, y solo lo abre si es el paquete esperado firmado por el mismo fabricante que el WebView instalado (`ApkTrust`). El nombre del archivo es fijo: el servidor no decide la ruta.
+    - **QR:** `QrScanActivity` con CameraX y ML Kit; pide el permiso de cámara la primera vez. Si se deniega, la interfaz dice que se empareje con el código; si se cancela, devuelve nada.
+    - **Pruebas:** 19 JUnit (identidad con los certificados de prueba, filtro de SQL, cálculo de la subred, comprobación del WebView y su proveedor). En el emulador de Android 14:
+      - el puente: almacenamiento seguro, SQLCipher con un BLOB de ida y vuelta, filtro, lista de canales y rechazo sin servidor;
+      - P-01 en formato teléfono;
+      - P-27 con WebView 86 simulado y la app con 87; sin servidor, el error y «Volver a intentarlo»;
+      - el QR: permiso denegado, cámara abierta y cancelar.
+    - **Pendiente, con su tarea:**
+      - leer un QR real con la cámara (T123, en un teléfono);
+      - `file.save`, `notify` y `update.install` responden «Todavía no está disponible» (T119 a T121);
+      - la versión de la app sale aún de `versionName` 1.0 (T121);
+      - el APK de depuración pesa 48,5 MB con todas las arquitecturas.
+    - **Sin implementar en ningún cascarón y sin tarea que lo recoja:** el estado de la red que muestra P-30 (`discovery.lan()`, opcional, T048). Sin él, P-30 dice si el servidor responde, pero no distingue «sin red» ni «la red aísla a los equipos» (aislamiento de clientes del wifi): los dos salen como «El servidor no responde».
 
 - [ ] **T119. Android: servicio de alertas.**
   - *Cubre:* RF-ALR-01, RNF-02
