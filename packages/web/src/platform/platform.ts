@@ -98,6 +98,8 @@ export interface UpdatePackage {
   url: string;
   version: string;
   sha256: string;
+  /** DT-18: se descarga del servidor emparejado, con la identidad verificada. */
+  server: ExpectedServer;
 }
 
 export interface Platform {

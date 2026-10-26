@@ -23,6 +23,7 @@ const PRELOAD_CHANNELS: readonly NativeChannel[] = [
   'file.save',
   'notify',
   'secureScreen',
+  'update.install',
 ];
 const allowed = new Set<string>(PRELOAD_CHANNELS);
 
@@ -36,6 +37,10 @@ const bridge: NativeBridge = {
     ipcRenderer.on('native:socket', (_e, id: number, event: NativeSocketEvent, data?: string) =>
       listener(id, event, data),
     );
+  },
+  onUpdateProgress: (listener) => {
+    ipcRenderer.removeAllListeners('native:update-progress');
+    ipcRenderer.on('native:update-progress', (_e, received: number, total: number) => listener(received, total));
   },
 };
 

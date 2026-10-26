@@ -9,12 +9,16 @@
     "start": "electron .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "e2e": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && playwright test"
+    "e2e": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && playwright test",
+    "instalador": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs ligero",
+    "instalador:completo": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs completo"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/multicast-dns": "7.2.4",
     "@types/ws": "^8.18.2",
     "electron": "^44.7.0",
+    "electron-builder": "^26.18.0",
     "ws": "8.22.0"
   },
   "dependencies": {

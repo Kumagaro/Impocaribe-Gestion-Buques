@@ -21,6 +21,7 @@ export const NATIVE_CHANNELS = [
   'file.save',
   'notify',
   'secureScreen',
+  'update.install',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 
@@ -59,4 +60,13 @@ export interface NativeBridge {
   invoke(channel: NativeChannel, ...args: unknown[]): Promise<unknown>;
   /** Los eventos de los WebSocket abiertos con `ws.open`, por su número. */
   onSocket(listener: (id: number, event: NativeSocketEvent, data?: string) => void): void;
+  /** T117: el avance de la descarga de una actualización (`update.install`). */
+  onUpdateProgress(listener: (received: number, total: number) => void): void;
+}
+
+/** T117 · RF-UPD-05: la versión publicada que se descarga e instala. */
+export interface NativeUpdate {
+  url: string;
+  version: string;
+  sha256: string;
 }

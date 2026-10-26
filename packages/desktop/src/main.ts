@@ -4,6 +4,7 @@
 // SQLCipher y la bandeja: cerrar la ventana la oculta y las alertas siguen llegando (RF-ALR-01).
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, Notification, protocol, safeStorage, Tray } from 'electron';
 import type { NativeDeviceInfo, NativeSocketEvent } from '@impocaribe/shared';
+import { spawn } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
@@ -15,10 +16,13 @@ import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
 import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
+import { downloadUpdate, installerPath } from './system/updater.ts';
 
-// shortcut: build de web en el monorepo; el instalador (T117) lo empaqueta junto a la app.
-const webDist = fileURLToPath(new URL('../../web/dist', import.meta.url));
-// El logo (generado por pnpm --filter @impocaribe/web brand-icons); el .ico del instalador llega con T117.
+// T117: instalada, la interfaz va en los recursos de la app (extraResources); en desarrollo, el build de web del monorepo.
+const webDist = app.isPackaged
+  ? join(process.resourcesPath, 'web')
+  : fileURLToPath(new URL('../../web/dist', import.meta.url));
+// El logo (generado por pnpm --filter @impocaribe/web brand-icons), dentro de la app.
 const icon = fileURLToPath(new URL('../resources/icon.png', import.meta.url));
 const preload = fileURLToPath(new URL('./preload.cjs', import.meta.url));
 /** Solo para probar contra un servidor sin TLS (IMPOCARIBE_TLS=off); la app instalada siempre usa HTTPS. */
@@ -90,6 +94,20 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
+      // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y abre el instalador (que pide la
+      // confirmación del usuario); la app se cierra para que pueda reemplazarla.
+      installUpdate: async (update, server) => {
+        const file = await downloadUpdate(
+          update.url,
+          server,
+          update.sha256,
+          installerPath(join(data, 'actualizaciones'), update.version),
+          (received, total) => window?.webContents.send('native:update-progress', received, total),
+        );
+        spawn(file, [], { detached: true, stdio: 'ignore' }).unref();
+        quitting = true;
+        app.quit();
+      },
     });
     app.on('before-quit', () => {
       transport.closeAll();

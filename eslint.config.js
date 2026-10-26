@@ -79,6 +79,9 @@ export default tseslint.config(
       '**/test-results/**',
       '**/playwright-report/**',
       'packages/android/android/**',
+      // T117: los instaladores generados y el server-bundle que arma T125.
+      'packages/desktop/release/**',
+      'packages/desktop/server-bundle/**',
       'docs/referencia/**',
       // Grafo de engram: artefactos generados, fuera del repositorio.
       '.engram/**',
@@ -92,8 +95,8 @@ export default tseslint.config(
     rules: { 'no-empty-pattern': 'off' },
   },
   {
-    // Archivos de configuración que se ejecutan en Node
-    files: ['**/*.config.{js,mjs}'],
+    // Archivos de configuración y scripts que se ejecutan en Node
+    files: ['**/*.config.{js,mjs}', 'packages/*/scripts/**/*.mjs'],
     languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
   },
   {

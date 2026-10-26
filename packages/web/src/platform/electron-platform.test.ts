@@ -10,6 +10,7 @@ const SERVER = { serverId: '7f3c2a10-1b2c-4d5e-8f90-abcdef123456', caFingerprint
 function fakeBridge(reply: (channel: string, args: unknown[]) => unknown = () => undefined) {
   const calls: [string, unknown[]][] = [];
   let socketListener: (id: number, event: NativeSocketEvent, data?: string) => void = () => undefined;
+  let progressListener: (received: number, total: number) => void = () => undefined;
   const bridge: NativeBridge = {
     info: { platform: 'windows', appVersion: '1.4.0', smallestWidthDp: 1024, name: 'PC-OFICINA' },
     invoke: async (channel, ...args) => {
@@ -17,8 +18,14 @@ function fakeBridge(reply: (channel: string, args: unknown[]) => unknown = () =>
       return reply(channel, args);
     },
     onSocket: (l) => (socketListener = l),
+    onUpdateProgress: (l) => (progressListener = l),
   };
-  return { bridge, calls, emit: (id: number, e: NativeSocketEvent, d?: string) => socketListener(id, e, d) };
+  return {
+    bridge,
+    calls,
+    emit: (id: number, e: NativeSocketEvent, d?: string) => socketListener(id, e, d),
+    progress: (r: number, t: number) => progressListener(r, t),
+  };
 }
 
 describe('createElectronPlatform', () => {
@@ -35,7 +42,7 @@ describe('createElectronPlatform', () => {
       ['http', ['https://192.168.1.20:8443/api/v1/health', { method: 'GET', headers: { A: 'b' }, body: null }, SERVER]],
     ]);
     expect(p.deviceInfo().name).toBe('PC-OFICINA');
-    expect(p.installUpdate).toBeUndefined();
+    expect(p.serverScheme).toBe('https');
   });
 
   it('un multipart se envía en bytes con su límite en el Content-Type', async () => {
@@ -92,5 +99,17 @@ describe('createElectronPlatform', () => {
       'ROLLBACK',
       'SELECT count(*) AS n FROM t',
     ]);
+  });
+
+  it('T117: instalar pide al proceso principal la versión con su huella, al servidor emparejado, y avisa el progreso', async () => {
+    const { bridge, calls, progress } = fakeBridge(() => {
+      progress(1024, 4096);
+      return undefined;
+    });
+    const seen: [number, number][] = [];
+    const update = { url: 'https://s/api/v1/updates/windows/1.4.0/download', version: '1.4.0', sha256: 'a'.repeat(64) };
+    await createElectronPlatform(bridge).installUpdate!({ ...update, server: SERVER }, (r, t) => seen.push([r, t]));
+    expect(calls).toEqual([['update.install', [update, SERVER]]]);
+    expect(seen).toEqual([[1024, 4096]]);
   });
 });

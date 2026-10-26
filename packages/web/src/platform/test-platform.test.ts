@@ -72,7 +72,12 @@ describe('implementación de prueba de platform', () => {
     await platform.notify({ title: 'Alerta nueva', body: 'Revise la app' });
     await platform.saveFile('EAGLE1-2026-V1-0001.pdf', new Uint8Array([37, 80, 68, 70]));
     await platform.secureScreen(true);
-    const update = { url: 'https://servidor/updates/android/1.2.0/download', version: '1.2.0', sha256: 'a'.repeat(64) };
+    const update = {
+      url: 'https://servidor/updates/android/1.2.0/download',
+      version: '1.2.0',
+      sha256: 'a'.repeat(64),
+      server: { serverId: 'srv', caFingerprint: 'AB' },
+    };
     await platform.installUpdate!(update);
     expect(platform.calls).toEqual([
       { method: 'notify', args: [{ title: 'Alerta nueva', body: 'Revise la app' }] },

@@ -10,13 +10,24 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 let app: ElectronApplication;
+/**
+ * T117: con IMPOCARIBE_APP_EXE, la app empaquetada (release/ligero/win-unpacked/impocaribe.exe); si no, el código
+ * compilado con el Electron del monorepo.
+ */
+const packaged = process.env.IMPOCARIBE_APP_EXE;
+const launch = () =>
+  packaged
+    ? { executablePath: packaged, args: [`--user-data-dir=${profile}`] }
+    : {
+        executablePath: createRequire(import.meta.url)('electron') as string,
+        args: ['.', `--user-data-dir=${profile}`],
+      };
 let profile = '';
 
 test.beforeAll(async () => {
   profile = mkdtempSync(join(tmpdir(), 'impocaribe-electron-'));
   app = await _electron.launch({
-    executablePath: createRequire(import.meta.url)('electron') as string,
-    args: ['.', `--user-data-dir=${profile}`],
+    ...launch(),
     cwd: root,
     // VS Code deja ELECTRON_RUN_AS_NODE=1 en el entorno de sus terminales: con ella, Electron arranca como Node.
     env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE')) as Record<
@@ -96,8 +107,7 @@ test('T116 · cerrar la ventana la oculta en la bandeja y la interfaz sigue viva
 test('una segunda apertura no crea otra ventana', async () => {
   const second = await _electron
     .launch({
-      executablePath: createRequire(import.meta.url)('electron') as string,
-      args: ['.', `--user-data-dir=${profile}`],
+      ...launch(),
       cwd: root,
       env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE')) as Record<
         string,

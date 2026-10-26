@@ -3,7 +3,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { sampleOf } from '../../../test/fake-server';
-import { renderScreen } from '../../../test/screen';
+import { renderScreen, TEST_PAIRING } from '../../../test/screen';
 import { updatesApi } from '../../api/endpoints/updates';
 import type { StoredSession } from '../../session/app-session';
 import { useAlertFeed } from '../alerts/useAlertFeed';
@@ -82,6 +82,8 @@ describe('Actualizaciones de la app (RF-UPD-02 a 05)', () => {
       url: 'https://servidor.test:443/api/v1/updates/windows/1.4.0/download',
       version: '1.4.0',
       sha256: 'b'.repeat(64),
+      // T117: del servidor emparejado, con su identidad verificada.
+      server: { serverId: TEST_PAIRING.serverId, caFingerprint: TEST_PAIRING.caFingerprint },
     });
     await act(async () => finish());
   });

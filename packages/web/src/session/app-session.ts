@@ -76,7 +76,10 @@ export class AppSession {
     const address = this.state.pairing?.lastAddress;
     if (!this.platform.installUpdate || !address) throw new Error('Esta app no se puede actualizar desde aquí.');
     const url = `${this.platform.serverScheme ?? 'https'}://${address.address}:${address.port}${update.downloadUrl}`;
-    await this.platform.installUpdate({ url, version: update.version, sha256: update.sha256 }, onProgress);
+    await this.platform.installUpdate(
+      { url, version: update.version, sha256: update.sha256, server: this.expected() },
+      onProgress,
+    );
   }
 
   subscribe = (listener: () => void): (() => void) => {

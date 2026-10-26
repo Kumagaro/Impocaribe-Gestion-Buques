@@ -1,6 +1,6 @@
 // T115 · plan §10.1: cada canal del puente (NATIVE_CHANNELS) con su servicio del proceso principal. Los argumentos
 // llegan del renderizador: se comprueban aquí, no se confía en ellos.
-import type { NativeChannel, NativeRequest, NativeServer } from '@impocaribe/shared';
+import type { NativeChannel, NativeRequest, NativeServer, NativeUpdate } from '@impocaribe/shared';
 import type { LocalDatabases, SqlValue } from './database.ts';
 import type { Announcement } from './discovery.ts';
 import type { SecureStore } from './secure-storage.ts';
@@ -19,6 +19,8 @@ export interface NativeServices {
   saveFile(name: string, data: Uint8Array): Promise<void>;
   notify(title: string, body: string): void;
   secureScreen(enabled: boolean): void;
+  /** T117: descarga, comprueba e instala la versión (la app se cierra para instalarla). */
+  installUpdate(update: NativeUpdate, server: NativeServer): Promise<void>;
 }
 
 type Handler = (...args: unknown[]) => unknown;
@@ -65,6 +67,19 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
       s.notify(str(title, 'el título'), str(body, 'el texto'));
     },
     secureScreen: (enabled) => s.secureScreen(enabled === true),
+    'update.install': (u, srv) => {
+      const update = u as Partial<NativeUpdate>;
+      const expected = server(srv);
+      if (!expected) throw new Error('Falta la identidad del servidor.');
+      return s.installUpdate(
+        {
+          url: str(update.url, 'la dirección'),
+          version: str(update.version, 'la versión'),
+          sha256: str(update.sha256, 'la huella'),
+        },
+        expected,
+      );
+    },
   };
 }
 
