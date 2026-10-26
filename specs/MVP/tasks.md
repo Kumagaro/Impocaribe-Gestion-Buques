@@ -830,6 +830,28 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T119. Android: servicio de alertas.**
   - *Cubre:* RF-ALR-01, RNF-02
   - *Depende:* T118, T043
+  - *Estado (2026-10-26):* hecha.
+    - **Servicio en primer plano** (`nativo/AlertService`, tipo `specialUse` desde Android 14; en Android 7, `startService` y la notificación clásica):
+      - abre su propio WebSocket con el servidor emparejado (el transporte que verifica la identidad, DT-18) y el token de dispositivo (DT-05), que solo recibe alertas y revocaciones;
+      - aviso fijo «Impocaribe conectado» y una notificación por alerta, con el tipo y la referencia (RF-ALR-02), en el canal «Alertas»; tocarla abre la app;
+      - se reconecta con espera creciente (2 a 30 s) y busca el servidor por su última dirección o por difusión, como P-27 (`PairedServer`);
+      - vuelve a arrancar al encender el teléfono y tras actualizar la app (`BootReceiver`);
+      - se detiene y borra su token y sus avisos al cerrar sesión, o si el servidor rechaza o revoca el token.
+    - **Interfaz:** al arrancar la sincronización, si el servicio no tiene token pide uno (`POST /auth/device-token`; pedirlo en cada arranque llenaría la bitácora) y se lo pasa con los nombres de las alertas (canales `alerts.start` y `alerts.stop`). En Android `notify` no hace nada: notifica el servicio, también con la app abierta, para que no salga dos veces.
+    - **Permisos:** notificaciones (Android 13 o superior; sin él el servicio sigue y las alertas se ven en el contador) y, una sola vez, la exclusión de la optimización de batería (plan §10.2).
+    - **Arreglos de T118 encontrados al probarlo:**
+      - Capacitor atiende el plugin en un solo hilo, y la búsqueda en la subred frenaba todas las demás llamadas: lo que espera a la red va a sus propios hilos;
+      - las apps no podían hablar con el servidor de pruebas sin TLS: ahora la parte nativa lo dice (`plainHttp`) y la compilación de prueba de Android permite http. La app que se distribuye sigue sin permitirlo, y en la PC instalada `IMPOCARIBE_TLS` ya no cuenta.
+    - **Pruebas:** 4 JUnit de los mensajes y la espera, y 2 de la sesión (pide el token solo si hace falta; cerrar sesión detiene el servicio). En el emulador de Android 14, contra el servidor real sin TLS:
+      - emparejar por dirección y código, iniciar sesión y los dos permisos;
+      - con la app cerrada (sin tarea), una alerta creada en la base llega como notificación;
+      - tras reiniciar el teléfono, el servicio vuelve solo y la siguiente alerta llega;
+      - al cerrar sesión, el servicio, su aviso y su token desaparecen.
+    - **Límites:**
+      - una alerta creada mientras el teléfono está apagado o sin conexión no se notifica después; se ve en el contador al abrir la app;
+      - Android puede tardar varios minutos en avisar del encendido;
+      - R-01 dice que la app avise si no está excluida de la batería; hoy solo se pide una vez. Falta el aviso en la interfaz;
+      - en Android 7 no se probó aún (T122).
 
 - [ ] **T120. Android: sistema.**
   - *Cubre:* RF-ORD-22, RNF-09
