@@ -81,6 +81,8 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- T118 · P-01: el QR de emparejamiento. Sin cámara la app funciona igual (código o dirección a mano). -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- T120 · RF-ORD-22: el PDF a Descargas; desde Android 10 no hace falta. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <!-- T119: el servicio de alertas, sus notificaciones, su arranque al encender y la exclusión de batería. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />

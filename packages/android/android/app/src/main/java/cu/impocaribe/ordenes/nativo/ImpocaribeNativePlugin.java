@@ -44,6 +44,8 @@ import org.json.JSONObject;
     permissions = {
         @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera"),
         @Permission(strings = { Manifest.permission.POST_NOTIFICATIONS }, alias = "notifications"),
+        // T120: solo hasta Android 9 (desde 10 Descargas no pide permiso; el manifiesto lo limita).
+        @Permission(strings = { Manifest.permission.WRITE_EXTERNAL_STORAGE }, alias = "storage"),
     }
 )
 public class ImpocaribeNativePlugin extends Plugin {
@@ -117,6 +119,21 @@ public class ImpocaribeNativePlugin extends Plugin {
             else startAlerts(call);
             return;
         }
+        // T120: hasta Android 9, guardar en Descargas pide el permiso de almacenamiento la primera vez.
+        if ("file.save".equals(channel) && Build.VERSION.SDK_INT < 29 && getPermissionState("storage") != PermissionState.GRANTED) {
+            requestPermissionForAlias("storage", call, "storagePermission");
+            return;
+        }
+        run(call, channel);
+    }
+
+    @PermissionCallback
+    private void storagePermission(PluginCall call) {
+        if (getPermissionState("storage") == PermissionState.GRANTED) run(call, "file.save");
+        else call.reject("Sin permiso para guardar en Descargas: permítalo en los ajustes de la app.");
+    }
+
+    private void run(PluginCall call, String channel) {
         JSArray args = call.getArray("args", new JSArray());
         boolean waitsForNetwork = channel.equals("http") || channel.startsWith("discovery.");
         (waitsForNetwork ? network : ordered).execute(() -> {
@@ -281,9 +298,13 @@ public class ImpocaribeNativePlugin extends Plugin {
                 // T119: en Android las notifica el servicio de alertas, también con la app abierta; si la interfaz
                 // también lo hiciera, cada alerta saldría dos veces.
                 return null;
-            // shortcut: el PDF a Descargas (RF-ORD-22) llega con T120 y la actualización del APK con T121. Hasta
-            // entonces se dice por qué no se puede.
-            case "file.save":
+            case "file.save": {
+                Object data = arg(a, 1);
+                if (!(data instanceof byte[])) throw new IllegalArgumentException("Falta el contenido del archivo.");
+                Downloads.save(getContext(), str(arg(a, 0), "el nombre"), (byte[]) data);
+                return null;
+            }
+            // shortcut: la actualización del APK llega con T121; hasta entonces se dice por qué no se puede.
             case "update.install":
                 throw new UnsupportedOperationException("Todavía no está disponible en la app Android.");
             default:

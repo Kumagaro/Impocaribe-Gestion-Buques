@@ -856,6 +856,21 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T120. Android: sistema.**
   - *Cubre:* RF-ORD-22, RNF-09
   - *Depende:* T118
+  - *Estado (2026-10-26):* hecha.
+    - **PDF a Descargas (RF-ORD-22, `nativo/Downloads`):**
+      - desde Android 10, por MediaStore y sin permiso; si ya hay uno con ese nombre, el sistema le pone «(1)»;
+      - en Android 7 a 9, en la carpeta Descargas con el permiso de almacenamiento, que se pide la primera vez, sin pisar otro con el mismo nombre;
+      - del nombre que propone el servidor se quitan carpetas y caracteres no válidos.
+    - **Compartir:** una notificación «Guardado en Descargas» con el nombre. Tocarla abre el PDF y su botón «Compartir» abre el selector de Android. Las pantallas no cambian: siguen diciendo «Se descargó…».
+    - **Bloqueo de capturas (RNF-09):** `FLAG_SECURE` en las pantallas que lo piden, ya desde T118.
+    - **Pruebas:** 3 JUnit (nombre seguro, no pisar, tipo). En el emulador de Android 14:
+      - tres guardados del mismo nombre quedan como tres archivos;
+      - «../» no sale de Descargas;
+      - la notificación abre el PDF en el visor de Drive, y «Compartir» abre el selector.
+    - **Límites:**
+      - sin permiso de notificaciones (Android 13 o superior) el PDF se guarda igual, pero no aparece la opción de compartir;
+      - en Android 14 el selector muestra un número en lugar del nombre del archivo; la app que lo recibe sí ve el nombre;
+      - Android 7 a 9 no se probó aún (T122).
 
 - [ ] **T121. Android: actualización.**
   - *Depende:* T120, T114
