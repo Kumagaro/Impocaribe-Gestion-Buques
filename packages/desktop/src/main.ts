@@ -16,7 +16,10 @@ import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
 import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
-import { downloadUpdate, installerPath } from './system/updater.ts';
+import { downloadUpdate, installerPath, resolveUpdate } from './system/updater.ts';
+
+/** Donde la interfaz guarda el emparejamiento (web/src/connection/pairing.ts). */
+const PAIRING_KEY = 'impocaribe.pairing';
 
 // T117: instalada, la interfaz va en los recursos de la app (extraResources); en desarrollo, el build de web del monorepo.
 const webDist = app.isPackaged
@@ -96,12 +99,30 @@ else {
       secureScreen: (enabled) => window?.setContentProtection(enabled),
       // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y abre el instalador (que pide la
       // confirmación del usuario); la app se cierra para que pueda reemplazarla.
-      installUpdate: async (update, server) => {
+      installUpdate: async ({ version }) => {
+        const { url, sha256, server } = await resolveUpdate(
+          version,
+          app.getVersion(),
+          secure.get(PAIRING_KEY),
+          async (checkUrl, expected) => {
+            const res = await transport.http(
+              checkUrl,
+              {
+                method: 'GET',
+                headers: { 'X-App-Version': app.getVersion(), 'X-App-Platform': 'windows' },
+                body: null,
+              },
+              expected,
+            );
+            if (res.status !== 200 || !res.body) throw new Error('El servidor no dijo qué versión está publicada.');
+            return JSON.parse(new TextDecoder().decode(res.body)) as { latest: string | null; sha256: string | null };
+          },
+        );
         const file = await downloadUpdate(
-          update.url,
+          url,
           server,
-          update.sha256,
-          installerPath(join(data, 'actualizaciones'), update.version),
+          sha256,
+          installerPath(join(data, 'actualizaciones'), version),
           (received, total) => window?.webContents.send('native:update-progress', received, total),
         );
         spawn(file, [], { detached: true, stdio: 'ignore' }).unref();

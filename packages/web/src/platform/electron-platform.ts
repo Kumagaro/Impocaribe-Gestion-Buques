@@ -124,10 +124,11 @@ export function createElectronPlatform(bridge: NativeBridge): Platform {
     saveFile: (name, data) => invoke<void>('file.save', name, data),
     notify: (n) => invoke<void>('notify', n),
     secureScreen: (enabled) => invoke<void>('secureScreen', enabled),
-    // T117 · RF-UPD-05: el proceso principal descarga, comprueba la huella y abre el instalador (y la app se cierra).
-    installUpdate: ({ url, version, sha256, server }, onProgress) => {
+    // T117 · RF-UPD-05: solo la versión. El proceso principal toma el servidor del emparejamiento guardado, le pide la
+    // huella, descarga, la comprueba y abre el instalador (y la app se cierra).
+    installUpdate: ({ version }, onProgress) => {
       bridge.onUpdateProgress(onProgress ?? (() => undefined));
-      return invoke<void>('update.install', { url, version, sha256 }, server);
+      return invoke<void>('update.install', { version });
     },
   };
 }

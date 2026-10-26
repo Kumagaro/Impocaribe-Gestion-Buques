@@ -794,7 +794,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
       - el completo (`impocaribe-completo-<versión>.exe`, para todo el equipo) lleva además `server-bundle` y se niega a construirse sin él;
       - cada uno sale con su `.sha256` (DT-16), y la app sabe qué instalador la puso (para «Crear servidor», T127);
       - del binario de SQLCipher solo va el de Windows x64, fuera del asar.
-    - **Actualización del ligero (RF-UPD-05):** el proceso principal descarga la versión del servidor emparejado por el transporte que verifica su identidad, con su progreso hacia la banda de AL-15 o EST-07; comprueba el SHA-256 publicado (si no coincide, lo borra y no instala); abre el instalador, que pide la confirmación del usuario, y cierra la app.
+    - **Actualización del ligero (RF-UPD-05):** el proceso principal descarga la versión del servidor emparejado por el transporte que verifica su identidad, con su progreso hacia la banda de AL-15 o EST-07; comprueba el SHA-256 publicado (si no coincide, lo borra y no instala); abre el instalador, que pide la confirmación del usuario, y cierra la app. La interfaz solo dice qué versión instalar: el servidor y su dirección salen del emparejamiento guardado, la versión tiene que ser más nueva que la instalada y la huella se le pide al servidor verificado (así un fallo en la interfaz no puede hacer que se descargue y abra otro programa). Sin certificado de firma de código, todavía no se comprueba la firma Authenticode del instalador.
     - **Pruebas:**
       - 4 de la descarga contra un servidor HTTPS de prueba (buena, huella cambiada, intruso, versión inexistente);
       - la de la plataforma de escritorio y la de AL-15 con el servidor esperado;

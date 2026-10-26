@@ -20,7 +20,7 @@ export interface NativeServices {
   notify(title: string, body: string): void;
   secureScreen(enabled: boolean): void;
   /** T117: descarga, comprueba e instala la versión (la app se cierra para instalarla). */
-  installUpdate(update: NativeUpdate, server: NativeServer): Promise<void>;
+  installUpdate(update: NativeUpdate): Promise<void>;
 }
 
 type Handler = (...args: unknown[]) => unknown;
@@ -67,19 +67,7 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
       s.notify(str(title, 'el título'), str(body, 'el texto'));
     },
     secureScreen: (enabled) => s.secureScreen(enabled === true),
-    'update.install': (u, srv) => {
-      const update = u as Partial<NativeUpdate>;
-      const expected = server(srv);
-      if (!expected) throw new Error('Falta la identidad del servidor.');
-      return s.installUpdate(
-        {
-          url: str(update.url, 'la dirección'),
-          version: str(update.version, 'la versión'),
-          sha256: str(update.sha256, 'la huella'),
-        },
-        expected,
-      );
-    },
+    'update.install': (u) => s.installUpdate({ version: str((u as Partial<NativeUpdate>)?.version, 'la versión') }),
   };
 }
 

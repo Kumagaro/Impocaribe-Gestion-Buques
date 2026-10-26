@@ -101,7 +101,7 @@ describe('createElectronPlatform', () => {
     ]);
   });
 
-  it('T117: instalar pide al proceso principal la versión con su huella, al servidor emparejado, y avisa el progreso', async () => {
+  it('T117: instalar solo le pasa la versión al proceso principal (él decide servidor y huella) y avisa el progreso', async () => {
     const { bridge, calls, progress } = fakeBridge(() => {
       progress(1024, 4096);
       return undefined;
@@ -109,7 +109,7 @@ describe('createElectronPlatform', () => {
     const seen: [number, number][] = [];
     const update = { url: 'https://s/api/v1/updates/windows/1.4.0/download', version: '1.4.0', sha256: 'a'.repeat(64) };
     await createElectronPlatform(bridge).installUpdate!({ ...update, server: SERVER }, (r, t) => seen.push([r, t]));
-    expect(calls).toEqual([['update.install', [update, SERVER]]]);
+    expect(calls).toEqual([['update.install', [{ version: '1.4.0' }]]]);
     expect(seen).toEqual([[1024, 4096]]);
   });
 });

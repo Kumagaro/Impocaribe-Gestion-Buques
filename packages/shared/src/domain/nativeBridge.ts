@@ -64,9 +64,10 @@ export interface NativeBridge {
   onUpdateProgress(listener: (received: number, total: number) => void): void;
 }
 
-/** T117 · RF-UPD-05: la versión publicada que se descarga e instala. */
+/**
+ * T117 · RF-UPD-05: la versión que se instala. Solo eso: el servidor, la dirección y la huella los decide el proceso
+ * principal con el emparejamiento guardado y la consulta al servidor verificado, no la interfaz.
+ */
 export interface NativeUpdate {
-  url: string;
   version: string;
-  sha256: string;
 }

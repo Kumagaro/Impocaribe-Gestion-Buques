@@ -1,6 +1,7 @@
 // T117 · RF-UPD-05 y plan §10.1: la actualización del instalador ligero. Se descarga del servidor emparejado por el
 // transporte que verifica su identidad (DT-18), con su progreso; se comprueba el SHA-256 publicado (T113) y solo
 // entonces se ejecuta el instalador, que pide la confirmación del usuario. Un archivo que no coincide se borra.
+import { compareVersions } from '@impocaribe/shared';
 import { identityAgent } from '@impocaribe/shared/node';
 import type { NativeServer } from '@impocaribe/shared';
 import { createHash } from 'node:crypto';
@@ -64,4 +65,42 @@ export function downloadUpdate(
         req.end();
       }),
   );
+}
+
+/** Lo que el proceso principal lee del emparejamiento guardado (PAIRING_KEY de la web). */
+interface StoredPairing {
+  serverId: string;
+  caFingerprint: string;
+  lastAddress?: { address: string; port: number };
+}
+
+/** La consulta `/updates/check` al servidor esperado (por el transporte que verifica su identidad). */
+export type UpdateCheckFn = (
+  url: string,
+  server: NativeServer,
+) => Promise<{ latest: string | null; sha256: string | null }>;
+
+/**
+ * Qué descargar, decidido aquí y no por la interfaz: el servidor y su dirección salen del emparejamiento guardado, la
+ * versión tiene que ser más nueva que la instalada y la huella se le pide al servidor (verificado), no se acepta de
+ * la interfaz. Así un fallo en la interfaz no puede hacer que se descargue y se abra otro programa.
+ */
+export async function resolveUpdate(
+  version: string,
+  current: string,
+  pairing: string | null,
+  check: UpdateCheckFn,
+): Promise<{ url: string; sha256: string; server: NativeServer }> {
+  if (!VERSION.test(version)) throw new UpdateError(`Versión no válida: ${version}`);
+  if (compareVersions(version, current) <= 0)
+    throw new UpdateError(`La ${version} no es más nueva que la instalada (${current}).`);
+  const stored = pairing ? (JSON.parse(pairing) as Partial<StoredPairing>) : null;
+  if (!stored?.serverId || !stored.caFingerprint || !stored.lastAddress)
+    throw new UpdateError('Este equipo no está emparejado con el servidor: no se puede actualizar.');
+  const server = { serverId: stored.serverId, caFingerprint: stored.caFingerprint };
+  const base = `https://${stored.lastAddress.address}:${stored.lastAddress.port}/api/v1/updates`;
+  const published = await check(`${base}/check?platform=windows&version=${current}`, server);
+  if (published.latest !== version || !published.sha256 || !/^[0-9a-f]{64}$/i.test(published.sha256))
+    throw new UpdateError(`La ${version} no es la versión publicada en el servidor.`);
+  return { url: `${base}/windows/${version}/download`, sha256: published.sha256, server };
 }

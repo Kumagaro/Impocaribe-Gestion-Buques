@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { downloadUpdate, installerPath, UpdateError } from './updater.ts';
+import { downloadUpdate, installerPath, resolveUpdate, UpdateError } from './updater.ts';
 
 // T117 · RF-UPD-05: la actualización se descarga del servidor emparejado, con su progreso, y solo se queda si su
 // SHA-256 es el publicado. Certificados de prueba de shared.
@@ -79,5 +79,44 @@ describe('downloadUpdate', () => {
   it('el nombre del instalador lo pone la app, con una versión válida', () => {
     expect(() => installerPath('C:/x', '../../evil')).toThrow('Versión no válida: ../../evil');
     expect(installerPath('C:/x', '1.4.0')).toBe(join('C:/x', 'impocaribe-1.4.0.exe'));
+  });
+});
+
+describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => {
+  const pairing = JSON.stringify({ ...SERVER, lastAddress: { address: '192.168.1.20', port: 8443 } });
+  const published = async () => ({ latest: '1.4.0', sha256: SHA });
+
+  it('dirección y servidor del emparejamiento guardado; huella pedida al servidor', async () => {
+    const asked: [string, unknown][] = [];
+    const r = await resolveUpdate('1.4.0', '1.3.0', pairing, async (url, server) => {
+      asked.push([url, server]);
+      return published();
+    });
+    expect(asked).toEqual([['https://192.168.1.20:8443/api/v1/updates/check?platform=windows&version=1.3.0', SERVER]]);
+    expect(r).toEqual({
+      url: 'https://192.168.1.20:8443/api/v1/updates/windows/1.4.0/download',
+      sha256: SHA,
+      server: SERVER,
+    });
+  });
+
+  it.each([
+    ['../../evil', pairing, published, 'Versión no válida: ../../evil'],
+    ['1.3.0', pairing, published, 'La 1.3.0 no es más nueva que la instalada (1.3.0).'],
+    ['1.4.0', null, published, 'Este equipo no está emparejado con el servidor: no se puede actualizar.'],
+    [
+      '1.4.0',
+      pairing,
+      async () => ({ latest: '1.5.0', sha256: SHA }),
+      'La 1.4.0 no es la versión publicada en el servidor.',
+    ],
+    [
+      '1.4.0',
+      pairing,
+      async () => ({ latest: '1.4.0', sha256: null }),
+      'La 1.4.0 no es la versión publicada en el servidor.',
+    ],
+  ])('rechaza %s', async (version, stored, check, message) => {
+    await expect(resolveUpdate(version, '1.3.0', stored, check)).rejects.toEqual(new UpdateError(message));
   });
 });
