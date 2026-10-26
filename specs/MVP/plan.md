@@ -38,7 +38,7 @@ Este documento describe **cómo** se construye lo que pide la spec. Cada decisi�
 |---|---|---|
 | DT-01 | Un solo proceso servidor (NestJS) que sirve la API, el WebSocket, la sincronización, la descarga de instaladores y las tareas programadas | Simplicidad (XII) y un solo servicio de Windows que mantener |
 | DT-02 | **La interfaz va incluida en cada app.** Electron la sirve con un protocolo propio (`app://impocaribe`) y Capacitor desde sus recursos internos | La app abre sin servidor (RF-CON-01, art. IX) |
-| DT-03 | **Copia local en SQLite cifrado** (SQLCipher) con `@capacitor-community/sqlite`, que ofrece la misma API en Android y Electron. Clave aleatoria de 256 bits guardada en Android Keystore o en `safeStorage` de Electron | Una sola implementación para las dos apps (IX) y datos protegidos si se pierde el equipo |
+| DT-03 | **Copia local en SQLite cifrado** (SQLCipher): en Android con `@capacitor-community/sqlite`; en Electron con `better-sqlite3-multiple-ciphers` en el proceso principal, por IPC (decisión del responsable del 2026-10-24: `@capacitor-community/sqlite` exigiría montar la app de escritorio sobre Capacitor-Electron). Clave aleatoria de 256 bits guardada en Android Keystore o en `safeStorage` de Electron. La interfaz usa la misma API (`platform.openDatabase`) en las dos | Una sola copia local para las dos apps (IX) y datos protegidos si se pierde el equipo |
 | DT-04 | **Sincronización por registro de cambios** (`change_log`) numerado en orden de *commit*, más un aviso por WebSocket y descarga incremental | Simple, ordenada, sin conflictos: el servidor es el único que escribe (VII) |
 | DT-05 | Autenticación con **token Bearer** guardado en almacenamiento seguro, más un **token de dispositivo** separado, solo para alertas, para el servicio nativo de Android. Las cookies se descartan porque la interfaz ya no viene del servidor | DT-02 |
 | DT-06 | Durante la emisión, el PDF se genera **dentro de la transacción** | Si falla, se revierte todo y el número no se consume (VI) |
@@ -1004,7 +1004,7 @@ Son funciones puras con pruebas unitarias exhaustivas:
 - **Transporte nativo** (DT-19): `platform.http` y `platform.ws` se implementan en el proceso principal con verificación de la CA y de la identidad.
 - **Descubrimiento:** DNS-SD y difusión UDP desde el proceso principal; búsqueda en la subred con un límite de 64 conexiones simultáneas.
 - **Instalador completo:** además, el botón "Crear servidor en este equipo", la pantalla P-29 y el aviso de apagado (P-31) mediante el motivo de bloqueo de apagado de Windows, registrado por la ventana principal.
-- SQLite cifrado (`@capacitor-community/sqlite` para Electron) y `safeStorage` para el token y la clave.
+- SQLite cifrado (SQLCipher con `better-sqlite3-multiple-ciphers` en el proceso principal, DT-03) y `safeStorage` para el token y la clave.
 - Icono en la bandeja. Cerrar la ventana la minimiza y la conexión de alertas sigue activa. Opción de iniciar con Windows.
 - Notificaciones nativas, diálogo "Guardar como" para el PDF y `setContentProtection` en las pantallas sensibles.
 - **Actualización:** descarga el instalador NSIS desde el servidor, verifica el SHA-256 y lo ejecuta al cerrar.

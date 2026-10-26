@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import pkg from '../package.json';
 import { createBrowserPlatform } from './platform/browser-platform';
-import { findPlatform } from './platform/platform';
+import { createElectronPlatform, nativeBridge } from './platform/electron-platform';
+import { findPlatform, setPlatform } from './platform/platform';
 import { AppSession } from './session/app-session';
 import './ui/base.css';
 import { deviceClassFor, DeviceClassProvider } from './ui/device';
@@ -26,6 +27,10 @@ import './screens/dashboard/dashboard.css';
 import './screens/search/search.css';
 
 installTokens();
+
+// T115: dentro de Electron, el preload deja el puente al proceso principal; con él, la plataforma de escritorio.
+const native = nativeBridge();
+if (native) setPlatform(createElectronPlatform(native));
 
 // La clase se decide una vez: en Android el ancho mínimo no cambia al girar (RF-UI-02).
 const deviceClass = deviceClassFor(findPlatform()?.deviceInfo() ?? null, location.search);

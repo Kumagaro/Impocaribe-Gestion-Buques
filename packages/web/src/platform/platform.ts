@@ -29,7 +29,16 @@ export interface SecureStorage {
 }
 
 /** Petición HTTP con la forma de fetch. En las apps verifica la identidad del servidor (DT-18, DT-19). */
-export type HttpTransport = (url: string, init: RequestInit) => Promise<Response>;
+export type HttpTransport = (url: string, init: RequestInit, server?: ExpectedServer) => Promise<Response>;
+
+/**
+ * T115 · DT-18: el servidor que debe responder: el emparejado, o el anunciado mientras se empareja. El transporte nativo
+ * solo entrega la petición si la cadena del certificado es la de esa identidad; el navegador de pruebas no lo comprueba.
+ */
+export interface ExpectedServer {
+  serverId: string;
+  caFingerprint: string;
+}
 
 /** Conexión WebSocket del transporte nativo (plan §6.4). */
 export interface PlatformSocket {
@@ -96,7 +105,7 @@ export interface Platform {
   serverScheme?: 'http' | 'https';
   /** Todas las peticiones al servidor pasan por aquí, nunca por el fetch del WebView (DT-19). */
   http: HttpTransport;
-  ws(url: string): PlatformSocket;
+  ws(url: string, server?: ExpectedServer): PlatformSocket;
   discovery: PlatformDiscovery;
   deviceInfo(): DeviceInfo;
   /** Keystore en Android, safeStorage en Electron (plan §9). */

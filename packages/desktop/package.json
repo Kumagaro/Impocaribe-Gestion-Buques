@@ -8,9 +8,18 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "electron .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && playwright test"
   },
   "devDependencies": {
-    "electron": "^44.7.0"
+    "@types/multicast-dns": "7.2.4",
+    "@types/ws": "^8.18.2",
+    "electron": "^44.7.0",
+    "ws": "8.22.0"
+  },
+  "dependencies": {
+    "@impocaribe/shared": "workspace:*",
+    "better-sqlite3-multiple-ciphers": "13.0.3",
+    "multicast-dns": "7.2.5"
   }
 }

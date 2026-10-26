@@ -56,7 +56,8 @@ export function createNodeTransport(server: PairedServer, now: () => Date = () =
         },
       );
       req.on('error', reject);
-      if (typeof init.body === 'string') req.write(init.body);
+      // T115: texto (JSON) o bytes (un archivo en multipart).
+      if (typeof init.body === 'string' || init.body instanceof Uint8Array) req.write(init.body);
       req.end();
     });
 }

@@ -2,8 +2,9 @@
 import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
-// jsdom no trae matchMedia: por defecto el sistema no pide reducir el movimiento (cada prueba puede cambiarlo).
-if (!window.matchMedia) {
+// jsdom no trae matchMedia: por defecto el sistema no pide reducir el movimiento (cada prueba puede cambiarlo). Las
+// pruebas en entorno Node (sin window, como la de la plataforma de Electron) no lo necesitan.
+if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string) =>
     ({
       matches: false,

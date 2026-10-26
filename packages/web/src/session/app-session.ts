@@ -5,7 +5,7 @@ import type { UserDto } from '@impocaribe/shared/validation';
 import { createApiClient } from '../api/client';
 import { loadPairing, PAIRING_KEY, savePairing, type PairingRecord } from '../connection/pairing';
 import { LocalStore } from '../local/local-store';
-import type { Platform } from '../platform/platform';
+import type { ExpectedServer, Platform } from '../platform/platform';
 import { SyncEngine } from '../sync/engine';
 import type { ThemePreference } from '../ui/tokens';
 
@@ -142,7 +142,7 @@ export class AppSession {
     this.engine = new SyncEngine({
       store,
       api: () => this.api(),
-      socket: (url) => this.platform.ws(url),
+      socket: (url) => this.platform.ws(url, this.expected()),
       wsUrl: () => {
         const { address, port } = this.state.pairing!.lastAddress!;
         return `${this.platform.serverScheme === 'http' ? 'ws' : 'wss'}://${address}:${port}/api/v1/ws`;
@@ -198,8 +198,14 @@ export class AppSession {
   }
 
   /** Un cliente para un servidor aún sin emparejar, sin firma de dispositivo (descubrimiento y emparejamiento). */
-  apiFor(address: string, port: number) {
-    return this.client(address, port, async () => null);
+  apiFor(address: string, port: number, server: ExpectedServer) {
+    return this.client(address, port, async () => null, server);
+  }
+
+  /** DT-18: la identidad del servidor emparejado, la que el transporte nativo exige. */
+  private expected(): ExpectedServer {
+    const { serverId, caFingerprint } = this.state.pairing!;
+    return { serverId, caFingerprint };
   }
 
   /** El cliente de API del servidor emparejado, por su última dirección conocida. */
@@ -207,10 +213,20 @@ export class AppSession {
     const pairing = this.state.pairing;
     if (!pairing?.lastAddress) throw new Error('Este dispositivo no está emparejado con el servidor.');
     const { address, port } = pairing.lastAddress;
-    return this.client(address, port, async () => ({ id: pairing.deviceId, secret: pairing.deviceSecret }));
+    return this.client(
+      address,
+      port,
+      async () => ({ id: pairing.deviceId, secret: pairing.deviceSecret }),
+      this.expected(),
+    );
   }
 
-  private client(address: string, port: number, getDevice: () => Promise<{ id: string; secret: string } | null>) {
+  private client(
+    address: string,
+    port: number,
+    getDevice: () => Promise<{ id: string; secret: string } | null>,
+    server: ExpectedServer,
+  ) {
     return createApiClient({
       baseUrl: `${this.platform.serverScheme ?? 'https'}://${address}:${port}/api/v1`,
       appVersion: this.appVersion,
@@ -218,7 +234,7 @@ export class AppSession {
       getToken: async () => this.state.session?.token ?? null,
       getDevice,
       now: this.clock,
-      transport: this.platform.http,
+      transport: (url, init) => this.platform.http(url, init, server),
       onSessionExpired: () => void this.signOut(),
       onDeviceRevoked: () => void this.forgetDevice(),
       onUpgradeRequired: (details) =>

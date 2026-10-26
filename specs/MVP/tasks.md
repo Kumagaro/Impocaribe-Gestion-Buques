@@ -757,6 +757,25 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* DT-02, DT-03, RF-CON-01
   - *Depende:* T087, T036
   - *Decisión del responsable (2026-10-24):* en escritorio la copia local usa SQLCipher nativo (`better-sqlite3-multiple-ciphers` en el proceso principal, por IPC) en lugar de `@capacitor-community/sqlite`, que exigiría montar la app sobre Capacitor-Electron. Android sigue con `@capacitor-community/sqlite` (DT-03); el cifrado es SQLCipher en los dos.
+  - *Estado (2026-10-26):* hecha. `packages/desktop`:
+    - **Arranque:** una sola instancia y ventana aislada (`contextIsolation`, `sandbox`, sin navegar fuera de `app://impocaribe` ni abrir ventanas).
+    - **Puente:** un preload que solo deja pasar los canales de `NATIVE_CHANNELS` (contrato en `shared/domain/nativeBridge.ts`).
+    - **Servicios del proceso principal:**
+      - transporte HTTP y WebSocket con la verificación de identidad de `shared/node` (DT-18, DT-19), que solo sale por HTTPS y hacia el servidor esperado;
+      - descubrimiento por DNS-SD, difusión UDP en cada interfaz, sonda a `/api/v1/discovery` y la `/24` (constantes compartidas con el servidor);
+      - almacenamiento seguro con `safeStorage`;
+      - copia local en SQLCipher (`better-sqlite3-multiple-ciphers`; su binario precompilado es Node-API y carga en Electron sin recompilar). La clave es aleatoria y vive en el almacenamiento seguro. Rechaza `ATTACH`, `DETACH`, `VACUUM`, `load_extension` y todo `PRAGMA` salvo `user_version`, para que un fallo en la interfaz no pueda escribir fuera de la base.
+    - **Web:** `platform/electron-platform.ts` (serializa el multipart, WebSocket por número sin perder eventos tempranos, transacciones en cola con deshacer), registrada en `main.tsx` cuando existe el puente. La sesión pasa al transporte el servidor esperado: el emparejado, o el anunciado o el del QR mientras se empareja.
+    - **Pruebas:**
+      - 34 del proceso principal: SQLCipher real, mDNS, UDP y HTTP locales reales, y certificados de prueba para el intruso;
+      - 4 de la plataforma de escritorio en la web;
+      - 1 más del transporte de `shared`, con un cuerpo en bytes;
+      - 2 E2E con la app real (Playwright y Electron): arranca sin servidor en P-01 con el puente; secreto, base cifrada y canal no permitido; una sola instancia.
+    - **Para lanzarla desde una terminal de VS Code:** quitar `ELECTRON_RUN_AS_NODE`, que VS Code hereda.
+    - **Pendiente:**
+      - el estado de la red para el diagnóstico (`lan`, RF-RED-06): sin él, P-30 no distingue un servidor apagado de una red que aísla equipos;
+      - emparejar con un servidor con TLS desde la app (las E2E corren sin TLS; la verificación está probada con certificados de prueba);
+      - instalar actualizaciones (T117).
 
 - [ ] **T116. Electron: sistema.**
   - *Cubre:* RF-ORD-22, RNF-09, RF-ALR-01
