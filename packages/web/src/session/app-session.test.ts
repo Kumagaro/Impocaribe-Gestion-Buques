@@ -1,4 +1,4 @@
-import { signRequest } from '@impocaribe/shared';
+import { ALERTS, signRequest } from '@impocaribe/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { FIXED_TIME, sampleOf } from '../../test/fake-server';
 import { createSyncServer } from '../../test/sync-server';
@@ -231,6 +231,55 @@ describe('T045 y T049: la sincronización de la sesión y su fin (RF-AUT-08, RF-
     await vi.waitFor(() => expect(session.getState().status).toBe('unpaired'));
     expect(await platform.secureStorage.get(PAIRING_KEY)).toBeNull();
     expect(await store.list('user_directory')).toEqual([]);
+  });
+});
+
+describe('T119 · RF-ALR-01 y DT-05: el servicio de alertas de Android', () => {
+  async function android(hasToken: boolean) {
+    const server = createSyncServer();
+    const tokenRequests: string[] = [];
+    const platform = await createTestPlatform({
+      ws: server.socket,
+      http: async (url, init) => {
+        if (!url.endsWith('/auth/device-token')) return server.transport(url, init);
+        tokenRequests.push(init.method ?? 'GET');
+        return json(201, { token: 'token-de-alertas', expiresAt: '2026-10-15T16:40:00.000Z' });
+      },
+    });
+    const started: [Record<string, string>, string | undefined][] = [];
+    let stopped = 0;
+    platform.alertService = {
+      start: async (labels, token) => {
+        started.push([labels, token]);
+        return hasToken || token !== undefined;
+      },
+      stop: async () => {
+        stopped++;
+      },
+    };
+    const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
+    await session.load();
+    await session.paired(PAIRING);
+    await session.signedIn({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
+    await session.startSync();
+    return { session, tokenRequests, started, stopped: () => stopped };
+  }
+
+  it('sin token en el servicio, pide uno y se lo pasa con los nombres de las alertas', async () => {
+    const { tokenRequests, started } = await android(false);
+    await vi.waitFor(() => expect(started).toHaveLength(2));
+    expect(tokenRequests).toEqual(['POST']);
+    expect(started[0]![1]).toBeUndefined();
+    expect(started[1]![1]).toBe('token-de-alertas');
+    expect(started[1]![0]['AL-15']).toBe(ALERTS['AL-15'].label);
+  });
+
+  it('con token, no pide otro; cerrar sesión detiene el servicio', async () => {
+    const { session, tokenRequests, started, stopped } = await android(true);
+    await vi.waitFor(() => expect(started).toHaveLength(1));
+    expect(tokenRequests).toEqual([]);
+    await session.signOut();
+    expect(stopped()).toBe(1);
   });
 });
 

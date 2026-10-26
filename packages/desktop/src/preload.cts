@@ -25,6 +25,8 @@ const PRELOAD_CHANNELS: readonly NativeChannel[] = [
   'secureScreen',
   'update.install',
   'qr.scan',
+  'alerts.start',
+  'alerts.stop',
 ];
 const allowed = new Set<string>(PRELOAD_CHANNELS);
 

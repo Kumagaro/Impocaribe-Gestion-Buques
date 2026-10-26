@@ -2,7 +2,11 @@ package cu.impocaribe.ordenes.nativo;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.util.Base64;
@@ -25,6 +29,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -35,13 +41,23 @@ import org.json.JSONObject;
  */
 @CapacitorPlugin(
     name = "ImpocaribeNative",
-    permissions = { @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera") }
+    permissions = {
+        @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera"),
+        @Permission(strings = { Manifest.permission.POST_NOTIFICATIONS }, alias = "notifications"),
+    }
 )
 public class ImpocaribeNativePlugin extends Plugin {
     private SecureStore secure;
     private LocalDatabases databases;
     private NativeTransport transport;
     private Discovery discovery;
+    /**
+     * Capacitor atiende todos los métodos del plugin en un solo hilo: una sonda de la subred (3 s) frenaría todo lo
+     * demás. Lo que espera a la red va a su propio hilo; el resto, en orden por uno solo (los mensajes de un WebSocket y
+     * las sentencias de una transacción no pueden cambiar de orden).
+     */
+    private final ExecutorService ordered = Executors.newSingleThreadExecutor();
+    private final ExecutorService network = Executors.newCachedThreadPool();
 
     @Override
     public void load() {
@@ -53,6 +69,8 @@ public class ImpocaribeNativePlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
+        ordered.shutdown();
+        network.shutdown();
         transport.closeAll();
         databases.closeAll();
     }
@@ -78,6 +96,8 @@ public class ImpocaribeNativePlugin extends Plugin {
         // RF-UI-02: el ancho mínimo decide teléfono o tablet, y no cambia al girar.
         info.put("smallestWidthDp", getContext().getResources().getConfiguration().smallestScreenWidthDp);
         info.put("name", Build.MANUFACTURER + " " + Build.MODEL);
+        // Solo la compilación de prueba sin TLS (-PimpocaribeTlsOff=true): la interfaz habla con http://.
+        if (BuildConfig.TLS_OFF) info.put("plainHttp", true);
         call.resolve(info);
     }
 
@@ -90,22 +110,86 @@ public class ImpocaribeNativePlugin extends Plugin {
             else requestPermissionForAlias("camera", call, "cameraPermission");
             return;
         }
-        JSArray args = call.getArray("args", new JSArray());
-        try {
-            Object decoded = decode(args);
-            Object value = dispatch(channel, decoded instanceof List ? (List<?>) decoded : new ArrayList<>());
-            JSObject out = new JSObject();
-            out.put("value", encode(value));
-            call.resolve(out);
-        } catch (Exception e) {
-            call.reject(e.getMessage() == null ? "Error de la parte nativa." : e.getMessage(), e);
+        // T119: el servicio de alertas; antes, el permiso de notificaciones (Android 13 o superior).
+        if ("alerts.start".equals(channel)) {
+            if (Build.VERSION.SDK_INT >= 33 && getPermissionState("notifications") != PermissionState.GRANTED)
+                requestPermissionForAlias("notifications", call, "notificationsPermission");
+            else startAlerts(call);
+            return;
         }
+        JSArray args = call.getArray("args", new JSArray());
+        boolean waitsForNetwork = channel.equals("http") || channel.startsWith("discovery.");
+        (waitsForNetwork ? network : ordered).execute(() -> {
+            try {
+                Object decoded = decode(args);
+                Object value = dispatch(channel, decoded instanceof List ? (List<?>) decoded : new ArrayList<>());
+                JSObject out = new JSObject();
+                out.put("value", encode(value));
+                call.resolve(out);
+            } catch (Exception e) {
+                call.reject(e.getMessage() == null ? "Error de la parte nativa." : e.getMessage(), e);
+            }
+        });
     }
 
     @PermissionCallback
     private void cameraPermission(PluginCall call) {
         if (getPermissionState("camera") == PermissionState.GRANTED) scan(call);
         else call.reject("Sin permiso para usar la cámara: empareje con el código o escriba la dirección a mano.");
+    }
+
+    /** Sin permiso el servicio arranca igual (Android lo deja): las alertas se ven en la app y el contador. */
+    @PermissionCallback
+    private void notificationsPermission(PluginCall call) {
+        startAlerts(call);
+    }
+
+    /**
+     * T119 · DT-05: args = [labels, token?]. Con token (el de una sesión nueva), lo guarda y reinicia el servicio con
+     * él; sin token, sigue con el guardado. Responde si el servicio quedó en marcha: false = no hay token, que la
+     * interfaz pida uno (pedirlo en cada arranque solo llenaría la bitácora).
+     */
+    private void startAlerts(PluginCall call) {
+        try {
+            List<?> a = (List<?>) decode(call.getArray("args", new JSArray()));
+            Map<?, ?> labels = map(arg(a, 0), "los nombres de las alertas");
+            Object token = arg(a, 1);
+            String stored = null;
+            String raw = secure.get(AlertService.STORE_KEY);
+            if (raw != null) stored = new JSONObject(raw).optString("token", null);
+            String use = token instanceof String ? (String) token : stored;
+            JSObject out = new JSObject();
+            if (use == null) {
+                out.put("value", false);
+                call.resolve(out);
+                return;
+            }
+            secure.set(AlertService.STORE_KEY, new JSONObject().put("token", use).put("labels", new JSONObject(labels)).toString());
+            Context context = getContext();
+            if (token instanceof String) AlertService.stop(context);
+            AlertService.start(context);
+            askBatteryExclusion();
+            out.put("value", true);
+            call.resolve(out);
+        } catch (Exception e) {
+            call.reject(e.getMessage() == null ? "No se pudo arrancar el servicio de alertas." : e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Plan §10.2 y R-01: sin la exclusión de la optimización de batería, Android puede dormir el servicio. Se pide una
+     * sola vez; si el usuario no la da, la guía de instalación explica cómo hacerlo por marca.
+     */
+    private void askBatteryExclusion() {
+        Context context = getContext();
+        PowerManager power = context.getSystemService(PowerManager.class);
+        if (power.isIgnoringBatteryOptimizations(context.getPackageName())) return;
+        android.content.SharedPreferences prefs = context.getSharedPreferences("impocaribe.native", Context.MODE_PRIVATE);
+        if (prefs.getBoolean("batteryAsked", false)) return;
+        prefs.edit().putBoolean("batteryAsked", true).apply();
+        getActivity().startActivity(
+            new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + context.getPackageName()))
+        );
     }
 
     private void scan(PluginCall call) {
@@ -188,10 +272,18 @@ public class ImpocaribeNativePlugin extends Plugin {
                 });
                 return null;
             }
-            // shortcut: el PDF a Descargas (RF-ORD-22) y las notificaciones llegan con T119 y T120; la actualización
-            // del APK, con T121. Hasta entonces se dice por qué no se puede.
-            case "file.save":
+            case "alerts.stop":
+                // RF-AUT-08: al cerrar sesión, sin token ni avisos de esa sesión.
+                AlertService.stop(getContext());
+                AlertService.forget(getContext(), null);
+                return null;
             case "notify":
+                // T119: en Android las notifica el servicio de alertas, también con la app abierta; si la interfaz
+                // también lo hiciera, cada alerta saldría dos veces.
+                return null;
+            // shortcut: el PDF a Descargas (RF-ORD-22) llega con T120 y la actualización del APK con T121. Hasta
+            // entonces se dice por qué no se puede.
+            case "file.save":
             case "update.install":
                 throw new UnsupportedOperationException("Todavía no está disponible en la app Android.");
             default:

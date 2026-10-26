@@ -125,6 +125,14 @@ export interface Platform {
    * sistema instalarla, con la confirmación del usuario. El navegador de pruebas no la tiene.
    */
   installUpdate?(update: UpdatePackage, onProgress?: (received: number, total: number) => void): Promise<void>;
+  /**
+   * RF-ALR-01 y DT-05: el servicio de Android que recibe las alertas con la app cerrada. `start` responde false
+   * si no tiene token: entonces se le pasa uno nuevo. Solo existe en Android (en la PC, la bandeja).
+   */
+  alertService?: {
+    start(labels: Record<string, string>, token?: string): Promise<boolean>;
+    stop(): Promise<void>;
+  };
 }
 
 let current: Platform | null = null;

@@ -1,8 +1,10 @@
 // T038 · Estado de la app: con qué servidor está emparejada (RF-RED-04), quién inició sesión (RF-AUT-02) y el cliente
 // de API que firma cada petición con el dispositivo (DT-24). Lo sensible vive en el almacenamiento seguro (plan §9):
 // nunca en la base local ni en el almacenamiento del navegador.
+import { ALERTS } from '@impocaribe/shared';
 import type { UserDto } from '@impocaribe/shared/validation';
 import { createApiClient } from '../api/client';
+import { postDeviceToken } from '../api/endpoints/auth';
 import { loadPairing, PAIRING_KEY, savePairing, type PairingRecord } from '../connection/pairing';
 import { LocalStore } from '../local/local-store';
 import type { ExpectedServer, Platform } from '../platform/platform';
@@ -117,6 +119,7 @@ export class AppSession {
 
   /** RF-AUT-08: al cerrar sesión, o cuando el servidor la revoca, se borran la credencial y la copia local. */
   async signOut(): Promise<void> {
+    void this.platform.alertService?.stop().catch(() => undefined);
     this.engine?.stop();
     this.engine = null;
     await (await this.store)?.clear();
@@ -155,7 +158,25 @@ export class AppSession {
       onRevoked: (kind) => void (kind === 'device' ? this.forgetDevice() : this.signOut()),
     });
     this.engine.start();
+    void this.startAlerts();
     return this.engine;
+  }
+
+  /**
+   * T119 · RF-ALR-01 y DT-05: en Android, el servicio que recibe las alertas con la app cerrada. Sigue con su token
+   * mientras valga; solo si no tiene, se pide uno (pedirlo en cada arranque llenaría la bitácora).
+   */
+  private async startAlerts(): Promise<void> {
+    const alerts = this.platform.alertService;
+    if (!alerts) return;
+    const labels = Object.fromEntries(Object.entries(ALERTS).map(([type, a]) => [type, a.label]));
+    try {
+      if (await alerts.start(labels)) return;
+      const { token } = await this.api().request(postDeviceToken);
+      await alerts.start(labels, token);
+    } catch {
+      // Sin servidor ahora: se vuelve a intentar en el próximo arranque; con la app abierta, se ven en el contador.
+    }
   }
 
   /** El motor de la sesión en curso, si ya arrancó. */

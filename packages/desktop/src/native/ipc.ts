@@ -72,6 +72,11 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
     'qr.scan': () => {
       throw new Error('Este equipo no lee códigos QR.');
     },
+    // T119: el servicio de alertas es de Android; en la PC las alertas siguen llegando desde la bandeja (T116).
+    'alerts.start': () => {
+      throw new Error('En este equipo las alertas llegan desde la bandeja.');
+    },
+    'alerts.stop': () => undefined,
   };
 }
 

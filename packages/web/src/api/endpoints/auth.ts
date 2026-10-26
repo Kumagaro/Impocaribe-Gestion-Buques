@@ -1,6 +1,7 @@
 // T038 · plan §6.2: primer arranque y autenticación. Las rutas y sus esquemas son los del servidor (contrato, T026).
 import {
   changePasswordSchema,
+  deviceTokenResponseSchema,
   loginRequestSchema,
   loginResponseSchema,
   meResponseSchema,
@@ -38,6 +39,13 @@ export const postLogin = defineEndpoint({
 });
 export const postLogout = defineEndpoint({ method: 'POST', path: '/auth/logout', roles: ALL });
 export const getMe = defineEndpoint({ method: 'GET', path: '/auth/me', output: meResponseSchema, roles: ALL });
+/** T119 · DT-05: el token de alertas del servicio de Android; vence con la sesión. */
+export const postDeviceToken = defineEndpoint({
+  method: 'POST',
+  path: '/auth/device-token',
+  output: deviceTokenResponseSchema,
+  roles: ALL,
+});
 export const getSessions = defineEndpoint({
   method: 'GET',
   path: '/auth/sessions',

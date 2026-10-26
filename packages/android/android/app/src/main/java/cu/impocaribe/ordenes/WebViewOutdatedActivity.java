@@ -18,16 +18,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.core.content.FileProvider;
 import cu.impocaribe.ordenes.nativo.ApkTrust;
-import cu.impocaribe.ordenes.nativo.Discovery;
 import cu.impocaribe.ordenes.nativo.DiscoveryMath;
 import cu.impocaribe.ordenes.nativo.NativeTransport;
-import cu.impocaribe.ordenes.nativo.SecureStore;
+import cu.impocaribe.ordenes.nativo.PairedServer;
 import cu.impocaribe.ordenes.nativo.ServerIdentity;
 import cu.impocaribe.ordenes.nativo.WebViewCheck;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import org.json.JSONObject;
 
 /**
@@ -39,7 +37,6 @@ import org.json.JSONObject;
 public class WebViewOutdatedActivity extends Activity {
     static final String EXTRA_FOUND = "impocaribe.webview.found";
     static final String EXTRA_PACKAGE = "impocaribe.webview.package";
-    private static final String PAIRING_KEY = "impocaribe.pairing";
 
     /** La plataforma del proveedor que usa el sistema (si no se sabe, el que suele traer este Android). */
     private String provider;
@@ -156,7 +153,9 @@ public class WebViewOutdatedActivity extends Activity {
     /** Busca el servidor, pide el instalador publicado, lo descarga con su huella y abre la instalación. */
     private void run() {
         try {
-            DiscoveryMath.Announcement server = findServer();
+            // Con emparejamiento, solo ese; sin él (el WebView viejo impide emparejar), el que se anuncie: lo que
+            // descargue igual tiene que ser el paquete esperado con la firma del fabricante (ApkTrust).
+            DiscoveryMath.Announcement server = PairedServer.find(this, true);
             if (server == null) {
                 fail(
                     "No se encontró el servidor. Compruebe que el teléfono está en la red de la empresa o pida ayuda "
@@ -205,45 +204,6 @@ public class WebViewOutdatedActivity extends Activity {
         } catch (Exception e) {
             fail(e.getMessage() == null ? "No se pudo descargar la actualización." : e.getMessage());
         }
-    }
-
-    /**
-     * El servidor del que bajar el instalador. Con emparejamiento guardado, solo ese (por su última dirección o
-     * anunciado en la red con la misma identidad, y siempre con la huella guardada). Sin él (el WebView viejo impide
-     * emparejar), el que se anuncie: lo que descargue igual tiene que ser el paquete esperado con la firma del
-     * fabricante (ApkTrust).
-     */
-    private DiscoveryMath.Announcement findServer() throws Exception {
-        Discovery discovery = new Discovery(this);
-        String pairedId = null;
-        String pairedFp = null;
-        try {
-            String raw = new SecureStore(this).get(PAIRING_KEY);
-            if (raw != null) {
-                JSONObject p = new JSONObject(raw);
-                pairedId = p.getString("serverId");
-                pairedFp = p.getString("caFingerprint");
-                JSONObject last = p.optJSONObject("lastAddress");
-                if (last != null) {
-                    DiscoveryMath.Announcement a = discovery.probe(last.getString("address"), last.getInt("port"), 2000, BuildConfig.TLS_OFF);
-                    if (a != null && a.serverId.equals(pairedId)) return paired(a, pairedId, pairedFp);
-                }
-            }
-        } catch (Exception ignored) {
-            // Sin emparejamiento guardado: se busca en la red.
-        }
-        List<DiscoveryMath.Announcement> found = discovery.broadcast(1500);
-        if (found.isEmpty()) found = discovery.browse(3000);
-        for (DiscoveryMath.Announcement a : found) {
-            if (pairedId == null) return a;
-            if (a.serverId.equals(pairedId)) return paired(a, pairedId, pairedFp);
-        }
-        return null;
-    }
-
-    /** La dirección es la anunciada, pero la identidad y la huella, las del emparejamiento guardado. */
-    private static DiscoveryMath.Announcement paired(DiscoveryMath.Announcement a, String id, String fp) {
-        return new DiscoveryMath.Announcement(a.address, a.port, id, fp, a.version);
     }
 
     private void install(File apk) {

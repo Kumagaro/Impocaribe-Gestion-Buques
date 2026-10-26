@@ -40,7 +40,8 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
   });
 
   return {
-    serverScheme: 'https',
+    // DT-18: siempre https; http solo si la parte nativa es una compilación de prueba contra un servidor sin TLS.
+    serverScheme: bridge.info.plainHttp ? 'http' : 'https',
     http: async (url, init, server) => {
       const { headers, body } = await serialize(init);
       const res = await invoke<NativeResponse>('http', url, { method: init.method ?? 'GET', headers, body }, server);
@@ -123,7 +124,17 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
       };
     },
     // T118 · P-01: el QR de emparejamiento con la cámara, solo en Android (la PC no lo ofrece).
-    ...(bridge.info.platform === 'android' ? { scanQr: () => invoke<string | null>('qr.scan') } : {}),
+    ...(bridge.info.platform === 'android'
+      ? {
+          scanQr: () => invoke<string | null>('qr.scan'),
+          // T119: el servicio de alertas (con la app cerrada, RF-ALR-01).
+          alertService: {
+            start: (labels: Record<string, string>, token?: string) =>
+              invoke<boolean>('alerts.start', labels, ...(token ? [token] : [])),
+            stop: () => invoke<void>('alerts.stop'),
+          },
+        }
+      : {}),
     saveFile: (name, data) => invoke<void>('file.save', name, data),
     notify: (n) => invoke<void>('notify', n),
     secureScreen: (enabled) => invoke<void>('secureScreen', enabled),

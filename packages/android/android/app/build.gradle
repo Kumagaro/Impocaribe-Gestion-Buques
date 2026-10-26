@@ -20,6 +20,8 @@ android {
         // T118: solo para probar contra un servidor sin TLS (las E2E, IMPOCARIBE_TLS=off): -PimpocaribeTlsOff=true.
         // La app que se distribuye habla con el servidor solo por HTTPS.
         buildConfigField "boolean", "TLS_OFF", (project.findProperty("impocaribeTlsOff") ?: "false").toString()
+        // Android bloquea http:// por defecto; solo esa compilación de prueba lo permite.
+        manifestPlaceholders = [cleartext: (project.findProperty("impocaribeTlsOff") ?: "false").toString()]
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61

@@ -23,6 +23,8 @@ export const NATIVE_CHANNELS = [
   'secureScreen',
   'update.install',
   'qr.scan',
+  'alerts.start',
+  'alerts.stop',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 
@@ -52,6 +54,8 @@ export interface NativeDeviceInfo {
   appVersion: string;
   smallestWidthDp: number;
   name: string;
+  /** Solo en las compilaciones de prueba contra un servidor sin TLS (IMPOCARIBE_TLS=off): la interfaz usa http://. */
+  plainHttp?: boolean;
 }
 
 /** Lo que ve la interfaz en `window.impocaribeNative`. */

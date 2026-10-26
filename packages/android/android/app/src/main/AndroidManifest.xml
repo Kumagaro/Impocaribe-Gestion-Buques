@@ -7,6 +7,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="${cleartext}"
         android:theme="@style/AppTheme">
 
         <activity
@@ -28,6 +29,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- T119 · RF-ALR-01: alertas con la app cerrada (plan §10.2); specialUse desde Android 14. -->
+        <service
+            android:name=".nativo.AlertService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Avisos en tiempo real del servidor local de la empresa (sin internet ni Play Services)" />
+        </service>
+        <receiver android:name=".nativo.BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- T118 · P-01: leer el QR de emparejamiento con la cámara. -->
         <activity
@@ -64,5 +81,11 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- T118 · P-01: el QR de emparejamiento. Sin cámara la app funciona igual (código o dirección a mano). -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- T119: el servicio de alertas, sus notificaciones, su arranque al encender y la exclusión de batería. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

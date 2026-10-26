@@ -32,7 +32,7 @@ const preload = fileURLToPath(new URL('./preload.cjs', import.meta.url));
 /** T117: la clave pública Ed25519 con que se firman los instaladores (la privada solo la tiene el build). */
 const signingKey = fileURLToPath(new URL('../resources/firma-publica.pem', import.meta.url));
 /** Solo para probar contra un servidor sin TLS (IMPOCARIBE_TLS=off); la app instalada siempre usa HTTPS. */
-const plainHttp = process.env.IMPOCARIBE_TLS === 'off';
+const plainHttp = process.env.IMPOCARIBE_TLS === 'off' && !app.isPackaged;
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
@@ -73,6 +73,7 @@ else {
       appVersion: app.getVersion(),
       smallestWidthDp: 1024,
       name: hostname(),
+      ...(plainHttp ? { plainHttp } : {}),
     };
     ipcMain.on('native:info', (event) => (event.returnValue = info));
     registerNative((channel, fn) => ipcMain.handle(channel, fn), {
