@@ -116,6 +116,18 @@ describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => 
       async () => ({ latest: '1.4.0', sha256: null }),
       'La 1.4.0 no es la versión publicada en el servidor.',
     ],
+    [
+      '1.4.0',
+      JSON.stringify({ ...SERVER, lastAddress: { address: 'evil.example/x?', port: 8443 } }),
+      published,
+      'La dirección guardada del servidor no es válida: empareje este equipo de nuevo.',
+    ],
+    [
+      '1.4.0',
+      JSON.stringify({ ...SERVER, lastAddress: { address: '192.168.1.20', port: 70000 } }),
+      published,
+      'La dirección guardada del servidor no es válida: empareje este equipo de nuevo.',
+    ],
   ])('rechaza %s', async (version, stored, check, message) => {
     await expect(resolveUpdate(version, '1.3.0', stored, check)).rejects.toEqual(new UpdateError(message));
   });

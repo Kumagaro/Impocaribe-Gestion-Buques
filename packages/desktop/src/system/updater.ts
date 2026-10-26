@@ -97,8 +97,17 @@ export async function resolveUpdate(
   const stored = pairing ? (JSON.parse(pairing) as Partial<StoredPairing>) : null;
   if (!stored?.serverId || !stored.caFingerprint || !stored.lastAddress)
     throw new UpdateError('Este equipo no está emparejado con el servidor: no se puede actualizar.');
+  const { address, port } = stored.lastAddress;
+  // Solo una IPv4 o un nombre de equipo, y un puerto válido: nada que cambie la dirección que se arma abajo.
+  if (
+    !/^(d{1,3}.){3}d{1,3}$|^[a-z0-9][a-z0-9.-]{0,252}$/i.test(String(address)) ||
+    !Number.isInteger(port) ||
+    port < 1 ||
+    port > 65535
+  )
+    throw new UpdateError('La dirección guardada del servidor no es válida: empareje este equipo de nuevo.');
   const server = { serverId: stored.serverId, caFingerprint: stored.caFingerprint };
-  const base = `https://${stored.lastAddress.address}:${stored.lastAddress.port}/api/v1/updates`;
+  const base = `https://${address}:${port}/api/v1/updates`;
   const published = await check(`${base}/check?platform=windows&version=${current}`, server);
   if (published.latest !== version || !published.sha256 || !/^[0-9a-f]{64}$/i.test(published.sha256))
     throw new UpdateError(`La ${version} no es la versión publicada en el servidor.`);
