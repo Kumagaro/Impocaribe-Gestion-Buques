@@ -1,6 +1,7 @@
-// T115 · DT-03, DT-19 y plan §10.1: la plataforma de la app de escritorio. Todo lo nativo lo hace el proceso principal
-// de Electron por el puente `window.impocaribeNative` (preload): la red con la identidad del servidor verificada, el
-// descubrimiento, el almacenamiento seguro (safeStorage) y la copia local en SQLCipher.
+// T115 y T118 · DT-03, DT-19 y plan §10.1-10.2: la plataforma de las dos apps. Todo lo nativo lo hace su parte nativa
+// por el mismo puente (NATIVE_CHANNELS): en Electron, el proceso principal por el preload (`window.impocaribeNative`);
+// en Android, el plugin ImpocaribeNative (capacitor-bridge.ts). La red con la identidad del servidor verificada, el
+// descubrimiento, el almacenamiento seguro y la copia local en SQLCipher.
 import type { NativeBridge, NativeResponse, NativeSocketEvent } from '@impocaribe/shared';
 import type { LocalDatabase, Platform, PlatformSocket, ServerAnnouncement, SqlExecutor, SqlValue } from './platform';
 
@@ -24,7 +25,7 @@ async function serialize(
   return { headers, body: typeof init.body === 'string' ? init.body : null };
 }
 
-export function createElectronPlatform(bridge: NativeBridge): Platform {
+export function createNativePlatform(bridge: NativeBridge): Platform {
   const invoke = <T>(channel: Parameters<NativeBridge['invoke']>[0], ...args: unknown[]) =>
     bridge.invoke(channel, ...args) as Promise<T>;
 

@@ -47,7 +47,7 @@ export interface NativeResponse {
 export type NativeSocketEvent = 'open' | 'message' | 'close' | 'error';
 
 export interface NativeDeviceInfo {
-  platform: 'windows';
+  platform: 'windows' | 'android';
   appVersion: string;
   smallestWidthDp: number;
   name: string;

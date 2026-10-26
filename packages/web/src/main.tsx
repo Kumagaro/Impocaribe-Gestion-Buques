@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import pkg from '../package.json';
 import { createBrowserPlatform } from './platform/browser-platform';
-import { createElectronPlatform, nativeBridge } from './platform/electron-platform';
+import { capacitorBridge, capacitorPlugin } from './platform/capacitor-bridge';
+import { createNativePlatform, nativeBridge } from './platform/native-platform';
 import { findPlatform, setPlatform } from './platform/platform';
 import { AppSession } from './session/app-session';
 import './ui/base.css';
@@ -28,22 +29,30 @@ import './screens/search/search.css';
 
 installTokens();
 
-// T115: dentro de Electron, el preload deja el puente al proceso principal; con él, la plataforma de escritorio.
-const native = nativeBridge();
-if (native) setPlatform(createElectronPlatform(native));
+/**
+ * La plataforma nativa del cascarón (T115: Electron, por su preload; T118: Android, por el plugin de Capacitor, cuya
+ * información del dispositivo es asíncrona); sin ninguna, la del navegador de desarrollo y de las pruebas.
+ */
+async function nativePlatform() {
+  const electron = nativeBridge();
+  if (electron) return createNativePlatform(electron);
+  const plugin = capacitorPlugin();
+  return plugin ? createNativePlatform(await capacitorBridge(plugin)) : null;
+}
 
-// La clase se decide una vez: en Android el ancho mínimo no cambia al girar (RF-UI-02).
-const deviceClass = deviceClassFor(findPlatform()?.deviceInfo() ?? null, location.search);
+void nativePlatform().then((native) => {
+  if (native) setPlatform(native);
+  // La clase se decide una vez: en Android el ancho mínimo no cambia al girar (RF-UI-02).
+  const deviceClass = deviceClassFor(findPlatform()?.deviceInfo() ?? null, location.search);
+  const session = new AppSession(findPlatform() ?? createBrowserPlatform(location, pkg.version), pkg.version);
+  void session.load();
+  document.documentElement.dataset.deviceClass = deviceClass;
 
-// La plataforma nativa del cascarón; sin ella, la del navegador de desarrollo y de las pruebas.
-const session = new AppSession(findPlatform() ?? createBrowserPlatform(location, pkg.version), pkg.version);
-void session.load();
-document.documentElement.dataset.deviceClass = deviceClass;
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <DeviceClassProvider value={deviceClass}>
-      <App session={session} />
-    </DeviceClassProvider>
-  </StrictMode>,
-);
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <DeviceClassProvider value={deviceClass}>
+        <App session={session} />
+      </DeviceClassProvider>
+    </StrictMode>,
+  );
+});

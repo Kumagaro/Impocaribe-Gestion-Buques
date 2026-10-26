@@ -2,7 +2,7 @@
 // (FormData, Blob y Request nativos, como en el renderizador de Electron; los de jsdom no se mezclan con los de Node.)
 import type { NativeBridge, NativeSocketEvent } from '@impocaribe/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { createElectronPlatform } from './electron-platform';
+import { createNativePlatform } from './native-platform';
 
 // T115 · plan §10.1: la plataforma de escritorio traduce cada llamada al canal del puente que corresponde.
 const SERVER = { serverId: '7f3c2a10-1b2c-4d5e-8f90-abcdef123456', caFingerprint: 'AB:CD' };
@@ -28,14 +28,14 @@ function fakeBridge(reply: (channel: string, args: unknown[]) => unknown = () =>
   };
 }
 
-describe('createElectronPlatform', () => {
+describe('createNativePlatform', () => {
   it('HTTP por el puente con el servidor esperado; la respuesta vuelve como Response', async () => {
     const { bridge, calls } = fakeBridge(() => ({
       status: 200,
       headers: [['content-type', 'application/json']],
       body: new TextEncoder().encode('{"status":"ok"}'),
     }));
-    const p = createElectronPlatform(bridge);
+    const p = createNativePlatform(bridge);
     const res = await p.http('https://192.168.1.20:8443/api/v1/health', { method: 'GET', headers: { A: 'b' } }, SERVER);
     expect(await res.json()).toEqual({ status: 'ok' });
     expect(calls).toEqual([
@@ -50,7 +50,7 @@ describe('createElectronPlatform', () => {
     const form = new FormData();
     form.append('version', '1.4.0');
     form.append('file', new Blob([new Uint8Array([77, 90])]), 'impocaribe-1.4.0.exe');
-    await createElectronPlatform(bridge).http('https://s/api/v1/updates', { method: 'POST', body: form }, SERVER);
+    await createNativePlatform(bridge).http('https://s/api/v1/updates', { method: 'POST', body: form }, SERVER);
     const sent = calls[0]![1][1] as { headers: Record<string, string>; body: Uint8Array };
     expect(sent.headers['Content-Type']).toMatch(/^multipart\/form-data; boundary=/);
     const text = new TextDecoder().decode(sent.body);
@@ -60,7 +60,7 @@ describe('createElectronPlatform', () => {
 
   it('WebSocket: lo enviado antes de abrir se manda después, y un evento temprano no se pierde', async () => {
     const { bridge, calls, emit } = fakeBridge((channel) => (channel === 'ws.open' ? 5 : undefined));
-    const socket = createElectronPlatform(bridge).ws('wss://s/api/v1/ws', SERVER);
+    const socket = createNativePlatform(bridge).ws('wss://s/api/v1/ws', SERVER);
     const opened = vi.fn();
     const messages: (string | undefined)[] = [];
     socket.on('open', opened);
@@ -84,7 +84,7 @@ describe('createElectronPlatform', () => {
       if (channel === 'db.execute' && args[1] === 'INSERT INTO t VALUES (2)') throw new Error('UNIQUE');
       return channel === 'db.query' ? [{ n: 1 }] : undefined;
     });
-    const db = await createElectronPlatform(bridge).openDatabase('impocaribe');
+    const db = await createNativePlatform(bridge).openDatabase('impocaribe');
     const tx = db.transaction(async (t) => {
       await t.execute('INSERT INTO t VALUES (1)');
       await t.execute('INSERT INTO t VALUES (2)');
@@ -108,7 +108,7 @@ describe('createElectronPlatform', () => {
     });
     const seen: [number, number][] = [];
     const update = { url: 'https://s/api/v1/updates/windows/1.4.0/download', version: '1.4.0', sha256: 'a'.repeat(64) };
-    await createElectronPlatform(bridge).installUpdate!({ ...update, server: SERVER }, (r, t) => seen.push([r, t]));
+    await createNativePlatform(bridge).installUpdate!({ ...update, server: SERVER }, (r, t) => seen.push([r, t]));
     expect(calls).toEqual([['update.install', [{ version: '1.4.0' }]]]);
     expect(seen).toEqual([[1024, 4096]]);
   });

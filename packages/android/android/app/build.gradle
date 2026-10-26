@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
+    // T118: las pruebas de la identidad del servidor usan los mismos certificados de prueba que shared (T021).
+    sourceSets {
+        test.resources.srcDirs += ['../../../shared/test-certs']
+    }
     namespace = "cu.impocaribe.ordenes"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
@@ -36,6 +40,16 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // T118 · DT-19: HTTP y WebSocket con la identidad del servidor verificada.
+    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    // T118 · DT-03: la copia local en SQLCipher.
+    implementation "net.zetetic:sqlcipher-android:$sqlcipherVersion@aar"
+    implementation "androidx.sqlite:sqlite:$androidxSqliteVersion"
+    // T118: el QR de emparejamiento, con el modelo dentro del APK (sin Play Store, R-10).
+    implementation "com.google.mlkit:barcode-scanning:$mlkitBarcodeVersion"
+    implementation "androidx.camera:camera-camera2:$cameraxVersion"
+    implementation "androidx.camera:camera-lifecycle:$cameraxVersion"
+    implementation "androidx.camera:camera-view:$cameraxVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
