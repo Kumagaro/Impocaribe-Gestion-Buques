@@ -22,12 +22,28 @@ export const versionSchema = z
   .trim()
   .refine(isVersion, { error: 'Escriba la versión con tres números separados por puntos, por ejemplo 1.4.2.' });
 
+/** Una firma Ed25519 en base64: 64 bytes. */
+export const SIGNATURE = /^[A-Za-z0-9+/]{86}==$/;
+
 /** Al publicar: los campos que acompañan al archivo (multipart). */
 export const publishReleaseSchema = z.object({
   platform: releasePlatformSchema,
   version: versionSchema,
   notes: z.string().trim().max(2000, { error: 'Las novedades no pueden pasar de 2000 caracteres.' }).default(''),
-});
+  /**
+   * T117: la firma Ed25519 del instalador de Windows (el .sig que deja el build, en base64). La app no abre una
+   * actualización sin ella; para Android no hace falta (el sistema exige la misma firma del APK).
+   */
+  signature: z.string().trim().default(''),
+})
+  .superRefine((v, ctx) => {
+    if (v.platform === 'windows' && !SIGNATURE.test(v.signature))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['signature'],
+        message: 'Elija la firma del instalador (el archivo .sig que dejó el build junto al .exe).',
+      });
+  });
 export type PublishRelease = z.infer<typeof publishReleaseSchema>;
 
 export const releaseDtoSchema = z.object({
@@ -62,5 +78,7 @@ export const updateCheckSchema = z.object({
   /** Relativa al servidor: `/api/v1/updates/<plataforma>/<versión>/download`. */
   downloadUrl: z.string().nullable(),
   sha256: z.string().nullable(),
+  /** T117: la firma Ed25519 del instalador de Windows (null en las demás plataformas). */
+  signature: z.string().nullable(),
 });
 export type UpdateCheck = z.infer<typeof updateCheckSchema>;

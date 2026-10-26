@@ -5,7 +5,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, Notification, protocol, safeStorage, Tray } from 'electron';
 import type { NativeDeviceInfo, NativeSocketEvent } from '@impocaribe/shared';
 import { spawn } from 'node:child_process';
-import { writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { rm, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -16,7 +17,7 @@ import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
 import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
-import { downloadUpdate, installerPath, resolveUpdate } from './system/updater.ts';
+import { downloadUpdate, installerPath, resolveUpdate, verifySignature } from './system/updater.ts';
 
 /** Donde la interfaz guarda el emparejamiento (web/src/connection/pairing.ts). */
 const PAIRING_KEY = 'impocaribe.pairing';
@@ -28,6 +29,8 @@ const webDist = app.isPackaged
 // El logo (generado por pnpm --filter @impocaribe/web brand-icons), dentro de la app.
 const icon = fileURLToPath(new URL('../resources/icon.png', import.meta.url));
 const preload = fileURLToPath(new URL('./preload.cjs', import.meta.url));
+/** T117: la clave pública Ed25519 con que se firman los instaladores (la privada solo la tiene el build). */
+const signingKey = fileURLToPath(new URL('../resources/firma-publica.pem', import.meta.url));
 /** Solo para probar contra un servidor sin TLS (IMPOCARIBE_TLS=off); la app instalada siempre usa HTTPS. */
 const plainHttp = process.env.IMPOCARIBE_TLS === 'off';
 
@@ -97,10 +100,10 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
-      // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y abre el instalador (que pide la
-      // confirmación del usuario); la app se cierra para que pueda reemplazarla.
+      // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y la firma del proyecto, y abre el
+      // instalador (que pide la confirmación del usuario); la app se cierra para que pueda reemplazarla.
       installUpdate: async ({ version }) => {
-        const { url, sha256, server } = await resolveUpdate(
+        const { url, sha256, signature, server } = await resolveUpdate(
           version,
           app.getVersion(),
           secure.get(PAIRING_KEY),
@@ -115,7 +118,11 @@ else {
               expected,
             );
             if (res.status !== 200 || !res.body) throw new Error('El servidor no dijo qué versión está publicada.');
-            return JSON.parse(new TextDecoder().decode(res.body)) as { latest: string | null; sha256: string | null };
+            return JSON.parse(new TextDecoder().decode(res.body)) as {
+              latest: string | null;
+              sha256: string | null;
+              signature: string | null;
+            };
           },
         );
         const file = await downloadUpdate(
@@ -125,6 +132,13 @@ else {
           installerPath(join(data, 'actualizaciones'), version),
           (received, total) => window?.webContents.send('native:update-progress', received, total),
         );
+        // La firma del proyecto, con la clave pública que trae la app: si no es válida, el instalador no se abre.
+        try {
+          verifySignature(sha256, signature, readFileSync(signingKey, 'utf8'));
+        } catch (err) {
+          await rm(file, { force: true });
+          throw err;
+        }
         spawn(file, [], { detached: true, stdio: 'ignore' }).unref();
         quitting = true;
         app.quit();

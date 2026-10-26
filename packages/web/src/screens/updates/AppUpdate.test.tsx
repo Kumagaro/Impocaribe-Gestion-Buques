@@ -34,6 +34,7 @@ const check = (extra: Partial<UpdateCheck> = {}): UpdateCheck => ({
   notes: 'Tablero más rápido.',
   downloadUrl: '/api/v1/updates/windows/1.4.0/download',
   sha256: 'b'.repeat(64),
+  signature: `${'A'.repeat(86)}==`,
   ...extra,
 });
 

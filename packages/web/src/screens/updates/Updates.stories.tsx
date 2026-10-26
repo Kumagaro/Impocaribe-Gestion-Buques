@@ -97,10 +97,11 @@ export const Publicar: StoryObj = {
     VIEWS,
     model({
       form: {
-        platform: 'android',
+        platform: 'windows',
         version: '1.4',
         notes: 'Tablero más rápido.',
-        file: new File([new Uint8Array(1024)], 'impocaribe-1.4.0.apk'),
+        file: new File([new Uint8Array(1024)], 'impocaribe-1.4.0.exe'),
+        signature: new File(['firma'], 'impocaribe-1.4.0.exe.sig'),
       },
       errors: { version: 'Escriba la versión con tres números separados por puntos, por ejemplo 1.4.2.' },
     }),

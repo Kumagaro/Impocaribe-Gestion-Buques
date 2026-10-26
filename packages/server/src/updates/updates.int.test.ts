@@ -17,10 +17,13 @@ const { s, get, q, token } = useScenario(clock, START);
 const installer = (kind: 'exe' | 'apk', n: number) =>
   Buffer.concat([Buffer.from(kind === 'exe' ? 'MZ\x90\x00' : 'PK\x03\x04', 'latin1'), Buffer.alloc(4096, n)]);
 const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex');
+/** T117: una firma con el formato de las del build (Ed25519 en base64); el servidor la guarda y la entrega, no la verifica. */
+const SIG = `${'A'.repeat(86)}==`;
 
 async function publish(fields: Record<string, string>, file: Buffer | null, who = 'ana') {
   const form = new FormData();
   for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  if (fields.platform === 'windows' && !('signature' in fields)) form.append('signature', SIG);
   if (file) form.append('file', new Blob([new Uint8Array(file)]), 'instalador');
   const res = await s.t.fetch(`${s.t.base}/updates`, {
     method: 'POST',
@@ -66,6 +69,7 @@ describe('T113 · versiones de las apps (RF-UPD-01 a 05)', () => {
       notes: 'Órdenes más rápidas',
       downloadUrl: '/api/v1/updates/windows/1.1.0/download',
       sha256: sha(exe),
+      signature: SIG,
     });
     expect(await check('windows', '1.1.0')).toMatchObject({ updateAvailable: false, mustUpdate: false });
     expect(await check('android-webview-chrome', '0.0.0')).toMatchObject({ latest: null, updateAvailable: false });
@@ -100,6 +104,11 @@ describe('T113 · versiones de las apps (RF-UPD-01 a 05)', () => {
     expect((await publish({ platform: 'windows', version: '1.1' }, installer('exe', 1))).body.details.fields).toEqual({
       version: 'Escriba la versión con tres números separados por puntos, por ejemplo 1.4.2.',
     });
+    // T117: el instalador de Windows se publica con su firma (el .sig del build).
+    expect(
+      (await publish({ platform: 'windows', version: '1.1.0', signature: '' }, installer('exe', 1))).body.details
+        .fields,
+    ).toEqual({ signature: 'Elija la firma del instalador (el archivo .sig que dejó el build junto al .exe).' });
     expect((await publish({ platform: 'windows', version: '1.1.0' }, null)).body.details.fields).toEqual({
       file: 'Elija el archivo del instalador.',
     });

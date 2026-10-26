@@ -136,9 +136,33 @@ describe('P-26 Versiones de la app', () => {
     const dialog = within(await screen.findByRole('dialog', { name: 'Publicar una versión' }));
     await userEvent.type(dialog.getByLabelText('Versión'), '1.4.0');
     await userEvent.upload(dialog.getByLabelText('Archivo'), new File(['MZ'], 'impocaribe-1.4.0.exe'));
+    await userEvent.upload(
+      dialog.getByLabelText('Firma (.sig)'),
+      new File([`${'A'.repeat(86)}==`], 'impocaribe-1.4.0.exe.sig'),
+    );
     await userEvent.click(dialog.getByRole('button', { name: 'Publicar' }));
     expect(
       await dialog.findByText('La versión 1.4.0 de Windows (instalador ligero) ya está publicada.'),
     ).not.toBeNull();
+  });
+
+  it('T117: el instalador de Windows se publica con su firma; sin ella se pide antes de enviar', async () => {
+    const t = await renderScreen(<ReleasesScreen />, {
+      path: '/versiones',
+      session: session('apoderada'),
+      before: (s) => s.respond(updatesApi.list, RELEASES),
+    });
+    await userEvent.click(await screen.findByRole('button', { name: 'Publicar una versión' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Publicar una versión' }));
+    await userEvent.type(dialog.getByLabelText('Versión'), '1.5.0');
+    await userEvent.upload(dialog.getByLabelText('Archivo'), new File(['MZ'], 'impocaribe-1.5.0.exe'));
+    await userEvent.click(dialog.getByRole('button', { name: 'Publicar' }));
+    expect(
+      dialog.getByText('Elija la firma del instalador (el archivo .sig que dejó el build junto al .exe).'),
+    ).not.toBeNull();
+    expect(writes(t)).toEqual([]);
+    // Android no la pide: el sistema exige la misma firma del APK.
+    await userEvent.selectOptions(dialog.getByLabelText('Plataforma'), 'android');
+    expect(dialog.queryByLabelText('Firma (.sig)')).toBeNull();
   });
 });

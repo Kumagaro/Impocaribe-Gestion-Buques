@@ -27,6 +27,8 @@ export const appReleases = pgTable(
     sha256: char('sha256', { length: 64 }).notNull(),
     notes: text('notes').notNull().default(''),
     isMinSupported: boolean('is_min_supported').notNull().default(false),
+    /** T117: la firma Ed25519 del instalador de Windows (base64); null en las demás plataformas. */
+    signature: text('signature'),
     publishedBy: uuid('published_by').references(() => users.id),
     publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),
   },

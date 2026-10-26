@@ -141,6 +141,7 @@ export class UpdatesController {
       notes: latest?.notes ?? null,
       downloadUrl: latest ? downloadUrl(latest.platform, latest.version) : null,
       sha256: latest?.sha256 ?? null,
+      signature: latest?.signature ?? null,
     };
   }
 
@@ -223,6 +224,7 @@ export class UpdatesController {
               fileId: stored.id,
               sha256,
               notes: input.notes,
+              signature: input.platform === 'windows' ? input.signature : null,
               publishedBy: userId,
               publishedAt: this.clock.now(),
             })

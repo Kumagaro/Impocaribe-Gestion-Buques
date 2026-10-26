@@ -1,7 +1,9 @@
 // T117 · DT-16, RF-INS-01 y plan §10.1: los instaladores NSIS de Windows. El ligero es solo la app (se publica en el
 // servidor, T113); el completo lleva además `server-bundle` (PostgreSQL, Node.js, Chromium y el servidor, que arma
-// T125) y no se publica. Cada instalador sale con su SHA-256. IMPOCARIBE_INSTALADOR=completo elige el completo.
-import { createHash } from 'node:crypto';
+// T125) y no se publica. Cada instalador sale con su SHA-256 y su firma Ed25519. IMPOCARIBE_INSTALADOR=completo elige
+// el completo.
+import { Buffer } from 'node:buffer';
+import { createHash, createPrivateKey, sign } from 'node:crypto';
 import { createReadStream, existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
@@ -10,6 +12,16 @@ const flavor = process.env.IMPOCARIBE_INSTALADOR === 'completo' ? 'completo' : '
 
 if (flavor === 'completo' && !existsSync('server-bundle'))
   throw new Error('Falta la carpeta server-bundle: la arma el paquete de distribución (T125).');
+
+// La clave privada Ed25519 del proyecto (en .env, nunca en el repositorio). La app lleva la pública
+// (resources/firma-publica.pem) y no abre un instalador de actualización sin esta firma.
+if (!process.env.IMPOCARIBE_FIRMA_CLAVE)
+  throw new Error('Falta IMPOCARIBE_FIRMA_CLAVE en .env: sin ella no se firman los instaladores (vea .env.example).');
+const signingKey = createPrivateKey({
+  key: Buffer.from(process.env.IMPOCARIBE_FIRMA_CLAVE, 'base64'),
+  format: 'der',
+  type: 'pkcs8',
+});
 
 async function sha256(file) {
   const hash = createHash('sha256');
@@ -23,12 +35,13 @@ export default {
   productName: 'Órdenes de Carga',
   executableName: 'impocaribe',
   directories: { output: `release/${flavor}`, buildResources: 'resources' },
-  // Solo lo que corre: el código compilado (sin mapas ni tipos) y el logo.
+  // Solo lo que corre: el código compilado (sin mapas ni tipos), el logo y la clave pública de firma.
   files: [
     'package.json',
     'dist/**/*.js',
     'dist/**/*.cjs',
     'resources/icon.png',
+    'resources/firma-publica.pem',
     // De SQLCipher, solo el binario de Windows x64: ni sus fuentes ni los de otros sistemas.
     '!node_modules/better-sqlite3-multiple-ciphers/{deps,src}/**',
     '!node_modules/better-sqlite3-multiple-ciphers/prebuilds/{darwin,linux,linuxmusl}-*.node',
@@ -55,12 +68,14 @@ export default {
     deleteAppDataOnUninstall: false,
     artifactName: flavor === 'completo' ? 'impocaribe-completo-${version}.exe' : 'impocaribe-${version}.exe',
   },
-  // DT-16: cada instalador con su SHA-256 al lado.
+  // DT-16: cada instalador con su SHA-256 al lado, y la firma Ed25519 de esa huella (sus 32 bytes) en base64.
   afterAllArtifactBuild: async (result) => {
     const written = [];
     for (const file of result.artifactPaths.filter((f) => f.endsWith('.exe'))) {
-      await writeFile(`${file}.sha256`, `${await sha256(file)}  ${basename(file)}\n`);
-      written.push(`${file}.sha256`);
+      const digest = await sha256(file);
+      await writeFile(`${file}.sha256`, `${digest}  ${basename(file)}\n`);
+      await writeFile(`${file}.sig`, sign(null, Buffer.from(digest, 'hex'), signingKey).toString('base64'));
+      written.push(`${file}.sha256`, `${file}.sig`);
     }
     return written;
   },

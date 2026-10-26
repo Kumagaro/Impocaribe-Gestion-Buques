@@ -4,7 +4,7 @@
 import { compareVersions } from '@impocaribe/shared';
 import { identityAgent } from '@impocaribe/shared/node';
 import type { NativeServer } from '@impocaribe/shared';
-import { createHash } from 'node:crypto';
+import { createHash, createPublicKey, verify } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
 import { mkdir, rename, rm } from 'node:fs/promises';
 import { request } from 'node:https';
@@ -78,7 +78,10 @@ interface StoredPairing {
 export type UpdateCheckFn = (
   url: string,
   server: NativeServer,
-) => Promise<{ latest: string | null; sha256: string | null }>;
+) => Promise<{ latest: string | null; sha256: string | null; signature: string | null }>;
+
+/** Una IPv4 o un nombre de equipo: nada que cambie la dirección que se arma con ella. */
+const HOST = /^(\d{1,3}\.){3}\d{1,3}$|^[a-z0-9][a-z0-9.-]{0,252}$/i;
 
 /**
  * Qué descargar, decidido aquí y no por la interfaz: el servidor y su dirección salen del emparejamiento guardado, la
@@ -90,7 +93,7 @@ export async function resolveUpdate(
   current: string,
   pairing: string | null,
   check: UpdateCheckFn,
-): Promise<{ url: string; sha256: string; server: NativeServer }> {
+): Promise<{ url: string; sha256: string; signature: string; server: NativeServer }> {
   if (!VERSION.test(version)) throw new UpdateError(`Versión no válida: ${version}`);
   if (compareVersions(version, current) <= 0)
     throw new UpdateError(`La ${version} no es más nueva que la instalada (${current}).`);
@@ -98,18 +101,33 @@ export async function resolveUpdate(
   if (!stored?.serverId || !stored.caFingerprint || !stored.lastAddress)
     throw new UpdateError('Este equipo no está emparejado con el servidor: no se puede actualizar.');
   const { address, port } = stored.lastAddress;
-  // Solo una IPv4 o un nombre de equipo, y un puerto válido: nada que cambie la dirección que se arma abajo.
-  if (
-    !/^(d{1,3}.){3}d{1,3}$|^[a-z0-9][a-z0-9.-]{0,252}$/i.test(String(address)) ||
-    !Number.isInteger(port) ||
-    port < 1 ||
-    port > 65535
-  )
+  if (!HOST.test(String(address)) || !Number.isInteger(port) || port < 1 || port > 65535)
     throw new UpdateError('La dirección guardada del servidor no es válida: empareje este equipo de nuevo.');
   const server = { serverId: stored.serverId, caFingerprint: stored.caFingerprint };
   const base = `https://${address}:${port}/api/v1/updates`;
   const published = await check(`${base}/check?platform=windows&version=${current}`, server);
   if (published.latest !== version || !published.sha256 || !/^[0-9a-f]{64}$/i.test(published.sha256))
     throw new UpdateError(`La ${version} no es la versión publicada en el servidor.`);
-  return { url: `${base}/windows/${version}/download`, sha256: published.sha256, server };
+  if (!published.signature) throw new UpdateError(`La ${version} no tiene la firma de Impocaribe: no se instala.`);
+  return {
+    url: `${base}/windows/${version}/download`,
+    sha256: published.sha256,
+    signature: published.signature,
+    server,
+  };
+}
+
+/**
+ * T117: la firma Ed25519 del proyecto sobre la huella del instalador, con la clave pública que trae la app
+ * (resources/firma-publica.pem). Sin ella no se abre ningún instalador, venga de donde venga.
+ */
+export function verifySignature(sha256: string, signature: string, publicKeyPem: string): void {
+  const valid = (() => {
+    try {
+      return verify(null, Buffer.from(sha256, 'hex'), createPublicKey(publicKeyPem), Buffer.from(signature, 'base64'));
+    } catch {
+      return false;
+    }
+  })();
+  if (!valid) throw new UpdateError('La actualización no tiene la firma de Impocaribe: no se instala.');
 }

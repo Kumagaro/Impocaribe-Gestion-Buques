@@ -1,11 +1,11 @@
-import { createHash, X509Certificate } from 'node:crypto';
+import { createHash, generateKeyPairSync, sign, X509Certificate } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:https';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { downloadUpdate, installerPath, resolveUpdate, UpdateError } from './updater.ts';
+import { downloadUpdate, installerPath, resolveUpdate, UpdateError, verifySignature } from './updater.ts';
 
 // T117 · RF-UPD-05: la actualización se descarga del servidor emparejado, con su progreso, y solo se queda si su
 // SHA-256 es el publicado. Certificados de prueba de shared.
@@ -16,6 +16,10 @@ const SERVER = {
 };
 const INSTALLER = Buffer.concat([Buffer.from('MZ'), Buffer.alloc(300_000, 7)]);
 const SHA = createHash('sha256').update(INSTALLER).digest('hex');
+// Una clave de prueba (la del proyecto solo la tiene el build, en .env).
+const KEYS = generateKeyPairSync('ed25519');
+const PUBLIC = KEYS.publicKey.export({ type: 'spki', format: 'pem' }) as string;
+const SIGNED = sign(null, Buffer.from(SHA, 'hex'), KEYS.privateKey).toString('base64');
 
 let good: Server;
 let intruder: Server;
@@ -84,7 +88,7 @@ describe('downloadUpdate', () => {
 
 describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => {
   const pairing = JSON.stringify({ ...SERVER, lastAddress: { address: '192.168.1.20', port: 8443 } });
-  const published = async () => ({ latest: '1.4.0', sha256: SHA });
+  const published = async () => ({ latest: '1.4.0', sha256: SHA, signature: SIGNED });
 
   it('dirección y servidor del emparejamiento guardado; huella pedida al servidor', async () => {
     const asked: [string, unknown][] = [];
@@ -96,6 +100,7 @@ describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => 
     expect(r).toEqual({
       url: 'https://192.168.1.20:8443/api/v1/updates/windows/1.4.0/download',
       sha256: SHA,
+      signature: SIGNED,
       server: SERVER,
     });
   });
@@ -107,13 +112,13 @@ describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => 
     [
       '1.4.0',
       pairing,
-      async () => ({ latest: '1.5.0', sha256: SHA }),
+      async () => ({ latest: '1.5.0', sha256: SHA, signature: SIGNED }),
       'La 1.4.0 no es la versión publicada en el servidor.',
     ],
     [
       '1.4.0',
       pairing,
-      async () => ({ latest: '1.4.0', sha256: null }),
+      async () => ({ latest: '1.4.0', sha256: null, signature: SIGNED }),
       'La 1.4.0 no es la versión publicada en el servidor.',
     ],
     [
@@ -128,7 +133,34 @@ describe('resolveUpdate (qué descargar lo decide el proceso principal)', () => 
       published,
       'La dirección guardada del servidor no es válida: empareje este equipo de nuevo.',
     ],
+    [
+      '1.4.0',
+      pairing,
+      async () => ({ latest: '1.4.0', sha256: SHA, signature: null }),
+      'La 1.4.0 no tiene la firma de Impocaribe: no se instala.',
+    ],
   ])('rechaza %s', async (version, stored, check, message) => {
     await expect(resolveUpdate(version, '1.3.0', stored, check)).rejects.toEqual(new UpdateError(message));
+  });
+});
+
+describe('verifySignature (la firma del proyecto, con la clave pública de la app)', () => {
+  const rejected = new UpdateError('La actualización no tiene la firma de Impocaribe: no se instala.');
+
+  it('acepta la firma de la huella con la clave del proyecto', () => {
+    expect(() => verifySignature(SHA, SIGNED, PUBLIC)).not.toThrow();
+  });
+
+  it('rechaza otra clave, otra huella o una firma rota', () => {
+    const other = generateKeyPairSync('ed25519').publicKey.export({ type: 'spki', format: 'pem' }) as string;
+    expect(() => verifySignature(SHA, SIGNED, other)).toThrow(rejected);
+    expect(() => verifySignature('f'.repeat(64), SIGNED, PUBLIC)).toThrow(rejected);
+    expect(() => verifySignature(SHA, 'no es una firma', PUBLIC)).toThrow(rejected);
+  });
+
+  it('la clave pública que trae la app es una clave Ed25519', () => {
+    const pem = readFileSync(new URL('../../resources/firma-publica.pem', import.meta.url), 'utf8');
+    expect(() => verifySignature(SHA, SIGNED, pem)).toThrow(rejected);
+    expect(pem).toMatch(/^-----BEGIN PUBLIC KEY-----/);
   });
 });

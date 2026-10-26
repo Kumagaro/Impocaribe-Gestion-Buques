@@ -22,6 +22,8 @@ export interface PublishForm {
   version: string;
   notes: string;
   file: File | null;
+  /** T117: la firma del instalador de Windows (el .sig que dejó el build junto al .exe). */
+  signature: File | null;
 }
 type FormErrors = Partial<Record<keyof PublishForm, string>>;
 
@@ -77,7 +79,7 @@ export function useReleases() {
     openPublish: () => {
       setErrors({});
       setFormError(null);
-      setForm({ platform, version: '', notes: '', file: null });
+      setForm({ platform, version: '', notes: '', file: null, signature: null });
     },
     closePublish: () => !uploading && setForm(null),
     setField: <K extends keyof PublishForm>(key: K, value: PublishForm[K]) => {
@@ -86,7 +88,8 @@ export function useReleases() {
     },
     publish: async () => {
       if (!form) return;
-      const parsed = publishReleaseSchema.safeParse(form);
+      const signature = form.platform === 'windows' && form.signature ? (await form.signature.text()).trim() : '';
+      const parsed = publishReleaseSchema.safeParse({ ...form, signature });
       const next: FormErrors = {};
       if (!parsed.success) for (const i of parsed.error.issues) next[i.path[0] as keyof PublishForm] ??= i.message;
       if (!form.file) next.file = 'Elija el archivo del instalador.';
@@ -96,6 +99,7 @@ export function useReleases() {
       body.append('platform', parsed.data.platform);
       body.append('version', parsed.data.version);
       body.append('notes', parsed.data.notes);
+      if (parsed.data.signature) body.append('signature', parsed.data.signature);
       body.append('file', form.file, form.file.name);
       setUploading(true);
       setFormError(null);

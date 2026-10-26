@@ -103,28 +103,35 @@ function Cards({ m }: { m: ReleasesModel }) {
   );
 }
 
-function FilePicker({ m }: { m: ReleasesModel }) {
+function FilePicker(p: {
+  id: string;
+  label: string;
+  help?: string;
+  accept: string;
+  file: File | null;
+  error: string | undefined;
+  onPick: (file: File | null) => void;
+}) {
   const input = useRef<HTMLInputElement>(null);
-  const f = m.form!;
   return (
-    <Field id="version-archivo" label="Archivo" error={m.errors.file}>
+    <Field id={p.id} label={p.label} {...(p.help ? { help: p.help } : {})} error={p.error}>
       <div className="releases-file">
         <input
           ref={input}
-          id="version-archivo"
+          id={p.id}
           type="file"
-          accept={f.platform === 'windows' ? '.exe' : '.apk'}
+          accept={p.accept}
           className="releases-file__input"
           tabIndex={-1}
-          aria-describedby="version-archivo-msg"
-          aria-invalid={m.errors.file ? true : undefined}
-          onChange={(e) => m.setField('file', e.target.files?.[0] ?? null)}
+          aria-describedby={`${p.id}-msg`}
+          aria-invalid={p.error ? true : undefined}
+          onChange={(e) => p.onPick(e.target.files?.[0] ?? null)}
         />
         <span className="releases-file__name">
-          {f.file ? `${f.file.name} · ${size(f.file.size)}` : 'Sin archivo elegido'}
+          {p.file ? `${p.file.name} · ${size(p.file.size)}` : 'Sin archivo elegido'}
         </span>
         <Button variant="ghost" icon={<Upload size={16} aria-hidden="true" />} onClick={() => input.current?.click()}>
-          {f.file ? 'Cambiar' : 'Elegir archivo'}
+          {p.file ? 'Cambiar' : 'Elegir archivo'}
         </Button>
       </div>
     </Field>
@@ -177,7 +184,26 @@ function PublishForm({ m }: { m: ReleasesModel }) {
           onChange={(e) => m.setField('notes', e.target.value)}
         />
       </Field>
-      <FilePicker m={m} />
+      <FilePicker
+        id="version-archivo"
+        label="Archivo"
+        accept={f.platform === 'windows' ? '.exe' : '.apk'}
+        file={f.file}
+        error={m.errors.file}
+        onPick={(file) => m.setField('file', file)}
+      />
+      {/* T117: la app de Windows no abre una actualización sin la firma del proyecto (Android exige la del APK). */}
+      {f.platform === 'windows' && (
+        <FilePicker
+          id="version-firma"
+          label="Firma (.sig)"
+          help="El archivo .sig que dejó el build junto al instalador"
+          accept=".sig"
+          file={f.signature}
+          error={m.errors.signature}
+          onPick={(file) => m.setField('signature', file)}
+        />
+      )}
       {m.uploading && f.file && <p className="catalog-text" role="status">{`Subiendo ${size(f.file.size)}…`}</p>}
     </div>
   );
