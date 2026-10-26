@@ -93,6 +93,43 @@ public final class NativeTransport {
         }
     }
 
+    public interface Progress {
+        void update(long received, long total);
+    }
+
+    /**
+     * T118 y T121 · RF-UPD-05: descarga un instalador del servidor esperado a {@code file}, por partes y con su
+     * progreso, y solo lo deja si su SHA-256 es el publicado; si no, lo borra.
+     */
+    public void download(String url, ServerIdentity.Expected server, String sha256, java.io.File file, Progress progress)
+        throws Exception {
+        java.io.File part = new java.io.File(file.getPath() + ".part");
+        java.security.MessageDigest hash = java.security.MessageDigest.getInstance("SHA-256");
+        try (Response res = client(url, server).newCall(new Request.Builder().url(url).build()).execute()) {
+            if (res.code() != 200 || res.body() == null)
+                throw new IllegalStateException("El servidor no entregó el instalador (estado " + res.code() + ").");
+            long total = res.body().contentLength();
+            long received = 0;
+            byte[] buf = new byte[64 * 1024];
+            try (java.io.InputStream in = res.body().byteStream(); java.io.OutputStream out = new java.io.FileOutputStream(part)) {
+                for (int n; (n = in.read(buf)) > 0; ) {
+                    out.write(buf, 0, n);
+                    hash.update(buf, 0, n);
+                    received += n;
+                    progress.update(received, total);
+                }
+            }
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte b : hash.digest()) hex.append(String.format("%02x", b));
+        if (!hex.toString().equalsIgnoreCase(sha256)) {
+            part.delete();
+            throw new IllegalStateException("El archivo descargado no coincide con el publicado: no se instala.");
+        }
+        if (file.exists()) file.delete();
+        if (!part.renameTo(file)) throw new IllegalStateException("No se pudo guardar el instalador.");
+    }
+
     /** Abre un WebSocket y devuelve su número; sus eventos salen por {@code events}. */
     public synchronized int open(String url, ServerIdentity.Expected server) throws Exception {
         int id = next++;

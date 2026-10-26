@@ -15,14 +15,25 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
-            android:exported="true">
+            android:exported="false" />
 
+        <!-- T118 · RF-UI-11: la puerta de la app comprueba el WebView antes de cargar la interfaz. -->
+        <activity
+            android:name=".EntryActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:noHistory="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+
+        <!-- T118 · P-27: WebView desactualizado, nativa (la interfaz no puede cargar). -->
+        <activity
+            android:name=".WebViewOutdatedActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -42,4 +53,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <!-- T118 · P-27 (y T121): abrir la instalación del WebView o del APK descargados del servidor local. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 </manifest>
