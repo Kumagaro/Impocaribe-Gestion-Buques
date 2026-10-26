@@ -135,7 +135,7 @@ public class ImpocaribeNativePlugin extends Plugin {
 
     private void run(PluginCall call, String channel) {
         JSArray args = call.getArray("args", new JSArray());
-        boolean waitsForNetwork = channel.equals("http") || channel.startsWith("discovery.");
+        boolean waitsForNetwork = channel.equals("http") || channel.startsWith("discovery.") || channel.equals("update.install");
         (waitsForNetwork ? network : ordered).execute(() -> {
             try {
                 Object decoded = decode(args);
@@ -304,9 +304,20 @@ public class ImpocaribeNativePlugin extends Plugin {
                 Downloads.save(getContext(), str(arg(a, 0), "el nombre"), (byte[]) data);
                 return null;
             }
-            // shortcut: la actualización del APK llega con T121; hasta entonces se dice por qué no se puede.
-            case "update.install":
-                throw new UnsupportedOperationException("Todavía no está disponible en la app Android.");
+            case "update.install": {
+                // T121 · RF-UPD-05: el progreso va a la banda de AL-15 o a EST-07, un aviso por punto porcentual.
+                long[] last = { -1 };
+                AppUpdate.install(getActivity(), str(map(arg(a, 0), "la versión").get("version"), "la versión"), (got, total) -> {
+                    long percent = total > 0 ? got * 100 / total : -1;
+                    if (percent == last[0] && got < total) return;
+                    last[0] = percent;
+                    JSObject p = new JSObject();
+                    p.put("received", got);
+                    p.put("total", total);
+                    notifyListeners("updateProgress", p);
+                });
+                return null;
+            }
             default:
                 throw new IllegalArgumentException("Canal no permitido: " + channel);
         }

@@ -874,6 +874,22 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 - [ ] **T121. Android: actualización.**
   - *Depende:* T120, T114
+  - *Estado (2026-10-26):* hecha.
+    - **Actualización (RF-UPD-05, `nativo/AppUpdate`)**, como la de la PC (T117):
+      - la interfaz solo dice qué versión; tiene que ser x.y.z, más nueva que la instalada y la publicada en el servidor emparejado, cuya identidad se verifica (DT-18);
+      - la primera vez lleva a «Instalar apps de este origen» y la banda dice que vuelva a tocar «Actualizar ahora»;
+      - descarga con su progreso en la banda de AL-15 o en EST-07 y comprueba el SHA-256 publicado;
+      - solo abre el instalador del sistema si el APK es esta app firmada con la misma clave que la instalada (`ApkTrust`), y el sistema pide la confirmación.
+    - **Versión de la app:** `versionName` es la de `packages/android/package.json` y `versionCode` crece con ella (1 + mayor·10⁶ + menor·10³ + parche): Android no instala una actualización con un código menor o igual al instalado.
+    - **Arreglo encontrado al probarlo:** la interfaz tomaba su versión de `packages/web/package.json`, no de la app instalada. Tras actualizar, seguía ofreciendo la misma versión y enviaba una versión equivocada en `X-App-Version` (DT-11). Ahora usa la de la parte nativa, también en la PC.
+    - **Pruebas:** 2 JUnit de las versiones. En el emulador de Android 14, contra el servidor real sin TLS, se publicó un APK 0.0.2 como Apoderada (`POST /updates`) sobre una app 0.0.0:
+      - la banda «Hay una versión nueva: 0.0.2»;
+      - el permiso de instalar apps;
+      - la descarga con su progreso (48 MB);
+      - «¿Desea actualizar esta app?» y la app queda en 0.0.2 con la sesión y el emparejamiento intactos;
+      - el servicio de alertas vuelve a arrancar solo tras actualizar;
+      - la banda ya no aparece.
+    - **Pendiente, con T125:** la clave de firma del APK que se distribuye. En las pruebas las dos versiones llevan la de depuración. Esa clave hay que guardarla siempre: con otra, Android no deja actualizar.
 
 - [ ] **T122. Pruebas de humo en la app Android real.** Playwright para Android en emuladores Android 7 y 14: emparejar, iniciar sesión, primera sincronización, emitir una orden, recibir una alerta con la app cerrada y trabajar sin conexión.
   - *Cubre:* RNF-02, plan §11.2

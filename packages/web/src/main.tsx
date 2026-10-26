@@ -44,7 +44,9 @@ void nativePlatform().then((native) => {
   if (native) setPlatform(native);
   // La clase se decide una vez: en Android el ancho mínimo no cambia al girar (RF-UI-02).
   const deviceClass = deviceClassFor(findPlatform()?.deviceInfo() ?? null, location.search);
-  const session = new AppSession(findPlatform() ?? createBrowserPlatform(location, pkg.version), pkg.version);
+  // T121 · RF-UPD-02 y DT-11: la versión es la de la app instalada (la que se actualiza), no la de esta interfaz.
+  const platform = findPlatform() ?? createBrowserPlatform(location, pkg.version);
+  const session = new AppSession(platform, platform.deviceInfo().appVersion);
   void session.load();
   document.documentElement.dataset.deviceClass = deviceClass;
 
