@@ -22,6 +22,7 @@ export const NATIVE_CHANNELS = [
   'notify',
   'secureScreen',
   'update.install',
+  'qr.scan',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 

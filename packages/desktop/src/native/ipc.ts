@@ -68,6 +68,10 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
     },
     secureScreen: (enabled) => s.secureScreen(enabled === true),
     'update.install': (u) => s.installUpdate({ version: str((u as Partial<NativeUpdate>)?.version, 'la versión') }),
+    // T118: solo Android lee el QR de emparejamiento con la cámara (P-01); en la PC no se ofrece.
+    'qr.scan': () => {
+      throw new Error('Este equipo no lee códigos QR.');
+    },
   };
 }
 

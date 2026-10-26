@@ -122,6 +122,8 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
           }),
       };
     },
+    // T118 · P-01: el QR de emparejamiento con la cámara, solo en Android (la PC no lo ofrece).
+    ...(bridge.info.platform === 'android' ? { scanQr: () => invoke<string | null>('qr.scan') } : {}),
     saveFile: (name, data) => invoke<void>('file.save', name, data),
     notify: (n) => invoke<void>('notify', n),
     secureScreen: (enabled) => invoke<void>('secureScreen', enabled),

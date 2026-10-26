@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
 
+        <!-- T118 · P-01: leer el QR de emparejamiento con la cámara. -->
+        <activity
+            android:name=".QrScanActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
         <!-- T118 · P-27: WebView desactualizado, nativa (la interfaz no puede cargar). -->
         <activity
             android:name=".WebViewOutdatedActivity"
@@ -55,4 +62,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- T118 · P-27 (y T121): abrir la instalación del WebView o del APK descargados del servidor local. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- T118 · P-01: el QR de emparejamiento. Sin cámara la app funciona igual (código o dirección a mano). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

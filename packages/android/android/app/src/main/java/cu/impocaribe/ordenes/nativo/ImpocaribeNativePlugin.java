@@ -1,5 +1,8 @@
 package cu.impocaribe.ordenes.nativo;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.util.Base64;
@@ -9,7 +12,13 @@ import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import androidx.activity.result.ActivityResult;
+import com.getcapacitor.PermissionState;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import cu.impocaribe.ordenes.QrScanActivity;
 import cu.impocaribe.ordenes.BuildConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +33,10 @@ import org.json.JSONObject;
  * (NATIVE_CHANNELS, packages/shared/src/domain/nativeBridge.ts). Por Capacitor solo viaja JSON: los bytes van como
  * {@code { $bytes: base64 }} (web/src/platform/capacitor-bridge.ts). Los argumentos llegan de la interfaz: se comprueban.
  */
-@CapacitorPlugin(name = "ImpocaribeNative")
+@CapacitorPlugin(
+    name = "ImpocaribeNative",
+    permissions = { @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera") }
+)
 public class ImpocaribeNativePlugin extends Plugin {
     private SecureStore secure;
     private LocalDatabases databases;
@@ -72,6 +84,12 @@ public class ImpocaribeNativePlugin extends Plugin {
     @PluginMethod
     public void invoke(PluginCall call) {
         String channel = call.getString("channel", "");
+        // T118 · P-01: el QR abre la cámara (con su permiso) y responde al volver; no pasa por dispatch.
+        if ("qr.scan".equals(channel)) {
+            if (getPermissionState("camera") == PermissionState.GRANTED) scan(call);
+            else requestPermissionForAlias("camera", call, "cameraPermission");
+            return;
+        }
         JSArray args = call.getArray("args", new JSArray());
         try {
             Object decoded = decode(args);
@@ -82,6 +100,26 @@ public class ImpocaribeNativePlugin extends Plugin {
         } catch (Exception e) {
             call.reject(e.getMessage() == null ? "Error de la parte nativa." : e.getMessage(), e);
         }
+    }
+
+    @PermissionCallback
+    private void cameraPermission(PluginCall call) {
+        if (getPermissionState("camera") == PermissionState.GRANTED) scan(call);
+        else call.reject("Sin permiso para usar la cámara: empareje con el código o escriba la dirección a mano.");
+    }
+
+    private void scan(PluginCall call) {
+        startActivityForResult(call, new Intent(getContext(), QrScanActivity.class), "qrResult");
+    }
+
+    /** El texto del QR, o null si se canceló. */
+    @ActivityCallback
+    private void qrResult(PluginCall call, ActivityResult result) {
+        JSObject out = new JSObject();
+        Intent data = result.getData();
+        String text = result.getResultCode() == Activity.RESULT_OK && data != null ? data.getStringExtra(QrScanActivity.EXTRA_TEXT) : null;
+        out.put("value", text == null ? JSONObject.NULL : text);
+        call.resolve(out);
     }
 
     private Object dispatch(String channel, List<?> a) throws Exception {
