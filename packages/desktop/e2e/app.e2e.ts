@@ -77,6 +77,22 @@ test('arranca sin servidor, con la plataforma de escritorio y solo el puente nat
   expect(raw.subarray(0, 15).toString('latin1')).not.toBe('SQLite format 3');
 });
 
+test('T116 · cerrar la ventana la oculta en la bandeja y la interfaz sigue viva (RF-ALR-01)', async () => {
+  const page = await app.firstWindow();
+  const state = await app.evaluate(({ BrowserWindow }) => {
+    const w = BrowserWindow.getAllWindows()[0]!;
+    w.close();
+    return { visible: w.isVisible(), destroyed: w.isDestroyed(), count: BrowserWindow.getAllWindows().length };
+  });
+  expect(state).toEqual({ visible: false, destroyed: false, count: 1 });
+  // Oculta, la interfaz sigue corriendo: con backgroundThrottling apagado, Chromium la sigue tratando como visible y no
+  // frena sus temporizadores ni su conexión de alertas.
+  expect(await page.evaluate(() => new Promise((r) => setTimeout(() => r(document.visibilityState), 300)))).toBe(
+    'visible',
+  );
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.show());
+});
+
 test('una segunda apertura no crea otra ventana', async () => {
   const second = await _electron
     .launch({

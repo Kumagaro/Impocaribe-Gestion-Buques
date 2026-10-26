@@ -1,7 +1,8 @@
-// T003 y T115 · plan §10.1: la app de escritorio. Una sola instancia; la interfaz se sirve con app://impocaribe (DT-02)
-// en una ventana aislada (contextIsolation, sandbox) que solo habla con el proceso principal por el puente del preload.
-// Lo nativo vive aquí: red con verificación de la identidad (DT-19), descubrimiento, almacenamiento seguro y SQLCipher.
-import { app, BrowserWindow, dialog, ipcMain, net, Notification, protocol, safeStorage } from 'electron';
+// T003, T115 y T116 · plan §10.1: la app de escritorio. Una sola instancia; la interfaz se sirve con app://impocaribe
+// (DT-02) en una ventana aislada (contextIsolation, sandbox) que solo habla con el proceso principal por el puente del
+// preload. Lo nativo vive aquí: red con verificación de la identidad (DT-19), descubrimiento, almacenamiento seguro,
+// SQLCipher y la bandeja: cerrar la ventana la oculta y las alertas siguen llegando (RF-ALR-01).
+import { app, BrowserWindow, dialog, ipcMain, Menu, net, Notification, protocol, safeStorage, Tray } from 'electron';
 import type { NativeDeviceInfo, NativeSocketEvent } from '@impocaribe/shared';
 import { writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
@@ -13,6 +14,7 @@ import { broadcast, browse, lanInterfaces, probe, subnetAddresses } from './nati
 import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
+import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
 
 // shortcut: build de web en el monorepo; el instalador (T117) lo empaqueta junto a la app.
 const webDist = fileURLToPath(new URL('../../web/dist', import.meta.url));
@@ -27,14 +29,21 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let window: BrowserWindow | null = null;
+let tray: Tray | null = null;
+/** «Salir», el apagado o la actualización: entonces cerrar la ventana sí cierra la app. */
+let quitting = false;
+
+const show = () => {
+  if (window?.isMinimized()) window.restore();
+  window?.show();
+  window?.focus();
+};
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-  // Una segunda apertura trae al frente la ventana que ya está.
-  app.on('second-instance', () => {
-    if (window?.isMinimized()) window.restore();
-    window?.focus();
-  });
+  // Una segunda apertura trae al frente la ventana que ya está (también si estaba en la bandeja).
+  app.on('second-instance', show);
+  app.on('before-quit', () => (quitting = true));
 
   // Sin await de nivel superior: en un main ESM, "ready" no llega hasta que el módulo termina de evaluarse.
   void app.whenReady().then(() => {
@@ -67,10 +76,19 @@ else {
         subnet: () => subnetAddresses(lanInterfaces()),
       },
       saveFile: async (name, bytes) => {
-        const { canceled, filePath } = await dialog.showSaveDialog(window!, { defaultPath: name });
+        // RF-ORD-22: «Guardar como», con el filtro de su tipo (el PDF de la orden).
+        const { canceled, filePath } = await dialog.showSaveDialog(window!, {
+          defaultPath: name,
+          filters: saveFilters(name),
+        });
         if (!canceled && filePath) await writeFile(filePath, bytes);
       },
-      notify: (title, body) => new Notification({ title, body, icon }).show(),
+      notify: (title, body) => {
+        // RF-ALR-01: también con la ventana oculta; tocarla trae la app al frente.
+        const n = new Notification({ title, body, icon });
+        n.on('click', show);
+        n.show();
+      },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
     });
     app.on('before-quit', () => {
@@ -82,8 +100,39 @@ else {
       width: 1280,
       height: 800,
       icon,
-      webPreferences: { preload, contextIsolation: true, sandbox: true, nodeIntegration: false },
+      show: !startsHidden(process.argv),
+      // Oculta en la bandeja, la interfaz sigue sincronizando y recibiendo alertas: sin frenar sus temporizadores.
+      webPreferences: {
+        preload,
+        contextIsolation: true,
+        sandbox: true,
+        nodeIntegration: false,
+        backgroundThrottling: false,
+      },
     });
+    window.on('close', (event) => {
+      if (!hideOnClose(quitting)) return;
+      event.preventDefault();
+      window?.hide();
+    });
+
+    tray = new Tray(icon);
+    tray.setToolTip('Órdenes de Carga');
+    const refreshMenu = () =>
+      tray?.setContextMenu(
+        Menu.buildFromTemplate(
+          trayMenu(app.getLoginItemSettings().openAtLogin, {
+            open: show,
+            setStartWithWindows: (enabled) => {
+              app.setLoginItemSettings(loginItem(enabled));
+              refreshMenu();
+            },
+            quit: () => app.quit(),
+          }),
+        ),
+      );
+    refreshMenu();
+    tray.on('click', show);
     // Nada fuera de la app: ni navegación ni ventanas nuevas (Const. art. X).
     window.webContents.on('will-navigate', (event, url) => {
       if (!url.startsWith(APP_ORIGIN)) event.preventDefault();
@@ -91,5 +140,8 @@ else {
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     return window.loadURL(`${APP_ORIGIN}/index.html`);
   });
-  app.on('window-all-closed', () => app.quit());
+  // Con la ventana oculta la app sigue en la bandeja; solo «Salir» la cierra.
+  app.on('window-all-closed', () => {
+    if (quitting) app.quit();
+  });
 }

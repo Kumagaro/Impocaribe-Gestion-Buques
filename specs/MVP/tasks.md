@@ -780,6 +780,11 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T116. Electron: sistema.**
   - *Cubre:* RF-ORD-22, RNF-09, RF-ALR-01
   - *Depende:* T115
+  - *Estado (2026-10-26):* hecha.
+    - **Bandeja (RF-ALR-01):** icono con «Abrir Órdenes de Carga», «Iniciar con Windows» (abre en la bandeja, sin ventana) y «Salir». Cerrar la ventana la oculta y la app sigue: la interfaz no frena sus temporizadores ni su conexión de alertas (`backgroundThrottling` apagado). Tocar una notificación o abrir la app otra vez trae la ventana; solo «Salir» (o el apagado) la cierra.
+    - **«Guardar como» (RF-ORD-22):** con el filtro del tipo (PDF).
+    - **Bloqueo de capturas (RNF-09):** `setContentProtection` en las pantallas de códigos y de firma o cuño, que ya lo pedían.
+    - **Pruebas:** 7 de la lógica de la bandeja y del filtro, y una E2E más con la app real: cerrar oculta, la ventana sigue viva y es una sola. «Iniciar con Windows» no se prueba con la app real porque escribiría en el registro de este equipo; su lógica está en las pruebas unitarias.
 
 - [ ] **T117. Electron: instaladores completo y ligero, y actualización del ligero desde el servidor.**
   - *Depende:* T116, T114
