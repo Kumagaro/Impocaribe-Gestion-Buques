@@ -17,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.core.content.FileProvider;
+import cu.impocaribe.ordenes.nativo.ApkTrust;
 import cu.impocaribe.ordenes.nativo.Discovery;
 import cu.impocaribe.ordenes.nativo.DiscoveryMath;
 import cu.impocaribe.ordenes.nativo.NativeTransport;
@@ -37,9 +38,11 @@ import org.json.JSONObject;
  */
 public class WebViewOutdatedActivity extends Activity {
     static final String EXTRA_FOUND = "impocaribe.webview.found";
+    static final String EXTRA_PACKAGE = "impocaribe.webview.package";
     private static final String PAIRING_KEY = "impocaribe.pairing";
 
-    private final String provider = WebViewCheck.provider(Build.VERSION.SDK_INT);
+    /** La plataforma del proveedor que usa el sistema (si no se sabe, el que suele traer este Android). */
+    private String provider;
     private TextView status;
     private TextView willInstall;
     private ProgressBar bar;
@@ -73,6 +76,8 @@ public class WebViewOutdatedActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         String found = getIntent().getStringExtra(EXTRA_FOUND);
+        String platform = WebViewCheck.platformOf(getIntent().getStringExtra(EXTRA_PACKAGE));
+        provider = platform != null ? platform : WebViewCheck.provider(Build.VERSION.SDK_INT);
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -180,7 +185,8 @@ public class WebViewOutdatedActivity extends Activity {
                 action.setText("DESCARGANDO…");
                 bar.setVisibility(View.VISIBLE);
             });
-            File apk = new File(getCacheDir(), provider + "-" + latest + ".apk");
+            // Un nombre fijo: nada de lo que dice el servidor forma la ruta.
+            File apk = new File(getCacheDir(), provider + ".apk");
             transport.download(base + check.getString("downloadUrl"), expected, check.getString("sha256"), apk, (got, total) ->
                 ui(() -> {
                     bar.setMax(100);
@@ -188,23 +194,39 @@ public class WebViewOutdatedActivity extends Activity {
                     status.setText(String.format("%.1f de %.1f MB", got / 1048576.0, total / 1048576.0).replace('.', ','));
                 })
             );
+            // El paquete esperado, con la firma del fabricante que ya está instalado: si no, no se abre.
+            String untrusted = ApkTrust.check(getPackageManager(), apk, WebViewCheck.packageOf(provider));
+            if (untrusted != null) {
+                apk.delete();
+                fail(untrusted);
+                return;
+            }
             ui(() -> install(apk));
         } catch (Exception e) {
             fail(e.getMessage() == null ? "No se pudo descargar la actualización." : e.getMessage());
         }
     }
 
-    /** El emparejado (por su última dirección) y, si no responde, el que se anuncie en la red. */
+    /**
+     * El servidor del que bajar el instalador. Con emparejamiento guardado, solo ese (por su última dirección o
+     * anunciado en la red con la misma identidad, y siempre con la huella guardada). Sin él (el WebView viejo impide
+     * emparejar), el que se anuncie: lo que descargue igual tiene que ser el paquete esperado con la firma del
+     * fabricante (ApkTrust).
+     */
     private DiscoveryMath.Announcement findServer() throws Exception {
         Discovery discovery = new Discovery(this);
+        String pairedId = null;
+        String pairedFp = null;
         try {
             String raw = new SecureStore(this).get(PAIRING_KEY);
             if (raw != null) {
                 JSONObject p = new JSONObject(raw);
+                pairedId = p.getString("serverId");
+                pairedFp = p.getString("caFingerprint");
                 JSONObject last = p.optJSONObject("lastAddress");
                 if (last != null) {
                     DiscoveryMath.Announcement a = discovery.probe(last.getString("address"), last.getInt("port"), 2000, BuildConfig.TLS_OFF);
-                    if (a != null && a.serverId.equals(p.getString("serverId"))) return a;
+                    if (a != null && a.serverId.equals(pairedId)) return paired(a, pairedId, pairedFp);
                 }
             }
         } catch (Exception ignored) {
@@ -212,7 +234,16 @@ public class WebViewOutdatedActivity extends Activity {
         }
         List<DiscoveryMath.Announcement> found = discovery.broadcast(1500);
         if (found.isEmpty()) found = discovery.browse(3000);
-        return found.isEmpty() ? null : found.get(0);
+        for (DiscoveryMath.Announcement a : found) {
+            if (pairedId == null) return a;
+            if (a.serverId.equals(pairedId)) return paired(a, pairedId, pairedFp);
+        }
+        return null;
+    }
+
+    /** La dirección es la anunciada, pero la identidad y la huella, las del emparejamiento guardado. */
+    private static DiscoveryMath.Announcement paired(DiscoveryMath.Announcement a, String id, String fp) {
+        return new DiscoveryMath.Announcement(a.address, a.port, id, fp, a.version);
     }
 
     private void install(File apk) {

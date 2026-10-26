@@ -24,7 +24,22 @@ public final class WebViewCheck {
         return major(versionName) < MIN_MAJOR;
     }
 
-    /** La plataforma publicada en el servidor (T113) con el instalador que corresponde a este Android. */
+    public static final String CHROME = "com.android.chrome";
+    public static final String SYSTEM_WEBVIEW = "com.google.android.webview";
+
+    /** La plataforma publicada (T113) del proveedor que usa el sistema, por su paquete; null si no es ninguno de los dos. */
+    public static String platformOf(String packageName) {
+        if (CHROME.equals(packageName)) return "android-webview-chrome";
+        if (SYSTEM_WEBVIEW.equals(packageName)) return "android-webview-system";
+        return null;
+    }
+
+    /** El paquete que tiene que traer el instalador de esa plataforma (y cuya firma se compara, ApkTrust). */
+    public static String packageOf(String platform) {
+        return "android-webview-chrome".equals(platform) ? CHROME : SYSTEM_WEBVIEW;
+    }
+
+    /** Sin saber el proveedor: el que suele traer cada Android. */
     public static String provider(int sdk) {
         return sdk <= 28 ? "android-webview-chrome" : "android-webview-system";
     }

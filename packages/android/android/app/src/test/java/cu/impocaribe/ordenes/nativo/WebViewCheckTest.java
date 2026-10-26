@@ -30,4 +30,13 @@ public class WebViewCheckTest {
         assertEquals("Chrome 83", WebViewCheck.label("android-webview-chrome", "83.0.4103.106"));
         assertEquals("Android System WebView 86", WebViewCheck.label("android-webview-system", "86.0.4240.185"));
     }
+
+    @Test
+    public void laPlataformaSaleDelPaqueteQueUsaElSistema() {
+        assertEquals("android-webview-chrome", WebViewCheck.platformOf("com.android.chrome"));
+        assertEquals("android-webview-system", WebViewCheck.platformOf("com.google.android.webview"));
+        assertEquals(null, WebViewCheck.platformOf("com.otro.navegador"));
+        assertEquals("com.android.chrome", WebViewCheck.packageOf("android-webview-chrome"));
+        assertEquals("com.google.android.webview", WebViewCheck.packageOf("android-webview-system"));
+    }
 }
