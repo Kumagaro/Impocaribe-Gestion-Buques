@@ -339,9 +339,6 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* RF-UI-09
   - *Depende:* T017
   - *Terminado:* aprobadas.
-  - *Estado (2026-10-27):* maqueta `docs/maquetas/T124-servidor.html` (claro y oscuro, solo escritorio), pendiente de aprobar:
-    - **P-28:** cinco pasos (comprobación con el bloqueo si ya hay un servidor y la marca ámbar con 4 GB; permisos y código de instalación; montaje de red; creación con los 10 pasos del plan §10.3, la barra y el detalle técnico; listo con el QR y «Crear la primera Apoderada»), el fallo de un paso con Reintentar y Deshacer, y la variante desde un respaldo de traslado.
-    - **P-29:** servicio, energía, red y memoria (contra el presupuesto del plan §10.7), solicitudes de emparejamiento, dispositivos, QR y mantenimiento; con batería, en modo protegido, 8 dispositivos en hotspot y la ventana al frente con una solicitud nueva (AL-20 a AL-22); los asistentes de actualizar (con la vuelta atrás), preparar traslado, desinstalar y el restablecimiento de emergencia.
   - *Estado (2026-10-15):* `docs/maquetas/T037-acceso.html`, aprobadas por el responsable.
 
 - [x] **T038. (PP) Pantallas P-01 a P-04:** Conexión y emparejamiento, Primer arranque, Login y Recuperar.
@@ -912,21 +909,45 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 ## F11. Servidor desde la app, red, energía y despliegue
 
-- [ ] **T124. Maquetas de P-28 Crear servidor y P-29 Estado del servidor** (solo escritorio).
+- [x] **T124. Maquetas de P-28 Crear servidor y P-29 Estado del servidor** (solo escritorio).
   - *Cubre:* RF-UI-09
   - *Depende:* T017
   - *Terminado:* aprobadas.
+  - *Estado (2026-10-27):* `docs/maquetas/T124-servidor.html` (claro y oscuro, solo escritorio), aprobada por el responsable el 2026-10-27:
+    - **P-28:** cinco pasos:
+      - comprobación, con el bloqueo si ya hay un servidor y la marca ámbar con 4 GB;
+      - permisos y código de instalación;
+      - montaje de red;
+      - creación, con los 10 pasos del plan §10.3, la barra y el detalle técnico;
+      - listo, con el QR y «Crear la primera Apoderada».
+
+      Además, el fallo de un paso con Reintentar y Deshacer, y la variante desde un respaldo de traslado.
+    - **P-29:**
+      - servicio, energía, red y memoria (contra el presupuesto del plan §10.7);
+      - solicitudes de emparejamiento, dispositivos, QR y mantenimiento;
+      - con batería, en modo protegido, con 8 dispositivos en hotspot, y la ventana al frente con una solicitud nueva (AL-20 a AL-22);
+      - los asistentes de actualizar (con la vuelta atrás), preparar traslado y desinstalar, y el restablecimiento de emergencia.
 
 - [ ] **T125. Tres instaladores y paquete de distribución.** Compilación del instalador completo (app + `server-bundle`), del ligero y del APK con sus SHA-256; generación del código de instalación por empresa (solo su comprobación va en el instalador completo; el código se imprime aparte); instaladores del WebView (Chrome y Android System WebView en su última versión compatible con Android 7).
   - *Cubre:* RF-INS-01, 02, DT-16, DT-15
   - *Depende:* T117, T121
   - *Pruebas:* el instalador ligero no contiene `server-bundle` ni ofrece "Crear servidor"; el código no aparece en ningún archivo del paquete.
+  - *Decisión del responsable (2026-10-27):* la clave de firma del APK la genera el proyecto: `D:\Trabajo\Web\Islabeya\claves\impocaribe-release.jks` (fuera del repositorio; RSA 4096, válida unos 27 años), con su contraseña solo en el `.env`. Huella SHA-256 del certificado: `E4:E9:18:0C:03:4F:7B:60:10:FC:71:56:F0:37:67:7E:46:A7:40:5E:4F:0A:35:76:B2:10:73:71:AE:FB:03:62`. El responsable guarda una copia del archivo y de la contraseña fuera del equipo: sin ellos no se puede actualizar la app en los teléfonos.
+  - *Estado (2026-10-27):* preparada (`pnpm paquete "Empresa"` y `pnpm --filter @impocaribe/desktop server-bundle`), sin ejecutar aún: faltan las descargas de Node.js, PostgreSQL, WinSW y los WebView.
 
 - [ ] **T126. Ayudante de instalación.** `impocaribe-setup.exe` con elevación de Windows, comprobaciones del paso 0 (incluido el bloqueo si ya hay un servidor en la red), pasos 1 a 10 del plan §10.3 con diario, idempotencia, deshacer por paso, reparar y progreso por tubería con nombre. Configura PostgreSQL y el servicio con los límites de memoria del plan §10.7, y ofrece el restablecimiento de emergencia (RF-INS-11).
   - *Cubre:* RF-INS-03, 05, D14, DT-17, RNF-01, RNF-08, RNF-10, RNF-19, RF-INS-11, RNF-21
   - *Depende:* T125, T034, T012
   - *Pruebas:* un fallo inyectado en cada paso y Deshacer deja la PC como estaba; ejecutar dos veces seguidas no duplica nada; con un servidor en la red, no pasa del paso 0; un código incorrecto da `INSTALL_CODE_INVALID`.
   - *Pruebas adicionales:* con 4 GB de RAM, la comprobación muestra advertencia ámbar y deja continuar; el restablecimiento de emergencia con un código incorrecto se rechaza, y con el correcto obliga a cambiar la contraseña, revoca las sesiones de esa Apoderada y emite AL-11.
+  - *Decisión del responsable (2026-10-27):* el ayudante es un ejecutable propio de un solo archivo, `impocaribe-setup.exe`, hecho con Node SEA. El aviso de permiso de Windows muestra ese nombre, con «Editor desconocido», porque no hay certificado de firma de código de Windows. Va en el paquete del servidor (`server/src/setup/`), para usar sus migraciones, su identidad y el hash del código.
+  - *Estado (2026-10-27):* en curso. Hechos y probados:
+    - el motor de pasos con diario, reintentar, deshacer y reparar;
+    - la comprobación de la PC (`shared/domain/serverChecks.ts`, la misma que usará P-28);
+    - el diario en disco y el progreso por tubería con nombre;
+    - las rutas y los archivos de configuración: PostgreSQL con el plan §10.7, el servicio de WinSW y el firewall solo para la red local.
+
+    Faltan los pasos reales, el ejecutable SEA y el restablecimiento de emergencia; se prueban de verdad en las máquinas virtuales de T135.
 
 - [ ] **T127. (PP, solo escritorio) Pantalla P-28 Crear servidor**, incluida la variante desde un respaldo de traslado y el paso a P-02.
   - *Cubre:* RF-INS-03, RNF-18, HU-14
