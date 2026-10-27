@@ -65,7 +65,7 @@ public class AlertService extends Service {
         ServiceCompat.startForeground(
             this,
             ONGOING_ID,
-            ongoing("Buscando el servidor…"),
+            ongoing(false),
             Build.VERSION.SDK_INT >= 34 ? ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE : 0
         );
         if (worker == null) {
@@ -104,7 +104,7 @@ public class AlertService extends Service {
                 // Red caída o servidor apagado: se reintenta.
             }
             if (!running) return;
-            update("Buscando el servidor…");
+            update(false);
             try {
                 Thread.sleep(AlertMessages.backoffMs(++failures));
             } catch (InterruptedException e) {
@@ -139,7 +139,7 @@ public class AlertService extends Service {
                         AlertMessages.Action a = AlertMessages.read(e[1], labels);
                         if (a.kind == AlertMessages.Kind.READY) {
                             ready = true;
-                            update("Recibe las alertas aunque la app esté cerrada.");
+                            update(true);
                         } else if (a.kind == AlertMessages.Kind.NOTIFY) alert(a);
                         else if (a.kind == AlertMessages.Kind.STOP) return null;
                         break;
@@ -194,11 +194,12 @@ public class AlertService extends Service {
         return PendingIntent.getActivity(this, 0, launch, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private Notification ongoing(String text) {
+    /** El aviso fijo dice si de verdad está conectado: «conectado» solo cuando el servidor aceptó el token. */
+    private Notification ongoing(boolean connected) {
         return new NotificationCompat.Builder(this, CHANNEL_SERVICE)
             .setSmallIcon(R.drawable.ic_stat_impocaribe)
-            .setContentTitle("Impocaribe conectado")
-            .setContentText(text)
+            .setContentTitle(connected ? "Impocaribe conectado" : "Impocaribe sin conexión")
+            .setContentText(connected ? "Recibe las alertas aunque la app esté cerrada." : "Buscando el servidor…")
             .setContentIntent(open())
             .setOngoing(true)
             .setShowWhen(false)
@@ -206,8 +207,8 @@ public class AlertService extends Service {
             .build();
     }
 
-    private void update(String text) {
-        getSystemService(NotificationManager.class).notify(ONGOING_ID, ongoing(text));
+    private void update(boolean connected) {
+        getSystemService(NotificationManager.class).notify(ONGOING_ID, ongoing(connected));
     }
 
     private void alert(AlertMessages.Action a) {

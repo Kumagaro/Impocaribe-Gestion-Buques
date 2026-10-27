@@ -32,12 +32,37 @@ async function appPage(device: AndroidDevice): Promise<Page> {
 
 /**
  * Abre la app. Si su proceso sigue vivo (el servicio de alertas lo mantiene), Playwright devolvería la página anterior,
- * ya cerrada: la nueva llega como otra página de la misma conexión.
+ * ya cerrada: la nueva llega como otra página de la misma conexión. Si Android terminó el proceso, la página está en
+ * uno nuevo, con otra conexión.
  */
 async function launch(device: AndroidDevice, previous?: Page): Promise<Page> {
-  const next = previous?.context().waitForEvent('page', { timeout: 60_000 });
+  if (!previous) {
+    await sh(device, `am start -n ${PKG}/.EntryActivity`);
+    return appPage(device);
+  }
+  const pid = async () => (await sh(device, `pidof ${PKG}`)).trim();
+  const before = await pid();
+  let sameProcess: Page | null = null;
+  void previous
+    .context()
+    .waitForEvent('page', { timeout: 90_000 })
+    .then(
+      (p) => (sameProcess = p),
+      () => undefined,
+    );
   await sh(device, `am start -n ${PKG}/.EntryActivity`);
-  return next ?? appPage(device);
+  let page: Page | null = null;
+  await expect
+    .poll(
+      async () => {
+        if (sameProcess) page = sameProcess;
+        else if ((await pid()) !== before) page = await appPage(device);
+        return page !== null && !page.isClosed();
+      },
+      { timeout: 90_000 },
+    )
+    .toBe(true);
+  return page!;
 }
 
 /** La app sin ventana, como al quitarla de las recientes: el servicio de alertas sigue (RF-ALR-01). */
@@ -85,8 +110,11 @@ test('la app Android: emparejar, entrar, sincronizar, emitir, alertas con la app
     });
 
     // La app recién instalada, sin datos; sin diálogos de permisos que tapen la interfaz.
-    await device.installApk(APK);
+    // Primero sin datos (si no, al reinstalar el servicio de alertas arrancaría con el token de la vez anterior) y con
+    // el proceso detenido: la página que se busque después es la de esta apertura.
     await sh(device, `pm clear ${PKG}`);
+    await device.installApk(APK);
+    await sh(device, `am force-stop ${PKG}`);
     await sh(device, `pm grant ${PKG} android.permission.POST_NOTIFICATIONS`);
     await sh(device, `dumpsys deviceidle whitelist +${PKG}`);
     let page = await launch(device);
@@ -133,14 +161,19 @@ test('la app Android: emparejar, entrar, sincronizar, emitir, alertas con la app
     await expect(page.locator('article[aria-label="Documento de la orden por emitir"]')).toContainText('17.280');
     await button(page, 'Emitir').dispatchEvent('click');
     const number = `EAGLEAND-${havanaToday().slice(0, 4)}-V1-0001`;
-    await expect(page.getByText(number, { exact: true })).toBeVisible();
+    // La primera emisión arranca el Chromium del servidor para el PDF: con el equipo cargado tarda.
+    await expect(page.getByText(number, { exact: true })).toBeVisible({ timeout: 90_000 });
     expect(await sql('SELECT status FROM load_orders WHERE number = $1', [number])).toEqual([{ status: 'official' }]);
 
-    // RF-ALR-01: con la app cerrada, la alerta llega por el servicio en primer plano.
-    await expect
-      .poll(async () => (await notifications(device)).includes('Impocaribe conectado'), { timeout: 60_000 })
-      .toBe(true);
+    // RF-ALR-01: con la app cerrada, la alerta llega por el servicio en primer plano, cuando ya está conectado (una
+    // alerta creada mientras no lo está no se notifica después: se ve en el contador al abrir la app).
+    const connected = () =>
+      expect
+        .poll(async () => (await notifications(device)).includes('Impocaribe conectado'), { timeout: 60_000 })
+        .toBe(true);
+    await connected();
     await closeApp(device);
+    await connected();
     const reference = `DM 80434 prueba ${Date.now()}`;
     await sql(
       `INSERT INTO alerts (type, kind, audience_roles, title, detail, created_at)
