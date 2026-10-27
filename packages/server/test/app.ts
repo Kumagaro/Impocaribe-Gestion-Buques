@@ -17,8 +17,12 @@ import {
   DATA_DIR,
   DB,
   MIN_APP_VERSION,
+  POWER_ENABLED,
+  POWER_PROVIDER,
+  POWER_SHUTDOWN,
   SERVER_INFO,
 } from '../src/tokens.ts';
+import { simulatedPower } from '../src/power/provider.ts';
 import { listenForTests } from './listen.ts';
 import type { SuiteDb } from './suite-db.ts';
 
@@ -37,6 +41,9 @@ export interface TestApp {
   fetch(url: string, init?: RequestInit): Promise<Response>;
   close(): Promise<void>;
 }
+
+/** T132: cuántas veces se pidió detener el servidor (RF-ENE-04). */
+export const stops = { count: 0 };
 
 export const TEST_DEVICE = 'dispositivo-de-pruebas';
 export const deviceSecret = (id: string) => `secreto-${id}`;
@@ -77,6 +84,15 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     .useValue(suite.url)
     .overrideProvider(BACKUPS_ENABLED)
     .useValue(false)
+    // T132: la energía se simula; las pruebas la cambian y llaman a Power.check. La parada al 5 % solo se cuenta.
+    .overrideProvider(POWER_PROVIDER)
+    .useValue(simulatedPower())
+    .overrideProvider(POWER_ENABLED)
+    .useValue(false)
+    .overrideProvider(POWER_SHUTDOWN)
+    .useValue(async () => {
+      stops.count++;
+    })
     .compile();
   // rawBody como en producción (createApp): la firma del dispositivo y la idempotencia usan el cuerpo tal como llegó.
   const app = configureApp(

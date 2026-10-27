@@ -9,8 +9,10 @@ import {
   deadlineAt,
   formatTons,
   parseTons,
+  powerMode,
   type AlertType,
   type Clock,
+  type PowerReading,
 } from '@impocaribe/shared';
 import { and, asc, eq, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -31,11 +33,12 @@ import {
   vVesselBalance,
 } from '../db/schema/vessels.ts';
 import { Maintenance } from '../backups/maintenance.ts';
+import { Power } from '../power/power.ts';
 import { Realtime } from '../sync/realtime.ts';
 import { ALERT_CONDITIONS_ENABLED, CLOCK, DB } from '../tokens.ts';
 import { openCondition, replicateAlerts, resolveMissing, type AlertInput } from './alerts.ts';
 
-/** Las que evalúa esta pasada. AL-20 y 21 llegan con la energía (F10). */
+/** Las que evalúa esta pasada. AL-21 llega con el límite del hotspot (T134). */
 export const EVALUATED: AlertType[] = [
   'AL-01',
   'AL-03',
@@ -46,6 +49,7 @@ export const EVALUATED: AlertType[] = [
   'AL-17',
   'AL-18',
   'AL-19',
+  'AL-20',
   'AL-23',
 ];
 
@@ -138,7 +142,7 @@ async function declarationConditions(tx: Tx, now: Date): Promise<Wanted[]> {
   return out;
 }
 
-async function otherConditions(tx: Tx, now: Date): Promise<Wanted[]> {
+async function otherConditions(tx: Tx, now: Date, power: PowerReading): Promise<Wanted[]> {
   const out: Wanted[] = [];
   const stale = await tx
     .select({ id: drafts.id, ownerId: drafts.ownerId })
@@ -264,16 +268,45 @@ async function otherConditions(tx: Tx, now: Date): Promise<Wanted[]> {
         detail: `Lleva más de ${CONFIRM_EVERY_DAYS} días sin que una Apoderada la escriba. Si nadie la recuerda, los respaldos no se podrán restaurar.`,
       },
     ]);
+
+  // AL-20 · RF-ENE-02, 03: el servidor con batería o en modo protegido; se resuelve sola al volver la corriente. El
+  // porcentaje en vivo va en la banda de las apps (server.power): el título no cambia mientras la alerta sigue abierta.
+  const mode = powerMode(power);
+  if (mode === 'battery')
+    out.push([
+      'AL-20',
+      {
+        type: 'AL-20',
+        title: 'El servidor funciona con batería',
+        detail: 'Sin corriente en la PC servidor. Al 15 % pasa a modo protegido (solo consulta) y al 5 % se detiene.',
+      },
+    ]);
+  else if (mode !== 'mains')
+    out.push([
+      'AL-20:protegido',
+      {
+        type: 'AL-20',
+        title: 'Servidor en modo protegido por batería baja',
+        detail: 'No se aceptan cambios hasta que vuelva la corriente; los datos están asegurados. Al 5 % se detiene.',
+      },
+    ]);
   return out;
 }
 
-/** Una pasada completa. Devuelve cuántas alertas abrió y cuántas resolvió. */
-export async function evaluateConditions(db: NodePgDatabase, clock: Clock) {
+/**
+ * Una pasada completa. Devuelve cuántas alertas abrió y cuántas resolvió. `power`: la energía de la PC servidor
+ * (T132); sin ella, con corriente.
+ */
+export async function evaluateConditions(
+  db: NodePgDatabase,
+  clock: Clock,
+  power: PowerReading = { onBattery: false, percent: null },
+) {
   return db.transaction(async (tx) => {
     // Una sola pasada a la vez (varias pueden coincidir: el temporizador y un cambio).
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('impocaribe_alert_conditions'))`);
     const now = clock.now();
-    const wanted = [...(await declarationConditions(tx, now)), ...(await otherConditions(tx, now))];
+    const wanted = [...(await declarationConditions(tx, now)), ...(await otherConditions(tx, now, power))];
     const opened: string[] = [];
     for (const [key, alert] of wanted) {
       const id = await openCondition(tx, clock, key, alert);
@@ -307,6 +340,7 @@ export class AlertConditions implements OnApplicationBootstrap, OnApplicationShu
     @Inject(ALERT_CONDITIONS_ENABLED) private readonly enabled: boolean,
     private readonly realtime: Realtime,
     private readonly maintenance: Maintenance,
+    private readonly power: Power,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -314,7 +348,13 @@ export class AlertConditions implements OnApplicationBootstrap, OnApplicationShu
     this.run();
     this.timer = setInterval(() => this.run(), EVERY_MS);
     this.timer.unref();
-    this.stopListening = this.realtime.onSync(() => this.soon());
+    const stopSync = this.realtime.onSync(() => this.soon());
+    // T132: AL-20 se abre o se resuelve en cuanto cambia la energía.
+    const stopPower = this.power.onChange(() => this.soon());
+    this.stopListening = () => {
+      stopSync();
+      stopPower();
+    };
   }
 
   onApplicationShutdown(): void {
@@ -333,7 +373,7 @@ export class AlertConditions implements OnApplicationBootstrap, OnApplicationShu
 
   private run(): void {
     if (this.maintenance.active) return;
-    void evaluateConditions(this.db, this.clock).catch((err: unknown) =>
+    void evaluateConditions(this.db, this.clock, this.power.state).catch((err: unknown) =>
       this.log.error(`No se pudieron evaluar las alertas: ${String(err)}`),
     );
   }

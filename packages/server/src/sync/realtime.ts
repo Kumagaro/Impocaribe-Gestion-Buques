@@ -68,6 +68,7 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
   private pinger: NodeJS.Timeout | undefined;
   private closing = false;
   private readonly syncListeners = new Set<() => void>();
+  private readonly readyListeners = new Set<(send: (msg: WsServerMessage) => void) => void>();
 
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
@@ -101,6 +102,17 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
   onSync(fn: () => void): () => void {
     this.syncListeners.add(fn);
     return () => this.syncListeners.delete(fn);
+  }
+
+  /** T132: a cada app que se conecta se le puede mandar el estado actual (la energía). */
+  onReady(fn: (send: (msg: WsServerMessage) => void) => void): () => void {
+    this.readyListeners.add(fn);
+    return () => this.readyListeners.delete(fn);
+  }
+
+  /** T132: un aviso a todas las apps conectadas (no al token de dispositivo, que solo recibe alertas). */
+  broadcast(msg: WsServerMessage): void {
+    for (const c of this.clients) if (c.kind === 'app') this.send(c, msg);
   }
 
   /** Un cliente dedicado a LISTEN; si se cae la conexión, se rehace. */
@@ -150,6 +162,7 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
     socket.on('close', () => this.clients.delete(client));
     socket.on('error', () => socket.terminate());
     this.send(client, { type: 'ready' });
+    if (client.kind === 'app') for (const fn of this.readyListeners) fn((msg) => this.send(client, msg));
   }
 
   /** La sesión del token, si está vigente, su usuario activo y su dispositivo sin revocar. */

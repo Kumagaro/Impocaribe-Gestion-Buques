@@ -1,4 +1,5 @@
 // T025 · Elementos globales de ui-spec §1.2, compartidos por las tres presentaciones de AppShell.
+import { powerNotice } from '@impocaribe/shared';
 import { CircleUserRound, Monitor, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
@@ -13,8 +14,8 @@ export interface ShellStatus {
   asOf: string;
   pendingDrafts: number;
   syncing: boolean;
-  /** Energía de la PC servidor (AL-20): null si va con corriente. */
-  power: { battery: number; protected: boolean } | null;
+  /** Energía de la PC servidor (AL-20, T132): null si va con corriente. */
+  power: { percent: number | null; protected: boolean } | null;
   alerts: number;
   /** RF-CON-10: minutos que la hora del dispositivo difiere de la del servidor, si son más de 5. */
   clockSkewMinutes?: number | null;
@@ -23,9 +24,11 @@ export interface ShellStatus {
 /** Banda de conexión y aviso de energía del servidor. */
 export function ShellBands({ status }: { status: ShellStatus }) {
   const { power } = status;
-  const powerText = power?.protected
-    ? 'Servidor en modo protegido por batería baja: solo consulta'
-    : power && `El servidor funciona con batería (${power.battery} %)`;
+  const powerText =
+    power &&
+    (power.protected
+      ? 'Servidor en modo protegido por batería baja: solo consulta'
+      : powerNotice({ onBattery: true, percent: power.percent }));
   return (
     <>
       <OfflineBanner online={status.online} asOf={status.asOf} pendingDrafts={status.pendingDrafts} />

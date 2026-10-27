@@ -66,9 +66,9 @@ export const SinConexion: StoryObj<Args> = {
 export const Sincronizando: StoryObj<Args> = { args: { status: { ...ONLINE, syncing: true } } };
 export const ServidorConBateria: StoryObj<Args> = {
   name: 'Servidor con batería',
-  args: { status: { ...ONLINE, power: { battery: 38, protected: false } } },
+  args: { status: { ...ONLINE, power: { percent: 38, protected: false } } },
 };
 export const ModoProtegido: StoryObj<Args> = {
   name: 'Modo protegido',
-  args: { status: { ...ONLINE, power: { battery: 9, protected: true } } },
+  args: { status: { ...ONLINE, power: { percent: 9, protected: true } } },
 };

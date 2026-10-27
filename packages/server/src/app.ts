@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
 import { Maintenance } from './backups/maintenance.ts';
 import { HttpErrorFilter } from './http/http-error.filter.ts';
+import { Power } from './power/power.ts';
 import { AppVersions } from './updates/app-versions.ts';
 
 // Orígenes de las apps: Electron (app://), y el WebView de Capacitor (plan §6).
@@ -14,6 +15,8 @@ const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://local
 // Rutas que una app desactualizada debe poder usar: estado, descubrimiento y descarga de la actualización (DT-11).
 const VERSION_EXEMPT = /^\/api\/v1\/(health|discovery|updates)(\/|$)/;
 const API = /^\/api\/v1(\/|$)/;
+// T132: en modo protegido se puede seguir entrando, saliendo y emparejando; lo demás que escribe se rechaza.
+const POWER_EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local|auth\/(login|logout))(\/|$)/;
 const WRITES = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 // La firma y el cuño viajan en base64 (F-05: hasta 2 MB, unos 2,7 MB en el JSON); el resto, con el límite por defecto.
 const IMAGE_ROUTES = ['/api/v1/company/signature', '/api/v1/company/stamp'];
@@ -74,6 +77,24 @@ export function configureApp(app: INestApplication): INestApplication {
       'El servidor se está restaurando desde un respaldo. Espere unos minutos.',
     );
     res.status(error.status).json(error.toBody());
+  });
+  // T132 · RF-ENE-03: en modo protegido no se aceptan escrituras nuevas; las que están en curso se cuentan, para dejarlas
+  // terminar antes de asegurar los datos.
+  const power = app.get(Power);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!WRITES.has(req.method) || !API.test(req.path) || POWER_EXEMPT.test(req.path)) return next();
+    if (power.protected) {
+      const error = new AppError(
+        'SERVER_PROTECTED_MODE',
+        'Servidor en modo protegido por batería baja: solo consulta. Podrá guardar cuando vuelva la corriente.',
+      );
+      res.status(error.status).json(error.toBody());
+      return;
+    }
+    const done = power.beginWrite();
+    res.on('finish', done);
+    res.on('close', done);
+    next();
   });
   app.useGlobalFilters(new HttpErrorFilter());
   return app;

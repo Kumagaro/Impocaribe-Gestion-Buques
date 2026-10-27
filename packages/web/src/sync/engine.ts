@@ -40,6 +40,8 @@ export interface SyncStatus {
   clockSkewMs: number | null;
   /** Hay una sincronización en curso (indicador que gira, MOV-08). */
   syncing: boolean;
+  /** T132 · RF-ENE-02, 03: el servidor con batería o en modo protegido; null con corriente o sin conexión. */
+  power: { percent: number | null; protected: boolean } | null;
 }
 
 /** Lo que cambió en una sincronización, para que las pantallas vuelvan a leer y resalten las filas (MOV-02). */
@@ -83,6 +85,7 @@ export class SyncEngine {
     received: 0,
     clockSkewMs: null,
     syncing: false,
+    power: null,
   };
   private readonly statusListeners = new Set<() => void>();
   private readonly changeListeners = new Set<(c: SyncChanged) => void>();
@@ -272,7 +275,11 @@ export class SyncEngine {
     this.socket = socket;
     socket.on('open', () => socket.send(JSON.stringify({ type: 'auth', token })));
     socket.on('message', (data) => this.handle(data ?? ''));
-    socket.on('close', () => this.reconnect(socket));
+    socket.on('close', () => {
+      // Sin conexión no se sabe cómo está la energía del servidor: la banda de conexión ya lo dice.
+      this.set({ power: null });
+      this.reconnect(socket);
+    });
     socket.on('error', () => undefined);
   }
 
@@ -294,6 +301,8 @@ export class SyncEngine {
     else if (msg.type === 'app.update')
       for (const l of this.appUpdateListeners)
         l({ platform: msg.platform, version: msg.version, mandatory: msg.mandatory });
+    else if (msg.type === 'server.power')
+      this.set({ power: msg.onBattery ? { percent: msg.percent, protected: msg.protected } : null });
     else if (msg.type === 'session.revoked') this.revoked('session');
     else if (msg.type === 'device.revoked') this.revoked('device');
   }

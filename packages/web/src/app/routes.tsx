@@ -81,8 +81,8 @@ function SignedInShell() {
     asOf: sync.syncedAt ? havanaDateTime(new Date(sync.syncedAt)) : 'sin datos',
     pendingDrafts: alerts.drafts,
     syncing: sync.syncing,
-    // shortcut: la energía llega con F10; hasta entonces, con corriente.
-    power: null,
+    // T132 · RF-ENE-02, 03: lo que avisa el servidor por WebSocket (server.power).
+    power: sync.power,
     alerts: alerts.open,
     clockSkewMinutes:
       sync.clockSkewMs !== null && Math.abs(sync.clockSkewMs) > SKEW_LIMIT_MS

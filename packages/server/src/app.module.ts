@@ -39,6 +39,9 @@ import { DraftsController } from './orders/drafts.controller.ts';
 import { OrdersController } from './orders/orders.controller.ts';
 import { PdfService } from './orders/pdf-engine.ts';
 import { Realtime } from './sync/realtime.ts';
+import { Power } from './power/power.ts';
+import { windowsPower } from './power/provider.ts';
+import { stopServer } from './power/shutdown.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import {
   ALERT_CONDITIONS_ENABLED,
@@ -51,6 +54,9 @@ import {
   DEVICE_GUARD_ENABLED,
   DEVICE_REGISTRY,
   MIN_APP_VERSION,
+  POWER_ENABLED,
+  POWER_PROVIDER,
+  POWER_SHUTDOWN,
   SERVER_INFO,
 } from './tokens.ts';
 
@@ -100,6 +106,11 @@ import {
     BackupScheduler,
     Maintenance,
     AppVersions,
+    // T132: la energía de la PC servidor (RF-ENE).
+    { provide: POWER_PROVIDER, useValue: windowsPower },
+    { provide: POWER_ENABLED, useValue: true },
+    { provide: POWER_SHUTDOWN, useValue: stopServer },
+    Power,
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

@@ -26,3 +26,4 @@ export * from './domain/auditActions.ts';
 export * from './domain/stages.ts';
 export * from './domain/backupPassword.ts';
 export * from './domain/serverChecks.ts';
+export * from './domain/power.ts';

@@ -219,6 +219,22 @@ describe('avisos y reconexión (plan §6.4)', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(heard).toHaveBeenCalledTimes(1);
   });
+
+  it('server.power deja la energía del servidor en el estado; con corriente o sin conexión, nada (T132, RF-ENE-02)', async () => {
+    const server = createSyncServer();
+    const { engine } = await setup(server);
+    engine.start();
+    await vi.waitFor(() => expect(server.sockets).toHaveLength(1));
+    server.sockets[0]!.receive({ type: 'server.power', onBattery: true, percent: 14, protected: true });
+    await vi.waitFor(() => expect(engine.status().power).toEqual({ percent: 14, protected: true }));
+    server.sockets[0]!.receive({ type: 'server.power', onBattery: false, percent: 14, protected: false });
+    await vi.waitFor(() => expect(engine.status().power).toBeNull());
+    server.sockets[0]!.receive({ type: 'server.power', onBattery: true, percent: 62, protected: false });
+    await vi.waitFor(() => expect(engine.status().power).toEqual({ percent: 62, protected: false }));
+    server.sockets[0]!.drop(1006);
+    await vi.waitFor(() => expect(engine.status().power).toBeNull());
+    engine.stop();
+  });
 });
 
 describe('reconstruir la copia (RF-CON-09)', () => {

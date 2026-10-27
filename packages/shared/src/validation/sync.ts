@@ -88,5 +88,12 @@ export const wsServerMessageSchema = z.discriminatedUnion('type', [
     version: z.string(),
     mandatory: z.boolean(),
   }),
+  /** T132 · RF-ENE-02, 03: el servidor con batería o en modo protegido; con corriente de nuevo, onBattery false. */
+  z.object({
+    type: z.literal('server.power'),
+    onBattery: z.boolean(),
+    percent: z.number().nullable(),
+    protected: z.boolean(),
+  }),
 ]);
 export type WsServerMessage = z.infer<typeof wsServerMessageSchema>;

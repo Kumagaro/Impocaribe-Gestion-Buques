@@ -23,6 +23,7 @@ const IDLE: SyncStatus = {
   hasData: false,
   received: 0,
   clockSkewMs: null,
+  power: null,
   syncing: false,
 };
 const noop = () => () => undefined;

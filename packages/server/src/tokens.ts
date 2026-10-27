@@ -15,3 +15,9 @@ export const MAINTENANCE_DB_URL = Symbol('MAINTENANCE_DB_URL');
 export const PG_BIN = Symbol('PG_BIN');
 /** T106: el programador de respaldos (las pruebas lo apagan y llaman a runBackup). */
 export const BACKUPS_ENABLED = Symbol('BACKUPS_ENABLED');
+/** T132: de dónde se lee la energía (las pruebas ponen uno simulado). */
+export const POWER_PROVIDER = Symbol('POWER_PROVIDER');
+/** T132: la consulta cada 30 s (las pruebas la apagan y llaman a Power.check). */
+export const POWER_ENABLED = Symbol('POWER_ENABLED');
+/** T132: cómo se detiene el servidor al 5 % (RF-ENE-04). */
+export const POWER_SHUTDOWN = Symbol('POWER_SHUTDOWN');

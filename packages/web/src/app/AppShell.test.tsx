@@ -194,8 +194,9 @@ describe('Elementos globales (ui-spec §1.2)', () => {
   });
 
   it.each([
-    [{ battery: 38, protected: false }, 'El servidor funciona con batería (38 %)'],
-    [{ battery: 9, protected: true }, 'Servidor en modo protegido por batería baja: solo consulta'],
+    [{ percent: 38, protected: false }, 'El servidor funciona con batería (38 %)'],
+    [{ percent: null, protected: false }, 'El servidor funciona con batería'],
+    [{ percent: 9, protected: true }, 'Servidor en modo protegido por batería baja: solo consulta'],
   ])('aviso de energía del servidor', (power, text) => {
     renderShell({ status: { ...ONLINE, power } });
     expect(screen.getByRole('status', { name: text })).not.toBeNull();
