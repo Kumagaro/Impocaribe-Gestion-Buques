@@ -9,7 +9,7 @@ import { lineReader, progressTo, type ProgressMessage } from './progress.ts';
 
 // T126 · DT-17: el progreso llega a la app por una tubería con nombre, en orden y completo; el diario sobrevive entero.
 describe('progreso por tubería con nombre', () => {
-  it('cada evento llega en orden, con el resultado al final', async () => {
+  it('el ayudante recibe la petición de la app (el código va por aquí) y su progreso llega en orden', async () => {
     const name =
       process.platform === 'win32'
         ? `\\\\.\\pipe\\impocaribe-prueba-${randomUUID()}`
@@ -17,6 +17,7 @@ describe('progreso por tubería con nombre', () => {
     const received: ProgressMessage[] = [];
     const done = new Promise<void>((resolve) => {
       const server = createServer((socket) => {
+        socket.write('{"network":"hotspot","code":"K7QM-3XTP-R2HW"}\n');
         socket.on(
           'data',
           lineReader((m) => received.push(m)),
@@ -30,6 +31,7 @@ describe('progreso por tubería con nombre', () => {
     });
     await new Promise((r) => setTimeout(r, 50));
     const progress = await progressTo(name);
+    expect(await progress.request).toEqual({ network: 'hotspot', code: 'K7QM-3XTP-R2HW' });
     progress.send({ type: 'step', id: 'copiar', status: 'running' });
     progress.send({ type: 'log', id: 'copiar', line: 'copiando 1.204 archivos' });
     progress.send({ type: 'step', id: 'copiar', status: 'done' });

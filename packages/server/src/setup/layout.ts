@@ -13,6 +13,10 @@ export const DB_USER = 'impocaribe';
 /** Los servicios de Windows; el servidor los usa para detenerse al 5 % de batería (T132). */
 export const SERVICES = { database: 'ImpocaribeBaseDatos', server: 'ImpocaribeServidor' } as const;
 
+/** La conexión del servidor a su base, con la contraseña que generó la instalación. */
+export const appDatabaseUrl = (password: string) =>
+  `postgres://${DB_USER}:${encodeURIComponent(password)}@localhost:${PG_PORT}/${DATABASE}`;
+
 export interface Layout {
   /** C:\Program Files\Impocaribe\Server: el programa (server-bundle), que se puede borrar y volver a copiar. */
   program: string;

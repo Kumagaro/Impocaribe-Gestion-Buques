@@ -5,6 +5,7 @@
 import { join } from 'node:path';
 import type { Step, UndoInfo } from './engine.ts';
 import {
+  appDatabaseUrl,
   DATABASE,
   DB_USER,
   FIREWALL_RULES,
@@ -30,7 +31,10 @@ export interface Sys {
   readFile(path: string): Promise<string>;
   /** Crea las carpetas que falten. */
   writeFile(path: string, text: string): Promise<void>;
-  /** Deja la carpeta solo para el sistema y los administradores (icacls). */
+  /**
+   * Crea la carpeta si falta y la deja solo para el sistema y los administradores, también lo que ya tuviera dentro:
+   * en ProgramData cualquier usuario puede crear carpetas, así que no se confía en una que ya existiera.
+   */
   lockDown(path: string): Promise<void>;
   /** GET local verificado con la CA del servidor (`ca`, PEM): si respondió 200. */
   ok(url: string, ca: string): Promise<boolean>;
@@ -58,7 +62,7 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
   const secretsFile = join(p.serviceDir, 'secretos.json');
   const exe = (name: string) => join(p.pgBin, `${name}.exe`);
   const secrets = async () => JSON.parse(await sys.readFile(secretsFile)) as Secrets;
-  const appUrl = (s: Secrets) => `postgres://${DB_USER}:${encodeURIComponent(s.app)}@localhost:${PG_PORT}/${DATABASE}`;
+  const appUrl = (s: Secrets) => appDatabaseUrl(s.app);
   const serverEnv = async (): Promise<Record<string, string>> => ({
     NODE_ENV: 'production',
     DATABASE_URL: appUrl(await secrets()),
@@ -115,8 +119,10 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
         const s: Secrets = { postgres: sys.secret(), app: sys.secret() };
         const pwfile = join(p.serviceDir, 'pw.tmp');
         try {
-          await sys.writeFile(secretsFile, JSON.stringify(s));
+          // Primero la carpeta solo para el sistema y los administradores (aunque alguien la hubiera creado antes), y
+          // después los secretos.
           await sys.lockDown(l.data);
+          await sys.writeFile(secretsFile, JSON.stringify(s));
           await sys.writeFile(pwfile, s.postgres);
           await sys.run(exe('initdb'), [
             '-D',
@@ -230,8 +236,8 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
         const existed = await sys.succeeds('sc.exe', ['query', SERVICES.server]);
         try {
           await sys.copy(p.winsw, serviceExe);
-          await sys.writeFile(serviceConfig, serviceXml(l, appUrl(await secrets())));
           await sys.lockDown(p.serviceDir);
+          await sys.writeFile(serviceConfig, serviceXml(l, appUrl(await secrets())));
           await sys.run(serviceExe, [existed ? 'refresh' : 'install']);
         } catch (err) {
           if (!existed) for (const file of [serviceExe, serviceConfig]) await sys.remove(file);

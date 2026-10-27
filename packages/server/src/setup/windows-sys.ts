@@ -55,8 +55,13 @@ export const windowsSys: Sys = {
     await writeFile(path, text);
   },
   async lockDown(path) {
-    // Solo el sistema (los servicios) y los administradores; sin herencia de los permisos de ProgramData.
+    await mkdir(path, { recursive: true });
+    // Dueño: los administradores (si un usuario la creó antes, deja de serlo), también de lo que haya dentro.
+    await run('icacls', [path, '/setowner', '*S-1-5-32-544', '/T', '/C']);
+    // Solo el sistema (los servicios) y los administradores, sin herencia de los permisos de ProgramData.
     await run('icacls', [path, '/inheritance:r', '/grant:r', '*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F']);
+    // Lo de dentro pierde sus permisos propios y hereda solo estos (sin nada dentro, icacls no tiene qué hacer).
+    await run('icacls', [`${path}\\*`, '/reset', '/T', '/C']).catch(() => undefined);
   },
   ok(url, ca) {
     return new Promise((resolve) => {

@@ -4,7 +4,9 @@
 //   node dist/setup/tasks.js migrate | identity | settings   (settings lee {network, codeHash} por la entrada)
 import { readFile } from 'node:fs/promises';
 import { stdin } from 'node:process';
+import { installationCodeSchema } from '@impocaribe/shared/validation';
 import pg from 'pg';
+import { verifySecret } from '../auth/password.ts';
 import { config } from '../config.ts';
 import { runMigrations } from '../db/migrate.ts';
 import { createIdentity, IdentityExistsError } from '../identity/identity.ts';
@@ -52,6 +54,28 @@ const commands: Record<string, () => Promise<string>> = {
       await client.end();
     }
     return 'Montaje de red y código de instalación guardados.';
+  },
+  /**
+   * RF-INS-02: el mantenimiento (reparar, actualizar, trasladar, desinstalar) se valida contra el código que tiene el
+   * servidor, que una Apoderada puede haber cambiado, no contra el del instalador. Lee el código por la entrada.
+   */
+  async 'check-code'() {
+    const code = installationCodeSchema.safeParse((await input()).trim());
+    const client = new pg.Client({ connectionString: cfg.databaseUrl });
+    await client.connect();
+    try {
+      const { rows } = await client.query<{ hash: string | null }>(
+        'SELECT installation_code_hash AS hash FROM system_settings',
+      );
+      const hash = rows[0]?.hash;
+      if (!code.success || !hash || !(await verifySecret(hash, code.data))) {
+        process.exitCode = 3;
+        return 'INSTALL_CODE_INVALID';
+      }
+      return 'ok';
+    } finally {
+      await client.end();
+    }
   },
 };
 
