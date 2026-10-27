@@ -955,6 +955,22 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-ENE-01 a 05, Const. art. XV, HU-16
   - *Depende:* T094, T046
   - *Pruebas:* con un proveedor simulado: al 15 % una emisión en curso termina y la siguiente recibe `SERVER_PROTECTED_MODE`; al volver la corriente se aceptan escrituras; los límites 15,0 % y 15,1 % se comportan como dicen los requisitos.
+  - *Estado (2026-10-27):* hecha, pendiente de la mutación del servidor (la corre el responsable).
+    - **Regla** (`shared/domain/power.ts`): con corriente, normal; con batería, aviso; al 15 % o menos, modo protegido; al 5 % o menos, parada.
+    - **Servidor** (`server/src/power/`):
+      - un proveedor inyectable: en Windows lee `Win32_Battery`, que también presenta un UPS conectado por USB;
+      - se consulta cada 30 s;
+      - en modo protegido rechaza las escrituras nuevas con `SERVER_PROTECTED_MODE`, salvo entrar, salir y emparejar; deja terminar las que están en curso (hasta 30 s) y hace `CHECKPOINT`;
+      - al 5 % detiene la base de datos y su propio servicio; los nombres de los servicios los pone el ayudante (T126) en el entorno;
+      - con corriente sale solo del modo protegido.
+    - **Avisos:**
+      - `server.power` por WebSocket a las apps conectadas, y a cada una al entrar;
+      - AL-20 «El servidor funciona con batería» y, aparte, «Servidor en modo protegido por batería baja»; se resuelven solas. El porcentaje en vivo va en la banda de todas las apps, no en el título de la alerta, que no cambia mientras sigue abierta.
+    - **Pruebas:**
+      - 4 de los límites;
+      - 6 de integración con el proveedor simulado: la emisión en curso termina y la siguiente se rechaza, vuelve a aceptar con corriente, 15,0 y 15,1 %, se puede consultar y entrar, el aviso por WebSocket, AL-20 y la parada una sola vez;
+      - 1 del motor y la banda con el porcentaje desconocido.
+    - **Sin probar aquí:** la lectura real de `Win32_Battery` con una laptop o un UPS, y la parada real de los servicios. Van en T135 (máquinas virtuales) y T143 (lista manual).
 
 - [ ] **T133. Aviso de apagado e inicio con Windows** (P-31) en la PC servidor.
   - *Cubre:* RF-INS-09, RF-INS-10
