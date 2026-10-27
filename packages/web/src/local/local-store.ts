@@ -48,17 +48,39 @@ function tableOf(entity: string): string {
   return `"${entity}"`;
 }
 
+/** Filas por sentencia: 4 parámetros cada una (800), por debajo incluso del límite antiguo de SQLite (999). */
+const BATCH = 200;
+
+/**
+ * RNF-20: las altas van por lotes de una sentencia, porque en las apps cada sentencia es un viaje por el puente nativo
+ * y la primera sincronización de un año serían decenas de miles. El lote se cierra al cambiar de tabla, ante una baja
+ * (el orden importa) y ante un id repetido (un mismo INSERT … ON CONFLICT no puede tocar dos veces la misma fila).
+ */
 async function applyIn(tx: SqlExecutor, changes: Change[], seq: number): Promise<void> {
+  let table = '';
+  let rows: Change[] = [];
+  const ids = new Set<string>();
+  const flush = async () => {
+    if (rows.length === 0) return;
+    await tx.execute(
+      `INSERT INTO ${table} (id, payload, ref_date, seq) VALUES ${rows.map(() => '(?, ?, ?, ?)').join(', ')}
+       ON CONFLICT (id) DO UPDATE SET payload = excluded.payload, ref_date = excluded.ref_date, seq = excluded.seq`,
+      rows.flatMap((c) => [c.entityId, JSON.stringify(c.payload), c.refDate, c.seq]),
+    );
+    rows = [];
+    ids.clear();
+  };
   for (const c of changes) {
-    const table = tableOf(c.entityType);
+    const next = tableOf(c.entityType);
+    if (next !== table || c.op === 'delete' || ids.has(c.entityId) || rows.length === BATCH) await flush();
+    table = next;
     if (c.op === 'delete') await tx.execute(`DELETE FROM ${table} WHERE id = ?`, [c.entityId]);
-    else
-      await tx.execute(
-        `INSERT INTO ${table} (id, payload, ref_date, seq) VALUES (?, ?, ?, ?)
-         ON CONFLICT (id) DO UPDATE SET payload = excluded.payload, ref_date = excluded.ref_date, seq = excluded.seq`,
-        [c.entityId, JSON.stringify(c.payload), c.refDate, c.seq],
-      );
+    else {
+      rows.push(c);
+      ids.add(c.entityId);
+    }
   }
+  await flush();
   await tx.execute("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('seq', ?)", [String(seq)]);
 }
 

@@ -89,6 +89,74 @@ describe('aplicar cambios (plan §5.9)', () => {
     expect(await store.seq()).toBe(1);
   });
 
+  it('RNF-20: muchas altas van en pocas sentencias, respetando el orden, los repetidos y las bajas', async () => {
+    const platform = await createTestPlatform();
+    const open = platform.openDatabase;
+    let statements = 0;
+    platform.openDatabase = async (name) => {
+      const db = await open(name);
+      return {
+        ...db,
+        transaction: (fn) =>
+          db.transaction((tx) => fn({ ...tx, execute: (sql, p) => (statements++, tx.execute(sql, p)) })),
+      };
+    };
+    const store = await LocalStore.open(platform);
+    const id = (n: number) => `0199f0a1-0000-7000-8000-${String(n).padStart(12, '0')}`;
+    const changes = Array.from({ length: 400 }, (_, i) => ({
+      seq: i + 1,
+      entityType: i % 2 ? ('user_directory' as const) : ('user_admin' as const),
+      entityId: id(Math.floor(i / 2)),
+      op: 'upsert' as const,
+      payload: user(id(Math.floor(i / 2)), `Usuario ${i}`),
+      refDate: null,
+    }));
+    // La misma fila otra vez, después una baja y una alta de la que se borró.
+    const more = [
+      {
+        seq: 401,
+        entityType: 'user_directory' as const,
+        entityId: id(7),
+        op: 'upsert' as const,
+        payload: user(id(7), 'Otra vez'),
+        refDate: null,
+      },
+      {
+        seq: 402,
+        entityType: 'user_directory' as const,
+        entityId: id(8),
+        op: 'delete' as const,
+        payload: null,
+        refDate: null,
+      },
+      {
+        seq: 403,
+        entityType: 'user_directory' as const,
+        entityId: id(9),
+        op: 'upsert' as const,
+        payload: user(id(9), 'Último'),
+        refDate: null,
+      },
+    ];
+    statements = 0;
+    await store.apply(
+      [
+        ...changes.filter((c) => c.entityType === 'user_directory'),
+        ...changes.filter((c) => c.entityType === 'user_admin'),
+        ...more,
+      ],
+      403,
+    );
+    // 200 de cada tabla en un lote cada una, la repetida, la baja, la última y el número: 6 sentencias, no 404.
+    expect(statements).toBe(6);
+    expect((await store.list('user_directory')).length).toBe(199);
+    expect(await store.get('user_directory', id(7))).toEqual(user(id(7), 'Otra vez'));
+    expect(await store.get('user_directory', id(8))).toBeNull();
+    expect(await store.get('user_directory', id(9))).toEqual(user(id(9), 'Último'));
+    expect((await store.list('user_admin')).length).toBe(200);
+    expect(await store.seq()).toBe(403);
+  });
+
   it('nextSince mayor que el último cambio visible también avanza el número', async () => {
     const store = await open();
     await store.apply([], 9);

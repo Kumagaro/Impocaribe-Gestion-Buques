@@ -163,8 +163,11 @@ public final class Discovery {
      * GET /api/v1/discovery. Sin verificar la cadena: solo se lee el anuncio, que no prueba nada; la identidad se
      * comprueba al conectar (DT-18). {@code https} salvo en las pruebas contra un servidor sin TLS.
      */
-    public DiscoveryMath.Announcement probe(String address, int port, int timeoutMs, boolean plain) {
-        try {
+    /** Un solo cliente para todas las sondas (sus conexiones e hilos se comparten): la /24 son 254 a la vez. */
+    private static OkHttpClient probeClient;
+
+    private static synchronized OkHttpClient probeClient() throws Exception {
+        if (probeClient == null) {
             X509TrustManager readOnly = new X509TrustManager() {
                 @Override public void checkClientTrusted(X509Certificate[] c, String a) {}
                 @Override public void checkServerTrusted(X509Certificate[] c, String a) {}
@@ -172,11 +175,17 @@ public final class Discovery {
             };
             SSLContext tls = SSLContext.getInstance("TLS");
             tls.init(null, new X509TrustManager[] { readOnly }, null);
-            OkHttpClient client = new OkHttpClient.Builder()
+            probeClient = new OkHttpClient.Builder()
                 .sslSocketFactory(tls.getSocketFactory(), readOnly)
                 .hostnameVerifier((h, s) -> true)
-                .callTimeout(timeoutMs, TimeUnit.MILLISECONDS)
                 .build();
+        }
+        return probeClient;
+    }
+
+    public DiscoveryMath.Announcement probe(String address, int port, int timeoutMs, boolean plain) {
+        try {
+            OkHttpClient client = probeClient().newBuilder().callTimeout(timeoutMs, TimeUnit.MILLISECONDS).build();
             String url = (plain ? "http" : "https") + "://" + address + ":" + port + "/api/v1/discovery";
             try (Response res = client.newCall(new Request.Builder().url(url).build()).execute()) {
                 if (res.code() != 200 || res.body() == null) return null;

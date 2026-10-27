@@ -39,7 +39,8 @@ export default defineConfig({
       name: `e2e-${device}`,
       use,
       metadata: { device },
-      testIgnore: /setup\.e2e\.ts$/,
+      // La de Android corre aparte, con su emulador (playwright.android.config.ts).
+      testIgnore: /(setup|android)\.e2e\.ts$/,
       dependencies: ['primer-arranque'],
     })),
   ],
