@@ -69,6 +69,7 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
   private closing = false;
   private readonly syncListeners = new Set<() => void>();
   private readonly readyListeners = new Set<(send: (msg: WsServerMessage) => void) => void>();
+  private readonly connectionListeners = new Set<() => void>();
 
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
@@ -115,6 +116,24 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
     for (const c of this.clients) if (c.kind === 'app') this.send(c, msg);
   }
 
+  /**
+   * T134 · RF-RED-01: cuántos dispositivos están conectados ahora (uno con la app abierta y el servicio de alertas
+   * cuenta una vez).
+   */
+  connectedDevices(): number {
+    return new Set([...this.clients].map((c) => c.deviceId)).size;
+  }
+
+  /** T134: cuando un dispositivo se conecta o se desconecta (AL-21 se reevalúa). */
+  onConnections(fn: () => void): () => void {
+    this.connectionListeners.add(fn);
+    return () => this.connectionListeners.delete(fn);
+  }
+
+  private connectionsChanged(): void {
+    for (const fn of this.connectionListeners) fn();
+  }
+
   /** Un cliente dedicado a LISTEN; si se cae la conexión, se rehace. */
   private async listen(): Promise<void> {
     const pool = (this.db as unknown as { $client: pg.Pool }).$client;
@@ -158,8 +177,12 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
     }
     const client: Client = { socket, ...session, alive: true };
     this.clients.add(client);
+    this.connectionsChanged();
     socket.on('pong', () => (client.alive = true));
-    socket.on('close', () => this.clients.delete(client));
+    socket.on('close', () => {
+      this.clients.delete(client);
+      this.connectionsChanged();
+    });
     socket.on('error', () => socket.terminate());
     this.send(client, { type: 'ready' });
     if (client.kind === 'app') for (const fn of this.readyListeners) fn((msg) => this.send(client, msg));

@@ -110,7 +110,7 @@ describe('aviso a las apps y AL-20 (RF-ENE-02)', () => {
   });
 
   it('AL-20 se abre con batería, otra al pasar a modo protegido, y se resuelven solas con corriente', async () => {
-    const evaluate = () => evaluateConditions(drizzle(s.suite.app), clock, power().state);
+    const evaluate = () => evaluateConditions(drizzle(s.suite.app), clock, { power: power().state });
     const al20 = () => q("SELECT title, status FROM alerts WHERE type = 'AL-20' ORDER BY title");
     await set(true, 62);
     await evaluate();

@@ -38,7 +38,7 @@ import { Realtime } from '../sync/realtime.ts';
 import { ALERT_CONDITIONS_ENABLED, CLOCK, DB } from '../tokens.ts';
 import { openCondition, replicateAlerts, resolveMissing, type AlertInput } from './alerts.ts';
 
-/** Las que evalúa esta pasada. AL-21 llega con el límite del hotspot (T134). */
+/** Las que evalúa esta pasada. */
 export const EVALUATED: AlertType[] = [
   'AL-01',
   'AL-03',
@@ -50,6 +50,7 @@ export const EVALUATED: AlertType[] = [
   'AL-18',
   'AL-19',
   'AL-20',
+  'AL-21',
   'AL-23',
 ];
 
@@ -142,7 +143,16 @@ async function declarationConditions(tx: Tx, now: Date): Promise<Wanted[]> {
   return out;
 }
 
-async function otherConditions(tx: Tx, now: Date, power: PowerReading): Promise<Wanted[]> {
+/** Lo que no está en la base: la energía de la PC servidor (T132) y los dispositivos conectados ahora (T134). */
+export interface LiveState {
+  power?: PowerReading;
+  connectedDevices?: number;
+}
+
+/** T134 · RF-RED-01: con hotspot, a partir de tantos dispositivos conectados se avisa (AL-21). */
+export const HOTSPOT_LIMIT = 8;
+
+async function otherConditions(tx: Tx, now: Date, live: LiveState): Promise<Wanted[]> {
   const out: Wanted[] = [];
   const stale = await tx
     .select({ id: drafts.id, ownerId: drafts.ownerId })
@@ -271,7 +281,7 @@ async function otherConditions(tx: Tx, now: Date, power: PowerReading): Promise<
 
   // AL-20 · RF-ENE-02, 03: el servidor con batería o en modo protegido; se resuelve sola al volver la corriente. El
   // porcentaje en vivo va en la banda de las apps (server.power): el título no cambia mientras la alerta sigue abierta.
-  const mode = powerMode(power);
+  const mode = powerMode(live.power ?? { onBattery: false, percent: null });
   if (mode === 'battery')
     out.push([
       'AL-20',
@@ -290,23 +300,27 @@ async function otherConditions(tx: Tx, now: Date, power: PowerReading): Promise<
         detail: 'No se aceptan cambios hasta que vuelva la corriente; los datos están asegurados. Al 5 % se detiene.',
       },
     ]);
+
+  // AL-21 · RF-RED-01: con el hotspot de un celular, 8 o más dispositivos conectados; con router, nunca.
+  if (settings?.networkSetup === 'hotspot' && (live.connectedDevices ?? 0) >= HOTSPOT_LIMIT)
+    out.push([
+      'AL-21',
+      {
+        type: 'AL-21',
+        title: 'Cerca del límite del hotspot',
+        detail: `Hay ${HOTSPOT_LIMIT} o más dispositivos conectados al hotspot del celular. Con más, la conexión se vuelve lenta e inestable: para más dispositivos hace falta un router wifi.`,
+      },
+    ]);
   return out;
 }
 
-/**
- * Una pasada completa. Devuelve cuántas alertas abrió y cuántas resolvió. `power`: la energía de la PC servidor
- * (T132); sin ella, con corriente.
- */
-export async function evaluateConditions(
-  db: NodePgDatabase,
-  clock: Clock,
-  power: PowerReading = { onBattery: false, percent: null },
-) {
+/** Una pasada completa. Devuelve cuántas alertas abrió y cuántas resolvió. Sin `live`: con corriente y nadie conectado. */
+export async function evaluateConditions(db: NodePgDatabase, clock: Clock, live: LiveState = {}) {
   return db.transaction(async (tx) => {
     // Una sola pasada a la vez (varias pueden coincidir: el temporizador y un cambio).
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('impocaribe_alert_conditions'))`);
     const now = clock.now();
-    const wanted = [...(await declarationConditions(tx, now)), ...(await otherConditions(tx, now, power))];
+    const wanted = [...(await declarationConditions(tx, now)), ...(await otherConditions(tx, now, live))];
     const opened: string[] = [];
     for (const [key, alert] of wanted) {
       const id = await openCondition(tx, clock, key, alert);
@@ -351,9 +365,12 @@ export class AlertConditions implements OnApplicationBootstrap, OnApplicationShu
     const stopSync = this.realtime.onSync(() => this.soon());
     // T132: AL-20 se abre o se resuelve en cuanto cambia la energía.
     const stopPower = this.power.onChange(() => this.soon());
+    // T134: AL-21 se abre o se resuelve cuando un dispositivo se conecta o se desconecta.
+    const stopConnections = this.realtime.onConnections(() => this.soon());
     this.stopListening = () => {
       stopSync();
       stopPower();
+      stopConnections();
     };
   }
 
@@ -373,8 +390,9 @@ export class AlertConditions implements OnApplicationBootstrap, OnApplicationShu
 
   private run(): void {
     if (this.maintenance.active) return;
-    void evaluateConditions(this.db, this.clock, this.power.state).catch((err: unknown) =>
-      this.log.error(`No se pudieron evaluar las alertas: ${String(err)}`),
-    );
+    void evaluateConditions(this.db, this.clock, {
+      power: this.power.state,
+      connectedDevices: this.realtime.connectedDevices(),
+    }).catch((err: unknown) => this.log.error(`No se pudieron evaluar las alertas: ${String(err)}`));
   }
 }
