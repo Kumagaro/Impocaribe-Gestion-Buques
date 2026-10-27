@@ -9,6 +9,9 @@ out/
 .env.*
 !.env.example
 
+# T125: paquetes de distribución (con instaladores) y la hoja del código de instalación
+/paquete/
+
 # Pruebas y reportes
 coverage/
 reports/

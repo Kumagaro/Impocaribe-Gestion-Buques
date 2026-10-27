@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "doctor": "node scripts/doctor.ts",
+    "paquete": "node scripts/paquete.ts",
     "dev": "pnpm --parallel --filter @impocaribe/server --filter @impocaribe/web dev",
     "build": "pnpm -r --filter !@impocaribe/android build",
     "test": "pnpm -r --workspace-concurrency=1 test && vitest run --config vitest.scripts.config.ts",

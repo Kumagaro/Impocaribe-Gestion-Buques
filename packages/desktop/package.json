@@ -11,6 +11,7 @@
     "test": "vitest run",
     "e2e": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && playwright test",
     "instalador": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs ligero",
+    "server-bundle": "node scripts/server-bundle.mjs",
     "instalador:completo": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs completo"
   },
   "devDependencies": {

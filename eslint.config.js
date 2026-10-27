@@ -97,7 +97,7 @@ export default tseslint.config(
   {
     // Archivos de configuración y scripts que se ejecutan en Node
     files: ['**/*.config.{js,mjs}', 'packages/*/scripts/**/*.mjs'],
-    languageOptions: { globals: { process: 'readonly', URL: 'readonly' } },
+    languageOptions: { globals: { process: 'readonly', URL: 'readonly', console: 'readonly' } },
   },
   {
     files: PRODUCTION,

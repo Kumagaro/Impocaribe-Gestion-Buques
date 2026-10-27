@@ -32,8 +32,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // T125: la clave del APK que se distribuye vive fuera del repositorio; el paquete de distribución pasa su ruta y sus
+    // contraseñas por el entorno. Con otra clave, Android no deja actualizar la app instalada (RF-UPD-05).
+    signingConfigs {
+        release {
+            def keystore = System.getenv('IMPOCARIBE_APK_KEYSTORE')
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword System.getenv('IMPOCARIBE_APK_KEYSTORE_PASS')
+                keyAlias System.getenv('IMPOCARIBE_APK_KEY_ALIAS')
+                keyPassword System.getenv('IMPOCARIBE_APK_KEY_PASS')
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
