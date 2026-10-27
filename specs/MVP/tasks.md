@@ -339,6 +339,9 @@ El código empieza desde cero. Esta fase deja el proyecto creado, el entorno lis
   - *Cubre:* RF-UI-09
   - *Depende:* T017
   - *Terminado:* aprobadas.
+  - *Estado (2026-10-27):* maqueta `docs/maquetas/T124-servidor.html` (claro y oscuro, solo escritorio), pendiente de aprobar:
+    - **P-28:** cinco pasos (comprobación con el bloqueo si ya hay un servidor y la marca ámbar con 4 GB; permisos y código de instalación; montaje de red; creación con los 10 pasos del plan §10.3, la barra y el detalle técnico; listo con el QR y «Crear la primera Apoderada»), el fallo de un paso con Reintentar y Deshacer, y la variante desde un respaldo de traslado.
+    - **P-29:** servicio, energía, red y memoria (contra el presupuesto del plan §10.7), solicitudes de emparejamiento, dispositivos, QR y mantenimiento; con batería, en modo protegido, 8 dispositivos en hotspot y la ventana al frente con una solicitud nueva (AL-20 a AL-22); los asistentes de actualizar (con la vuelta atrás), preparar traslado, desinstalar y el restablecimiento de emergencia.
   - *Estado (2026-10-15):* `docs/maquetas/T037-acceso.html`, aprobadas por el responsable.
 
 - [x] **T038. (PP) Pantallas P-01 a P-04:** Conexión y emparejamiento, Primer arranque, Login y Recuperar.
