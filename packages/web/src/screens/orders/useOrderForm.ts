@@ -236,12 +236,14 @@ export function useOrderForm(o: OrderFormOptions) {
             });
         overrides.current = {};
         setIssued(order);
+        // Primero lo que depende solo de que el servidor la aceptó (borrar el borrador local): si la app se cierra
+        // mientras espera la sincronización, no queda un borrador de una orden ya emitida que luego se subiría.
+        await o.onDone(order);
         await base.done(
           fixing
             ? `Se emitió la versión ${order.current.versionNo} de la orden ${order.number}.`
             : `Se emitió la orden ${order.number}.`,
         );
-        await o.onDone(order);
       };
       // RF-ORD-13: capacidad y camión repetido se saltan con una decisión de excepción con motivo; si hacen falta las
       // dos, el reintento tras la primera pide la segunda.

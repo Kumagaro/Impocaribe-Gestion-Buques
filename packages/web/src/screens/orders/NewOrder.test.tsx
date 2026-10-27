@@ -15,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { sampleOf } from '../../../test/fake-server';
 import { renderScreen } from '../../../test/screen';
 import { ordersApi } from '../../api/endpoints/orders';
+import { getSyncChanges } from '../../api/endpoints/sync';
 import type { StoredSession } from '../../session/app-session';
 import { NewOrderScreen } from './NewOrder.screen';
 
@@ -268,6 +269,19 @@ describe('P-13 en escritorio', () => {
       const [d] = await (await t.session.localStore()).localDrafts<{ tons: string }>();
       expect(d?.payload.tons).toBe('17,28');
     });
+  });
+
+  it('RF-ORD-06: emitida la orden, su borrador local se borra aunque la sincronización no termine', async () => {
+    const t = await open({ before: (s) => s.respond(ordersApi.issue, issued()) });
+    await fill(within(document.body));
+    const store = await t.session.localStore();
+    await waitFor(async () => expect(await store.localDrafts()).toHaveLength(1));
+    // La app se cierra (o se queda sin red) mientras espera la sincronización de después de emitir.
+    t.server.respond(getSyncChanges, () => new Promise(() => undefined));
+    await userEvent.click(screen.getByRole('button', { name: 'Emitir' }));
+    expect(await screen.findByText('EAGLE1-2026-V2-0001')).not.toBeNull();
+    // Si quedara, al volver la conexión se subiría como borrador de una orden ya emitida.
+    await waitFor(async () => expect(await store.localDrafts()).toEqual([]));
   });
 
   it('sin conexión se llena pero no se emite', async () => {
