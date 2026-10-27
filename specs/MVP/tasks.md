@@ -981,6 +981,14 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-RED-01
   - *Depende:* T035, T094
   - *Pruebas:* con 7 no hay alerta; con 8 sí; con montaje `router`, nunca.
+  - *Estado (2026-10-27):* hecha, pendiente de la mutación del servidor (la corre el responsable).
+    - Con el montaje `hotspot` (`system_settings`, T052) y 8 o más dispositivos conectados se abre AL-21 (solo la ven las Apoderadas); se resuelve sola al bajar de 8.
+    - Los conectados se cuentan por dispositivo: un teléfono con la app abierta y el servicio de alertas cuenta una vez. Cada vez que uno entra o sale se reevalúa.
+    - **Pruebas:** 3 de integración:
+      - 7 no avisa, 8 sí y se resuelve al bajar;
+      - con router, nunca;
+      - el conteo por dispositivo.
+    - El aviso en P-29 llega con T128 (la maqueta T124 lo muestra).
 
 - [ ] **T135. Pruebas de instalación en Windows.** Máquinas virtuales Windows 10 y 11 limpias, sin red externa y con Defender activo: crear, reparar, actualizar con fallo, trasladar, desinstalar y segundo servidor bloqueado.
   - *Cubre:* RF-INS, RNF-18
