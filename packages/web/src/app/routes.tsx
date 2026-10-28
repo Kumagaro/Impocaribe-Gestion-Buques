@@ -23,6 +23,7 @@ import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
 import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
+import { CreateServerScreen } from '../screens/server/CreateServer.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
@@ -112,6 +113,8 @@ export const appRoutes: RouteObject[] = [
     element: <SessionGate />,
     children: [
       { path: '/conexion', element: <ConnectionScreen /> },
+      // T127 · P-28: solo en la PC con el instalador completo (si no, vuelve a /conexion).
+      { path: '/servidor/crear', element: <CreateServerScreen /> },
       { path: '/setup', element: <SetupScreen /> },
       { path: '/login', element: <LoginScreen /> },
       { path: '/recuperar', element: <RecoverScreen /> },

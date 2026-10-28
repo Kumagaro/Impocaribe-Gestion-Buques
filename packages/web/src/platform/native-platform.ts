@@ -2,7 +2,16 @@
 // por el mismo puente (NATIVE_CHANNELS): en Electron, el proceso principal por el preload (`window.impocaribeNative`);
 // en Android, el plugin ImpocaribeNative (capacitor-bridge.ts). La red con la identidad del servidor verificada, el
 // descubrimiento, el almacenamiento seguro y la copia local en SQLCipher.
-import type { NativeBridge, NativeResponse, NativeSocketEvent } from '@impocaribe/shared';
+import type {
+  NativeBridge,
+  NativeResponse,
+  NativeSocketEvent,
+  PcFacts,
+  SetupMessage,
+  SetupOperation,
+  SetupOutcome,
+  SetupRequest,
+} from '@impocaribe/shared';
 import type { LocalDatabase, Platform, PlatformSocket, ServerAnnouncement, SqlExecutor, SqlValue } from './platform';
 
 type Listener = (data?: string) => void;
@@ -132,6 +141,20 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
             start: (labels: Record<string, string>, token?: string) =>
               invoke<boolean>('alerts.start', labels, ...(token ? [token] : [])),
             stop: () => invoke<void>('alerts.stop'),
+          },
+        }
+      : {}),
+    // T127 · P-28: el ayudante de instalación, solo si la app la puso el instalador completo.
+    ...(bridge.info.serverInstaller
+      ? {
+          serverSetup: {
+            facts: () => invoke<PcFacts>('setup.facts'),
+            checkCode: (code: string) => invoke<boolean>('setup.code', code),
+            run: (operation: SetupOperation, request: SetupRequest) =>
+              invoke<SetupOutcome>('setup.run', operation, request),
+            state: () =>
+              invoke<{ running: boolean; operation: SetupOperation | null; messages: SetupMessage[] }>('setup.state'),
+            listen: (listener: (message: SetupMessage) => void) => bridge.onSetupMessage(listener),
           },
         }
       : {}),

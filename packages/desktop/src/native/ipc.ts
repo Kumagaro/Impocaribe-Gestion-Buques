@@ -1,6 +1,16 @@
 // T115 · plan §10.1: cada canal del puente (NATIVE_CHANNELS) con su servicio del proceso principal. Los argumentos
 // llegan del renderizador: se comprueban aquí, no se confía en ellos.
-import type { NativeChannel, NativeRequest, NativeServer, NativeUpdate } from '@impocaribe/shared';
+import type {
+  NativeChannel,
+  NativeRequest,
+  NativeServer,
+  NativeUpdate,
+  PcFacts,
+  SetupOperation,
+  SetupOutcome,
+  SetupRequest,
+} from '@impocaribe/shared';
+import type { SetupState } from '../system/setup.ts';
 import type { LocalDatabases, SqlValue } from './database.ts';
 import type { Announcement } from './discovery.ts';
 import type { SecureStore } from './secure-storage.ts';
@@ -21,6 +31,13 @@ export interface NativeServices {
   secureScreen(enabled: boolean): void;
   /** T117: descarga, comprueba e instala la versión (la app se cierra para instalarla). */
   installUpdate(update: NativeUpdate): Promise<void>;
+  /** T127: el ayudante de instalación (P-28); null si la app no la puso el instalador completo. */
+  setup: {
+    facts(): Promise<PcFacts>;
+    checkCode(code: string): Promise<boolean>;
+    run(operation: SetupOperation, request: SetupRequest): Promise<SetupOutcome>;
+    current(): SetupState;
+  } | null;
 }
 
 type Handler = (...args: unknown[]) => unknown;
@@ -39,6 +56,25 @@ const server = (v: unknown): NativeServer | undefined => {
   return { serverId: str(s.serverId, 'la identidad del servidor'), caFingerprint: str(s.caFingerprint, 'la huella') };
 };
 const params = (v: unknown): SqlValue[] => (Array.isArray(v) ? (v as SqlValue[]) : []);
+
+const OPERATIONS: readonly SetupOperation[] = ['crear', 'reparar', 'deshacer', 'restablecer'];
+/** Solo los campos conocidos, como texto; el ayudante vuelve a validarlos. */
+const setupRequest = (v: unknown): SetupRequest => {
+  const r = (v ?? {}) as Record<string, unknown>;
+  const out: SetupRequest = {};
+  if (r.network !== undefined) {
+    if (r.network !== 'router' && r.network !== 'hotspot') throw new Error('Montaje de red desconocido.');
+    out.network = r.network;
+  }
+  for (const key of ['code', 'username', 'password'] as const)
+    if (r[key] !== undefined)
+      out[key] = str(r[key], key === 'code' ? 'el código' : key === 'username' ? 'el usuario' : 'la contraseña');
+  return out;
+};
+const setup = (s: NativeServices) => {
+  if (!s.setup) throw new Error('Esta app no la puso el instalador completo: no puede crear el servidor.');
+  return s.setup;
+};
 
 /** Los manejadores por canal; `handle` es `ipcMain.handle` (o el de una prueba). */
 export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler> {
@@ -77,6 +113,14 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
       throw new Error('En este equipo las alertas llegan desde la bandeja.');
     },
     'alerts.stop': () => undefined,
+    // T127 · P-28: el ayudante de instalación, solo con el instalador completo.
+    'setup.facts': () => setup(s).facts(),
+    'setup.code': (code) => setup(s).checkCode(str(code, 'el código')),
+    'setup.run': (operation, request) => {
+      if (!OPERATIONS.includes(operation as SetupOperation)) throw new Error('Operación desconocida.');
+      return setup(s).run(operation as SetupOperation, setupRequest(request));
+    },
+    'setup.state': () => s.setup?.current() ?? { running: false, operation: null, messages: [] },
   };
 }
 

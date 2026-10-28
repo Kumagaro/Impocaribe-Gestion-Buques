@@ -1,6 +1,7 @@
 // T115 · DT-19 y plan §10.1: el contrato entre la interfaz (renderizador) y el proceso principal de Electron. El
 // preload expone solo `invoke` sobre estos canales y los eventos del WebSocket; todo lo nativo (red con verificación de
 // la identidad, descubrimiento, almacenamiento seguro, SQLite cifrado, archivos, notificaciones) vive en el principal.
+import type { SetupMessage } from './setup.ts';
 
 /** Los canales que el preload deja pasar; cualquier otro se rechaza. */
 export const NATIVE_CHANNELS = [
@@ -25,6 +26,10 @@ export const NATIVE_CHANNELS = [
   'qr.scan',
   'alerts.start',
   'alerts.stop',
+  'setup.facts',
+  'setup.code',
+  'setup.run',
+  'setup.state',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 
@@ -56,6 +61,8 @@ export interface NativeDeviceInfo {
   name: string;
   /** Solo en las compilaciones de prueba contra un servidor sin TLS (IMPOCARIBE_TLS=off): la interfaz usa http://. */
   plainHttp?: boolean;
+  /** T127: la app la puso el instalador completo (con el ayudante): ofrece crear el servidor en esta PC (P-28). */
+  serverInstaller?: boolean;
 }
 
 /** Lo que ve la interfaz en `window.impocaribeNative`. */
@@ -67,6 +74,8 @@ export interface NativeBridge {
   onSocket(listener: (id: number, event: NativeSocketEvent, data?: string) => void): void;
   /** T117: el avance de la descarga de una actualización (`update.install`). */
   onUpdateProgress(listener: (received: number, total: number) => void): void;
+  /** T127: el progreso del ayudante de instalación (`setup.run`), mensaje a mensaje. */
+  onSetupMessage(listener: (message: SetupMessage) => void): void;
 }
 
 /**

@@ -6,6 +6,7 @@ import { Skeleton } from '../ui/presentation';
 import { useAppSession } from './SessionProvider';
 
 const ACCESS = ['/conexion', '/setup', '/login', '/recuperar'];
+const UNPAIRED = ['/conexion', '/servidor/crear'];
 
 export function SessionGate() {
   const { state } = useAppSession();
@@ -13,7 +14,9 @@ export function SessionGate() {
   if (state.status === 'loading') return <Skeleton lines={4} />;
   // P-30: el diagnóstico de red se abre siempre, con sesión dentro de la estructura y sin ella en su propio marco.
   if (pathname === '/diagnostico' && state.status !== 'signedIn') return <DiagnosticsStandalone />;
-  if (state.status === 'unpaired') return pathname === '/conexion' ? <Outlet /> : <Navigate to="/conexion" replace />;
+  // T127: sin emparejar también se puede crear el servidor en esta PC (P-28, desde P-01).
+  if (state.status === 'unpaired')
+    return UNPAIRED.includes(pathname) ? <Outlet /> : <Navigate to="/conexion" replace />;
   if (state.status === 'signedOut') return ACCESS.includes(pathname) ? <Outlet /> : <Navigate to="/login" replace />;
   if (state.session?.user.mustChangePassword && !pathname.startsWith('/perfil'))
     return <Navigate to="/perfil" replace />;

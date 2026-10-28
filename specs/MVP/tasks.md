@@ -941,17 +941,39 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Pruebas:* un fallo inyectado en cada paso y Deshacer deja la PC como estaba; ejecutar dos veces seguidas no duplica nada; con un servidor en la red, no pasa del paso 0; un código incorrecto da `INSTALL_CODE_INVALID`.
   - *Pruebas adicionales:* con 4 GB de RAM, la comprobación muestra advertencia ámbar y deja continuar; el restablecimiento de emergencia con un código incorrecto se rechaza, y con el correcto obliga a cambiar la contraseña, revoca las sesiones de esa Apoderada y emite AL-11.
   - *Decisión del responsable (2026-10-27):* el ayudante es un ejecutable propio de un solo archivo, `impocaribe-setup.exe`, hecho con Node SEA. El aviso de permiso de Windows muestra ese nombre, con «Editor desconocido», porque no hay certificado de firma de código de Windows. Va en el paquete del servidor (`server/src/setup/`), para usar sus migraciones, su identidad y el hash del código.
-  - *Estado (2026-10-27):* en curso. Hechos y probados:
-    - el motor de pasos con diario, reintentar, deshacer y reparar;
-    - la comprobación de la PC (`shared/domain/serverChecks.ts`, la misma que usará P-28);
-    - el diario en disco y el progreso por tubería con nombre;
-    - las rutas y los archivos de configuración: PostgreSQL con el plan §10.7, el servicio de WinSW y el firewall solo para la red local.
-
-    Faltan los pasos reales, el ejecutable SEA y el restablecimiento de emergencia; se prueban de verdad en las máquinas virtuales de T135.
+  - *Estado (2026-10-28):* hecho lo que se puede probar en este equipo; falta la prueba real en las máquinas virtuales (T135).
+    - **Motor** (`server/src/setup/`): pasos con diario, reintentar, deshacer y reparar; los 10 pasos del plan §10.3, cada uno limpia lo que dejó a medias si falla.
+    - **Comprobación de la PC** (`shared/domain/serverChecks.ts`, la misma de P-28). La red es la de un adaptador real: una VPN, VirtualBox, Hyper-V o WSL no cuentan.
+    - **Conversación con la app:** tubería con nombre al azar; la petición (con el código) va por ella, nunca en la línea de comandos. Si la app se cierra a mitad, el ayudante sigue y termina, y lo hecho queda en el diario.
+    - **Ejecutable:** `impocaribe-setup.exe` con Node SEA (`server/scripts/setup-exe.mjs`, desde `server-bundle`). Sin elevar responde `comprobar` (los datos de la PC) y `codigo` (si el código es el de la empresa); elevado, `crear`, `reparar`, `deshacer` y `restablecer`.
+    - **Restablecimiento de emergencia (RF-INS-11):** con el código que guarda el servidor; contraseña temporal que hay que cambiar, sesiones de esa Apoderada cerradas, bitácora (`auth.emergency_reset`) y AL-11. Un código incorrecto se rechaza y queda en la bitácora.
+    - **Pruebas:**
+      - 36 unitarias del motor, los pasos (con un fallo inyectado en cada uno), el diario y la tubería, y 2 de la red;
+      - 3 de integración del restablecimiento contra PostgreSQL;
+      - el ejecutable se construyó con el Node 24.21.0 oficial, y `comprobar` y `codigo` respondieron bien en este equipo.
+    - **Sin probar aquí**, porque instalaría el servidor en esta PC: los pasos elevados de verdad (servicios, firewall, energía). Van en T135.
 
 - [ ] **T127. (PP, solo escritorio) Pantalla P-28 Crear servidor**, incluida la variante desde un respaldo de traslado y el paso a P-02.
   - *Cubre:* RF-INS-03, RNF-18, HU-14
   - *Depende:* T126, T124, T038
+  - *Estado (2026-10-28):* hecha salvo la variante desde un respaldo de traslado, que necesita el archivo `.icmove` de T130 y se hace allí.
+    - **P-01:** «Crear servidor en este equipo» solo en escritorio con el instalador completo; desactivado, con el motivo, si ya hay un servidor en la red.
+    - **P-28** (`web/src/screens/server/`, maqueta T124):
+      - comprobación: busca otro servidor por los métodos de P-01 y por la difusión del ayudante, y comprueba la PC; con uno en la red o una marca roja no deja continuar;
+      - permisos: el código se comprueba sin elevar;
+      - montaje de red;
+      - creación: los pasos con su estado, la barra, el tiempo y el detalle técnico; si uno falla, lo dice en claro con Reintentar y Deshacer. Si Windows no da el permiso, vuelve al montaje y lo explica;
+      - listo: nombre, dirección, QR de un solo uso, guía del montaje y «Crear la primera Apoderada» (P-01 se empareja sola y lleva a P-02).
+
+      Si la ventana se cierra o se recarga durante la creación, al volver sigue en el paso 4.
+    - **Escritorio** (`desktop/src/system/setup.ts`): lanza el ayudante con el permiso de Windows (Start-Process -Verb RunAs) y atiende solo la primera conexión a la tubería. Canales `setup.facts`, `setup.code`, `setup.run` y `setup.state`, con la petición filtrada campo a campo.
+    - **QR:** se dibuja en la app con `uqr` (sin red).
+    - **Pruebas:**
+      - 5 de componente de P-28: recorrido completo con el código incorrecto y el correcto; otro servidor en la red; fallo con Reintentar y Deshacer; permiso denegado; retomar al volver a abrir;
+      - 2 de P-01;
+      - 5 de la tubería (incluido un segundo cliente, que no recibe la petición) y 1 de los canales;
+      - 3 del estado de la creación (shared).
+    - **Sin probar aquí:** el diálogo de permiso de Windows y la creación real. Van en T135.
 
 - [ ] **T128. (PP, solo escritorio) Pantalla P-29 Estado del servidor:** estado, energía, montaje, QR, solicitudes de emparejamiento (AL-22, con la ventana al frente), dispositivos, consumo de memoria y acciones de mantenimiento, incluido el restablecimiento de emergencia. Añade también a P-30, en la PC servidor, los dispositivos conectados y el montaje de red (pendiente de T048).
   - *Cubre:* RF-INS-04, RF-RED-04, 05, RF-INS-11

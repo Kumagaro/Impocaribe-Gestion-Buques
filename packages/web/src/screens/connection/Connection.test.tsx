@@ -233,3 +233,41 @@ describe('RF-RED-02 y F-01: sin servidor en la red', () => {
     expect(t.router.state.location.pathname).toBe('/diagnostico');
   });
 });
+
+// T127 · RF-INS-03: «Crear servidor en este equipo», solo en escritorio con el instalador completo (el ayudante).
+describe('P-01: crear el servidor en esta PC', () => {
+  const PC: DeviceInfo = { platform: 'windows', appVersion: '1.0.0', smallestWidthDp: 1024, name: 'PC-ALMACEN' };
+  const setup = {
+    facts: vi.fn(),
+    checkCode: vi.fn(),
+    run: vi.fn(),
+    state: vi.fn(),
+    listen: vi.fn(),
+  };
+
+  it('sin servidor en la red lo ofrece y abre P-28; con uno, lo desactiva y dice por qué', async () => {
+    const t = await open({
+      device: 'desktop',
+      deviceInfo: PC,
+      serverSetup: setup,
+      discovery: createSimulatedNetwork({ servers: [] }),
+      otherRoutes: ['/login', '/servidor/crear'],
+    });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    await userEvent.click(screen.getByRole('button', { name: 'Crear servidor en este equipo' }));
+    expect(t.router.state.location.pathname).toBe('/servidor/crear');
+    t.view.unmount();
+
+    await open({ device: 'desktop', deviceInfo: PC, serverSetup: setup });
+    await screen.findByRole('heading', { name: 'Servidor encontrado' });
+    const button = screen.getByRole('button', { name: 'Crear servidor en este equipo' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Ya hay un servidor en esta red (IMPOCARIBE-7F3C): solo puede haber uno.')).not.toBeNull();
+  });
+
+  it('sin el instalador completo (ni en el teléfono) no aparece', async () => {
+    await open({ device: 'desktop', deviceInfo: PC, discovery: createSimulatedNetwork({ servers: [] }) });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    expect(screen.queryByRole('button', { name: 'Crear servidor en este equipo' })).toBeNull();
+  });
+});

@@ -16,6 +16,7 @@ import './screens/auth/auth.css';
 import './screens/profile/profile.css';
 import './screens/users/users.css';
 import './screens/diagnostics/diagnostics.css';
+import './screens/server/server.css';
 import './screens/company/company.css';
 import './screens/settings/settings.css';
 import './screens/catalogs/catalogs.css';

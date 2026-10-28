@@ -16,6 +16,8 @@ export async function createTestPlatform(
     scanQr?: () => Promise<string | null>;
     /** La instalación simulada (T114): por defecto solo se registra. */
     installUpdate?: Platform['installUpdate'];
+    /** T127: el ayudante de instalación simulado (solo la PC con el instalador completo lo tiene). */
+    serverSetup?: Platform['serverSetup'];
   } = {},
 ): Promise<TestPlatform> {
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -57,5 +59,6 @@ export async function createTestPlatform(
     secureScreen: record('secureScreen'),
     installUpdate: options.installUpdate ?? record('installUpdate'),
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
+    ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
   };
 }

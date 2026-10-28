@@ -70,4 +70,28 @@ describe('canales del puente nativo', () => {
     expect(s.databases.query).not.toHaveBeenCalled();
     expect(s.saveFile).not.toHaveBeenCalled();
   });
+
+  // T127 · P-28: el ayudante de instalación, solo con el instalador completo; la petición se filtra campo a campo.
+  it('el ayudante: solo operaciones y campos conocidos, y nada sin el instalador completo', async () => {
+    const setup = {
+      facts: vi.fn(async () => ({})),
+      checkCode: vi.fn(async () => true),
+      run: vi.fn(async () => ({ ok: true })),
+      current: vi.fn(() => ({ running: false, operation: null, messages: [] })),
+    };
+    const h = nativeHandlers(as({ ...services(), setup } as never));
+    await h['setup.run']('crear', { network: 'hotspot', code: 'K7QM-3XTP-R2HW', otro: 'x' });
+    expect(setup.run).toHaveBeenCalledWith('crear', { network: 'hotspot', code: 'K7QM-3XTP-R2HW' });
+    expect(() => h['setup.run']('borrar-todo', {})).toThrow('Operación desconocida.');
+    expect(() => h['setup.run']('crear', { network: 'satélite' })).toThrow('Montaje de red desconocido.');
+    expect(() => h['setup.run']('restablecer', { code: 'K7QM-3XTP-R2HW', password: 1 })).toThrow(
+      'Falta la contraseña.',
+    );
+    expect(() => h['setup.code'](123)).toThrow('Falta el código.');
+    expect(setup.run).toHaveBeenCalledTimes(1);
+
+    const light = nativeHandlers(as({ ...services(), setup: null } as never));
+    expect(() => light['setup.facts']()).toThrow('no la puso el instalador completo');
+    expect(light['setup.state']()).toEqual({ running: false, operation: null, messages: [] });
+  });
 });

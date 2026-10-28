@@ -64,5 +64,7 @@ export async function capacitorBridge(plugin: ImpocaribeNativePlugin): Promise<N
       decodeBytes((await plugin.invoke({ channel, args: encodeBytes(args) as unknown[] })).value),
     onSocket: (listener) => void plugin.addListener('socket', (e) => listener(e.id, e.event, e.data)),
     onUpdateProgress: (listener) => void plugin.addListener('updateProgress', (e) => listener(e.received, e.total)),
+    // T127: el ayudante de instalación es solo de la PC servidor.
+    onSetupMessage: () => undefined,
   };
 }

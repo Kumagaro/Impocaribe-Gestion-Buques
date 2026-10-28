@@ -201,6 +201,9 @@ export function useConnection() {
     goLogin: () => void navigate('/login', { replace: true }),
     /** RF-RED-06: si no lo encuentra, el diagnóstico explica por qué. */
     openDiagnostics: () => void navigate('/diagnostico'),
+    /** T127 · RF-INS-03: solo en escritorio con el instalador completo (el que trae el ayudante de instalación). */
+    canCreateServer: platform.serverSetup !== undefined && device === 'desktop',
+    createServer: () => void navigate('/servidor/crear'),
   };
 }
 

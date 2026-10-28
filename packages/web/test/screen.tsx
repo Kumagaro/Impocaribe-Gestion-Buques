@@ -62,6 +62,8 @@ export async function renderScreen(
     online?: boolean;
     /** T114: la instalación de una versión que haría la app (por defecto solo se registra). */
     installUpdate?: Platform['installUpdate'];
+    /** T127: el ayudante de instalación de la PC servidor (P-28). */
+    serverSetup?: Platform['serverSetup'];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -76,6 +78,7 @@ export async function renderScreen(
     ...(options.deviceInfo ? { deviceInfo: options.deviceInfo } : {}),
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
     ...(options.installUpdate ? { installUpdate: options.installUpdate } : {}),
+    ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

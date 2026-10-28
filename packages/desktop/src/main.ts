@@ -5,7 +5,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, Notification, protocol, safeStorage, Tray } from 'electron';
 import type { NativeDeviceInfo, NativeSocketEvent } from '@impocaribe/shared';
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { rm, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
@@ -16,6 +16,7 @@ import { broadcast, browse, lanInterfaces, probe, subnetAddresses } from './nati
 import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
+import { SetupHelper } from './system/setup.ts';
 import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
 import { downloadUpdate, installerPath, resolveUpdate, verifySignature } from './system/updater.ts';
 
@@ -33,6 +34,17 @@ const preload = fileURLToPath(new URL('./preload.cjs', import.meta.url));
 const signingKey = fileURLToPath(new URL('../resources/firma-publica.pem', import.meta.url));
 /** Solo para probar contra un servidor sin TLS (IMPOCARIBE_TLS=off); la app instalada siempre usa HTTPS. */
 const plainHttp = process.env.IMPOCARIBE_TLS === 'off' && !app.isPackaged;
+/**
+ * T127: el ayudante de instalación va en el server-bundle; solo el instalador completo lo trae y lo dice en los
+ * metadatos de la app (electron-builder.config.mjs). En desarrollo, el que indique IMPOCARIBE_SETUP_EXE.
+ */
+const setupExe = app.isPackaged
+  ? join(process.resourcesPath, 'server-bundle', 'impocaribe-setup.exe')
+  : process.env.IMPOCARIBE_SETUP_EXE;
+const installer = (
+  JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')) as { impocaribe?: { instalador?: string } }
+).impocaribe?.instalador;
+const serverInstaller = !!setupExe && existsSync(setupExe) && (!app.isPackaged || installer === 'completo');
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
@@ -74,7 +86,12 @@ else {
       smallestWidthDp: 1024,
       name: hostname(),
       ...(plainHttp ? { plainHttp } : {}),
+      ...(serverInstaller ? { serverInstaller } : {}),
     };
+    // P-28: el progreso va a la ventana; si se cierra (queda en la bandeja) la creación sigue, y al volver se retoma.
+    const setup = serverInstaller
+      ? new SetupHelper(setupExe!, (m) => window?.webContents.send('native:setup-message', m))
+      : null;
     ipcMain.on('native:info', (event) => (event.returnValue = info));
     registerNative((channel, fn) => ipcMain.handle(channel, fn), {
       transport,
@@ -101,6 +118,7 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
+      setup,
       // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y la firma del proyecto, y abre el
       // instalador (que pide la confirmación del usuario); la app se cierra para que pueda reemplazarla.
       installUpdate: async ({ version }) => {

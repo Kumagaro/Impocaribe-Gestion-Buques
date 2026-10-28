@@ -106,6 +106,11 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
           Abrir el Diagnóstico de red
         </Button>
         <Alternatives model={model} />
+        {model.canCreateServer && (
+          <Button variant="secondary" onClick={model.createServer}>
+            Crear servidor en este equipo
+          </Button>
+        )}
       </>
     );
 
@@ -120,6 +125,14 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
           Emparejar con código
         </Button>
         <Alternatives model={model} />
+        {model.canCreateServer && (
+          <Button
+            variant="secondary"
+            disabledReason={`Ya hay un servidor en esta red (${serverName(phase.server.serverId)}): solo puede haber uno.`}
+          >
+            Crear servidor en este equipo
+          </Button>
+        )}
       </>
     );
 

@@ -1,5 +1,6 @@
 // T019 · DT-03, plan §7.1 y Const. art. IX.3: lo único que la interfaz pide al sistema operativo. Cada cascarón
 // (Electron, Android) registra su implementación al arrancar; las pruebas usan test-platform.ts.
+import type { PcFacts, SetupMessage, SetupOperation, SetupOutcome, SetupRequest } from '@impocaribe/shared';
 
 export interface DeviceInfo {
   platform: 'windows' | 'android';
@@ -102,6 +103,20 @@ export interface UpdatePackage {
   server: ExpectedServer;
 }
 
+/**
+ * T127 · P-28 y DT-17: el ayudante de instalación de la PC servidor. Comprueba la PC y el código sin elevar; crear,
+ * reparar, deshacer y restablecer piden el permiso de administrador de Windows.
+ */
+export interface ServerSetup {
+  facts(): Promise<PcFacts>;
+  checkCode(code: string): Promise<boolean>;
+  /** El resultado al terminar; el progreso llega a `listen`. Sin el permiso de Windows, falla. */
+  run(operation: SetupOperation, request: SetupRequest): Promise<SetupOutcome>;
+  /** Lo que va haciendo (o hizo) el ayudante: P-28 lo retoma si la ventana se cerró o se recargó. */
+  state(): Promise<{ running: boolean; operation: SetupOperation | null; messages: SetupMessage[] }>;
+  listen(listener: (message: SetupMessage) => void): void;
+}
+
 export interface Platform {
   /** Cómo se habla con el servidor: https en las apps (DT-18); http solo en el navegador de pruebas. */
   serverScheme?: 'http' | 'https';
@@ -133,6 +148,8 @@ export interface Platform {
     start(labels: Record<string, string>, token?: string): Promise<boolean>;
     stop(): Promise<void>;
   };
+  /** T127: solo en la PC con el instalador completo (el que trae el servidor). */
+  serverSetup?: ServerSetup;
 }
 
 let current: Platform | null = null;

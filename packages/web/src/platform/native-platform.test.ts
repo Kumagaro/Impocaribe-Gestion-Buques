@@ -19,6 +19,7 @@ function fakeBridge(reply: (channel: string, args: unknown[]) => unknown = () =>
     },
     onSocket: (l) => (socketListener = l),
     onUpdateProgress: (l) => (progressListener = l),
+    onSetupMessage: () => undefined,
   };
   return {
     bridge,

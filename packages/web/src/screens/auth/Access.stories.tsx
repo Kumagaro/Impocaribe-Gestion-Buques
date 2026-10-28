@@ -48,6 +48,8 @@ const connection = (phase: ConnectionPhase, extra: Partial<ConnectionModel> = {}
   cancel: noop,
   scan: noop,
   goLogin: noop,
+  canCreateServer: false,
+  createServer: noop,
   openDiagnostics: noop,
   ...extra,
 });
