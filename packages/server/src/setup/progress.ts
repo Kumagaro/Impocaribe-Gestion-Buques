@@ -3,28 +3,17 @@
 // instalación va por aquí, no en la línea de comandos, que cualquier proceso puede leer); el ayudante contesta con su
 // progreso, una línea JSON por evento, y la última es el resultado.
 import { connect } from 'node:net';
-import type { ServerCheck } from '@impocaribe/shared';
-import type { Outcome, SetupEvent } from './engine.ts';
+import { lineReader, type SetupMessage } from '@impocaribe/shared';
 
-export type ProgressMessage =
-  SetupEvent | { type: 'checks'; checks: ServerCheck[] } | { type: 'outcome'; outcome: Outcome };
+export type ProgressMessage = SetupMessage;
+/** El mismo lector de líneas que la app (shared/domain/setup.ts). */
+export { lineReader };
 
 export interface Progress {
   /** La primera línea de la app: qué hacer y con qué datos (sin validar: lo hace quien la usa). */
   request: Promise<unknown>;
   send(message: ProgressMessage): void;
   close(): Promise<void>;
-}
-
-/** El lado de la app (y la petición del ayudante): separa las líneas que llegan, partidas o varias juntas. */
-export function lineReader<T = ProgressMessage>(onMessage: (m: T) => void): (chunk: Buffer | string) => void {
-  let pending = '';
-  return (chunk) => {
-    pending += chunk.toString();
-    const lines = pending.split('\n');
-    pending = lines.pop()!;
-    for (const line of lines) if (line.trim()) onMessage(JSON.parse(line) as T);
-  };
 }
 
 /** Sin tubería (ejecutado a mano para soporte), la petición llega por la entrada y el progreso sale por la consola. */
@@ -40,9 +29,18 @@ export async function progressTo(pipe: string | undefined): Promise<Progress> {
     socket.once('connect', resolve);
     socket.once('error', reject);
   });
+  // Si la app se cierra a mitad, el ayudante sigue y termina: lo hecho queda en el diario, y al volver a crear sigue
+  // desde ahí.
+  socket.on('error', () => undefined);
   return {
     request: new Promise((resolve) => socket.on('data', lineReader<unknown>(resolve))),
     send: (m) => void socket.write(`${JSON.stringify(m)}\n`),
-    close: () => new Promise<void>((resolve) => socket.end(resolve)),
+    // Con la tubería ya rota, «end» no avisaría nunca: se espera al cierre.
+    close: () =>
+      new Promise<void>((resolve) => {
+        if (socket.destroyed) return resolve();
+        socket.once('close', () => resolve());
+        socket.end();
+      }),
   };
 }

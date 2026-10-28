@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { createSocket } from 'node:dgram';
 import { statfs } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { arch, networkInterfaces, release, totalmem } from 'node:os';
+import { arch, networkInterfaces, release, totalmem, type NetworkInterfaceInfo } from 'node:os';
 import { promisify } from 'node:util';
 import { BROADCAST_PORT, BROADCAST_PROBE, serverName, type PcFacts } from '@impocaribe/shared';
 import { PG_PORT, SERVER_PORT } from './layout.ts';
@@ -66,12 +66,28 @@ async function hasBattery(): Promise<boolean> {
   }
 }
 
-export async function gatherFacts(): Promise<PcFacts> {
-  const disk = await statfs(`${process.env.SystemDrive ?? 'C:'}\\`);
-  const lan = Object.entries(networkInterfaces())
+/** Adaptadores que no son la red de los dispositivos: VPN, máquinas virtuales, WSL, Bluetooth. */
+const NOT_LAN = /vpn|tun|tap|virtual|vbox|vmware|vethernet|hyper-v|wsl|bluetooth|zerotier|tailscale|hamachi/i;
+
+/**
+ * La red por la que llegarán los dispositivos: la primera IPv4 externa de un adaptador real (wifi o cable). Una VPN o
+ * el adaptador de VirtualBox también tienen IPv4, pero los teléfonos del almacén no los ven.
+ */
+export function lanInterface(
+  interfaces: NodeJS.Dict<NetworkInterfaceInfo[]>,
+): { name: string; address: string; wifi: boolean } | null {
+  const found = Object.entries(interfaces)
+    .filter(([name]) => !NOT_LAN.test(name))
     .flatMap(([name, list]) => (list ?? []).map((i) => ({ name, ...i })))
     .find((i) => i.family === 'IPv4' && !i.internal);
-  const wifi = lan ? /wi-?fi|wlan|inal[aá]mbric/i.test(lan.name) : false;
+  return found
+    ? { name: found.name, address: found.address, wifi: /wi-?fi|wlan|inal[aá]mbric/i.test(found.name) }
+    : null;
+}
+
+export async function gatherFacts(): Promise<PcFacts> {
+  const disk = await statfs(`${process.env.SystemDrive ?? 'C:'}\\`);
+  const lan = lanInterface(networkInterfaces());
   const ports = [SERVER_PORT, PG_PORT];
   const free = await Promise.all(ports.map(portFree));
   return {
@@ -81,7 +97,7 @@ export async function gatherFacts(): Promise<PcFacts> {
     memoryBytes: totalmem(),
     freeDiskBytes: disk.bavail * disk.bsize,
     network: lan
-      ? { kind: wifi ? 'wifi' : 'cable', name: (wifi ? await ssid() : null) ?? lan.name, address: lan.address }
+      ? { kind: lan.wifi ? 'wifi' : 'cable', name: (lan.wifi ? await ssid() : null) ?? lan.name, address: lan.address }
       : null,
     busyPorts: ports.filter((_, i) => !free[i]),
     hasBattery: await hasBattery(),

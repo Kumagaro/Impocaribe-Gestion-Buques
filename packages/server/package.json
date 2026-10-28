@@ -44,6 +44,8 @@
     "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.2",
     "drizzle-kit": "^0.31.11",
-    "fast-check": "^4.10.2"
+    "esbuild": "0.28.2",
+    "fast-check": "^4.10.2",
+    "postject": "1.0.0-alpha.6"
   }
 }

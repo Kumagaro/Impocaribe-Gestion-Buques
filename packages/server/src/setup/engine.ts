@@ -1,6 +1,10 @@
 // T126 · DT-17 y plan §10.3: el motor del ayudante de instalación. Ejecuta pasos idempotentes y anota cada resultado en
 // un diario en disco (C:\ProgramData\Impocaribe\setup-journal.json), así que se puede reintentar desde el que falló, o
 // deshacer en orden inverso lo hecho en este proceso: la PC queda como estaba. Nunca deja un servidor a medias.
+import type { SetupEvent, SetupOutcome as Outcome } from '@impocaribe/shared';
+
+// Los mensajes los comparte con la app (P-28): shared/domain/setup.ts.
+export type { Outcome, SetupEvent };
 
 /** Lo que un paso necesita guardar para deshacerse (p. ej., si la carpeta la creó él o ya existía). */
 export type UndoInfo = Record<string, unknown>;
@@ -29,12 +33,6 @@ export interface Journal {
   load(): Promise<JournalData | null>;
   save(data: JournalData): Promise<void>;
 }
-
-export type SetupEvent =
-  | { type: 'step'; id: string; status: 'running' | 'done' | 'failed' | 'undoing' | 'undone'; error?: string }
-  | { type: 'log'; id: string; line: string };
-
-export type Outcome = { ok: true } | { ok: false; step: string; error: string };
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 

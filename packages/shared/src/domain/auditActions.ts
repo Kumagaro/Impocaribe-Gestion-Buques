@@ -60,6 +60,7 @@ const LABELS: Record<string, string> = {
   'auth.locked': 'Cuenta bloqueada',
   'auth.change_password': 'Cambiar contraseña',
   'auth.recover': 'Recuperar contraseña',
+  'auth.emergency_reset': 'Restablecimiento de emergencia de la contraseña',
   'auth.recovery_codes': 'Generar códigos de recuperación',
   'auth.device_token': 'Token de alertas del dispositivo',
   'auth.session_closed': 'Cerrar una sesión',

@@ -6,7 +6,17 @@
 //   IMPOCARIBE_BUNDLE_WINSW   WinSW-x64.exe (v2.12.0)
 //   IMPOCARIBE_CHROMIUM       opcional: la carpeta de chrome-headless-shell; si no, la de la caché de Puppeteer
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -57,7 +67,15 @@ if (!pgDir) throw new Error('IMPOCARIBE_BUNDLE_PG no tiene bin\\pg_ctl.exe.');
 const pgVersion = version(join(pgDir, 'bin', 'pg_ctl.exe'), ['--version']);
 if (!/\) 16\./.test(pgVersion)) throw new Error(`Hace falta PostgreSQL 16; la descarga es «${pgVersion}».`);
 
+// WinSW 2.x no tiene --version (y sin su .xml no arranca): la versión sale del recurso del .exe.
 const winsw = need('IMPOCARIBE_BUNDLE_WINSW');
+const winswVersion = version('powershell', [
+  '-NoProfile',
+  '-Command',
+  `(Get-Item -LiteralPath '${winsw.replaceAll("'", "''")}').VersionInfo.FileVersion`,
+]);
+if (!winswVersion.startsWith('2.'))
+  throw new Error(`Hace falta WinSW 2.x; la descarga es ${winswVersion || '(sin versión)'}.`);
 
 // El mismo Chromium que usa el servidor en desarrollo (CHROMIUM_VERSION de pdf-engine.ts).
 const engine = readFileSync(join(repo, 'packages/server/src/orders/pdf-engine.ts'), 'utf8');
@@ -86,12 +104,18 @@ for (const part of ['bin', 'lib', 'share']) cpSync(join(pgDir, part), join(out, 
 cpSync(dirname(chromiumExe), join(out, 'chromium'), { recursive: true });
 mkdirSync(join(out, 'winsw'));
 cpSync(winsw, join(out, 'winsw', 'WinSW-x64.exe'));
+// T126: el ayudante (impocaribe-setup.exe), con el mismo node.exe que va en el paquete.
+run('node', [
+  join(repo, 'packages/server/scripts/setup-exe.mjs'),
+  join(out, 'node', 'node.exe'),
+  join(out, 'impocaribe-setup.exe'),
+]);
 
 const manifest = {
   node: nodeVersion,
   postgresql: pgVersion,
   chromium: chromiumVersion,
-  winsw: version(winsw, ['--version']),
+  winsw: winswVersion,
   server: JSON.parse(readFileSync(join(repo, 'packages/server/package.json'), 'utf8')).version,
 };
 writeFileSync(join(out, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
