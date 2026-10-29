@@ -26,6 +26,7 @@
     "mutation:full": "pnpm -r --if-present mutation",
     "verify:core": "pnpm typecheck && pnpm lint && pnpm test && pnpm mutation",
     "e2e": "pnpm --filter @impocaribe/web e2e",
+    "trace": "node scripts/quality/trace.ts",
     "visual": "pnpm --filter @impocaribe/web visual"
   },
   "devDependencies": {

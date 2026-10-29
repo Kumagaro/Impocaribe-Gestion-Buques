@@ -1088,6 +1088,16 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - algún ID de la spec (RF, RNF, HU, D) no tiene al menos una prueba que lo cite;
   - alguna pantalla P-xx de `ui-spec.md` no tiene prueba de extremo a extremo y referencias visuales en sus clases de dispositivo.
   - *Depende:* T138
+  - *Estado (2026-10-28):* la herramienta está hecha; el criterio se cumplirá con T138.
+    - **`pnpm trace`** (`scripts/quality/trace.ts`):
+      - lee los RF y RNF de la spec, las HU y los invariantes D de la Constitución;
+      - los busca citados en las pruebas (unitarias, de integración, E2E, visuales y Java), también abreviados: «RF-ORD-13, 17», «RF-ENE-01 a 05», «D1 a D15»;
+      - para cada pantalla de ui-spec, exige una E2E que la cite y referencias visuales de sus historias en cada clase. P-28, P-29 y P-31 solo en escritorio.
+    - **Excepciones**, que el informe muestra con su motivo: P-27 (pantalla nativa de Android) y P-31 (diálogo de Windows) no son de la interfaz web y van en la lista manual (T143).
+    - **Pruebas:** 6.
+    - **Primer informe (2026-10-28), lo que falta:**
+      - sin prueba que los cite (18): RF-ORD-01, 02, RF-TAB-01, 02, 05, RF-BIT-04, RF-CON-08, HU-03, 05, 07, 08, 11, 12, 14, 15, 16, 18 y D14;
+      - sin E2E ni referencias visuales: P-28 y P-29.
 
 - [ ] **T143. Lista manual de cascarones.** Windows 10 y 11; Android 7, 10 y 14 y el dispositivo de referencia. Incluye los tres instaladores, el emparejamiento por código y por QR, el aviso de apagado y el comportamiento con batería.
   - *Depende:* T125
