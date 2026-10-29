@@ -1179,6 +1179,12 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
     - **Primer informe (2026-10-28), lo que falta:**
       - sin prueba que los cite (18): RF-ORD-01, 02, RF-TAB-01, 02, 05, RF-BIT-04, RF-CON-08, HU-03, 05, 07, 08, 11, 12, 14, 15, 16, 18 y D14;
       - sin E2E ni referencias visuales: P-28 y P-29.
+    - **Los 18, revisados uno a uno (2026-10-29):**
+      - la mayoría ya tenía una prueba que comprueba lo que piden, y se les añadió la cita: RF-ORD-01, 02; RF-TAB-01, 05; las HU; y D14, con la prueba del traslado;
+      - se escribieron las que faltaban: P-15 sin conexión, con el documento desde la copia local (RF-CON-08), y el historial de la DM (RF-BIT-04);
+      - a la ficha de la DM se le añadieron el plazo y el estado de cada orden (RF-TAB-02).
+
+      Queda P-28 y P-29 sin E2E ni referencias visuales.
 
 - [ ] **T143. Lista manual de cascarones.** Windows 10 y 11; Android 7, 10 y 14 y el dispositivo de referencia. Incluye los tres instaladores, el emparejamiento por código y por QR, el aviso de apagado y el comportamiento con batería.
   - *Depende:* T125

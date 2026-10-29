@@ -10,6 +10,7 @@ import type { StoredSession } from '../../session/app-session';
 import { UsersScreen } from './Users.screen';
 import { lastAccessText } from './useUsers';
 
+// HU-11: la Apoderada crea y desactiva usuarios (la recuperación sin internet, en Recover.test.tsx).
 // T040 · P-21 Usuarios (ui-spec), RF-USR-01 a 05, RF-REC-01, RF-REC-06, RF-AUT-04, F-02: el hook real y las tres
 // presentaciones. FIXED_TIME es el 14/10/2026 16:40 UTC (12:40 en La Habana).
 vi.setConfig({ testTimeout: 20_000 });

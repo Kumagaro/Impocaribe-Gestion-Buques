@@ -16,6 +16,7 @@ import type { StoredSession } from '../../session/app-session';
 import { id, ME } from '../orders/orders.fixtures';
 import { BackupsScreen } from './Backups.screen';
 
+// HU-12: respaldos manuales y restaurar uno desde la app (los automáticos, en backups.int.test.ts).
 // T112 · P-24 Respaldos y restauración (maqueta T111): el hook real y el servidor falso.
 vi.setConfig({ testTimeout: 40_000 });
 

@@ -177,6 +177,58 @@ describe('P-10 ficha', () => {
   });
 });
 
+// RF-BIT-04: cada DM muestra su propio historial: sus versiones y los cambios de sus asignaciones, con autor y motivo.
+describe('P-10 historial', () => {
+  it('las versiones de la DM y los cambios de sus asignaciones, con quién y por qué', async () => {
+    await open({
+      path: `/dm/${ACTIVE.id}`,
+      before: (s) =>
+        s.respond(declarationsApi.history, {
+          versions: [
+            {
+              versionNo: 1,
+              kind: 'create',
+              brand: 'Dosel',
+              totalTons: null,
+              reason: null,
+              createdBy: 'Mario Delgado',
+              createdAt: '2026-09-20T13:00:00.000Z',
+            },
+            {
+              versionNo: 2,
+              kind: 'edit',
+              brand: 'Dosel',
+              totalTons: '20000.000',
+              reason: 'Llegó el total de la Aduana',
+              createdBy: 'Ilén Fernández',
+              createdAt: '2026-09-21T13:00:00.000Z',
+            },
+          ],
+          allocationChanges: [
+            {
+              vesselId: EAGLE.id,
+              kind: 'assign',
+              previousTons: '0.000',
+              newTons: '20000.000',
+              reason: null,
+              createdBy: 'Ilén Fernández',
+              createdAt: '2026-09-21T14:00:00.000Z',
+            },
+          ],
+        }),
+    });
+    await userEvent.click(await screen.findByRole('tab', { name: 'Historial' }));
+    const items = (await screen.findByRole('list', { name: 'Historial' })).querySelectorAll('li');
+    expect([...items].map((li) => li.textContent)).toEqual([
+      'Versión 1 · Alta · Dosel · sin total · Mario Delgado',
+      expect.stringMatching(
+        /^Versión 2 · Edición · Dosel · 20.000,000 t · Ilén Fernández · Llegó el total de la Aduana$/,
+      ),
+      expect.stringMatching(/^Asignación · Eagle 1: 0,000 t → 20.000,000 t$/),
+    ]);
+  });
+});
+
 describe('P-11 alta y HU-04', () => {
   const fill = async (tons = '80000') => {
     await userEvent.click(await screen.findByRole('button', { name: 'Nueva DM' }));

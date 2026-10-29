@@ -8,6 +8,7 @@ import { carriersApi } from '../../api/endpoints/catalogs';
 import type { StoredSession } from '../../session/app-session';
 import { CarriersScreen } from './Carriers.screen';
 
+// HU-08: transportistas de una lista, sin repetidos ni datos incompletos.
 // T059 · P-20 Transportistas (ui-spec y maqueta T057), RF-CAT-02, 07, 08 y 10, F-12: el hook real, la copia local real
 // y las tres presentaciones.
 vi.setConfig({ testTimeout: 20_000 });

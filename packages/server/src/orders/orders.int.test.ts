@@ -364,6 +364,7 @@ describe('T080 · concurrencia (D1, Const. art. II y VI)', () => {
 });
 
 describe('T081 y T082 · corregir y anular (HU-02)', () => {
+  // RF-ORD-01 y 02: la versión 1 queda Reemplazada y la vigente es la última no anulada.
   it('corregir crea la versión 2 con el mismo número y ajusta el saldo por la diferencia', async () => {
     await scenario();
     const o = (await post('/orders', order())).body;
@@ -423,6 +424,7 @@ describe('T081 y T082 · corregir y anular (HU-02)', () => {
     ]);
   });
 
+  // RF-ORD-01 y 02: Anulada, y ya no hay versión vigente que corregir.
   it('anular repone todo el saldo, marca la versión y no admite más versiones', async () => {
     await scenario();
     const o = (await post('/orders', order())).body;
@@ -464,6 +466,7 @@ describe('T083 · descargas (RF-ORD-21)', () => {
   }, 60_000);
 });
 
+// RF-ORD-01: los estados Borrador local (en el dispositivo, en P-14) y Borrador compartido, antes de ser Oficial.
 describe('T076 · borradores (RF-ORD-06 a 11, D9)', () => {
   const payload = { tons: '17,28', waybillNo: '22352' };
 

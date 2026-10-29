@@ -12,6 +12,7 @@ import { decryptFile, openPrivateKey, readMeta, type SealedKey } from './crypto.
 import { unpack } from './pack.ts';
 import { BackupScheduler } from './scheduler.ts';
 
+// HU-12: los respaldos automáticos (cada hora en la jornada y el diario a la USB) y los manuales.
 // T106 · RF-RES-01, 02, 04, 05, RNF-14, AL-12, contra PostgreSQL real y pg_dump real: el respaldo manual, el programador
 // (cada hora en la jornada y diario a la carpeta externa), la retención y las alertas.
 vi.setConfig({ testTimeout: 120_000 });

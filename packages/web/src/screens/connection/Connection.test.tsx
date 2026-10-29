@@ -14,6 +14,7 @@ import type { DeviceInfo } from '../../platform/platform';
 import { createSimulatedNetwork } from '../../platform/test-discovery';
 import { ConnectionScreen } from './Connection.screen';
 
+// HU-15: el dispositivo encuentra el servidor solo y se empareja de forma segura.
 // T038 · P-01 Conexión y emparejamiento (ui-spec), RF-CON-01, RF-RED-02 a 04, F-01: el hook real, las tres
 // presentaciones y la red simulada (test-discovery).
 vi.setConfig({ testTimeout: 30_000 });

@@ -8,6 +8,7 @@ import { clientsApi } from '../../api/endpoints/catalogs';
 import type { StoredSession } from '../../session/app-session';
 import { ClientsScreen } from './Clients.screen';
 
+// HU-08: clientes y destinatarios de una lista, sin repetidos ni datos incompletos.
 // T059 · P-19 Clientes (ui-spec y maqueta T057), RF-CAT-01, 07 y 08, F-11: el hook real, la copia local real y las tres
 // presentaciones.
 vi.setConfig({ testTimeout: 30_000 });

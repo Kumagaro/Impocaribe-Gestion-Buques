@@ -56,6 +56,7 @@ describe('P-12 Buscar', () => {
     expect(t.router.state.location.pathname).toBe(`/ordenes/${id(30)}`);
   });
 
+  // RF-TAB-02: por cada DM, saldo, asignaciones por buque, progreso, plazo y sus órdenes con su estado.
   it('por cliente o marca aparece la DM; su ficha con etapas, asignaciones, órdenes y el seguimiento en PDF', async () => {
     const t = await renderScreen(<SearchScreen />, {
       path: '/buscar',
@@ -79,6 +80,11 @@ describe('P-12 Buscar', () => {
     expect(within(ficha).getByRole('listitem', { current: 'step' }).textContent).toBe('En extracción');
     expect(ficha.textContent).toContain('asignado 100,000 t · cargado 17,280 t · saldo 82,720 t');
     expect(within(ficha).getByRole('list', { name: 'Órdenes de la DM' }).children).toHaveLength(3);
+    // D7: el plazo cuenta desde el 02/10 (día 1); hoy es el 14/10.
+    expect(within(ficha).getByText('Plazo').nextElementSibling!.textContent).toBe('día 13 de 30');
+    expect(within(within(ficha).getByRole('list', { name: 'Órdenes de la DM' })).getAllByText('Oficial')).toHaveLength(
+      3,
+    );
     await userEvent.click(within(ficha).getByRole('button', { name: 'Descargar el seguimiento (PDF)' }));
     expect(await screen.findByText('Se descargó el seguimiento de la DM 00431.')).not.toBeNull();
     expect(t.platform.calls.filter((c) => c.method === 'saveFile')).toHaveLength(1);

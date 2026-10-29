@@ -8,6 +8,7 @@ import { changeDriverCarrier, trucksApi } from '../../api/endpoints/catalogs';
 import type { StoredSession } from '../../session/app-session';
 import { FleetScreen } from './Fleet.screen';
 
+// HU-08: camiones, remolques y choferes de una lista, sin repetidos ni datos incompletos.
 // T058 · P-18 Choferes y camiones (ui-spec y maqueta T057), RF-CAT-03 a 09, F-13: el hook real, la copia local real y
 // las tres presentaciones.
 vi.setConfig({ testTimeout: 30_000 });

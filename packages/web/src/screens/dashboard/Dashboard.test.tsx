@@ -79,6 +79,7 @@ const rows = () =>
     .map((r) => r.textContent);
 
 describe('P-06 Tablero', () => {
+  // RF-TAB-01 y HU-03: las cifras las calcula el sistema (total, lo cargado y el saldo), y «Requieren atención».
   it('contratado, extraído y pendiente de las DM; órdenes, borradores y las que requieren atención', async () => {
     await renderScreen(<DashboardScreen />, { path: '/', session: session('operador'), local: records() });
     await screen.findByRole('table', { name: 'Avance por DM' });
@@ -100,6 +101,7 @@ describe('P-06 Tablero', () => {
     expect(alerts.textContent).toContain('DM 00437 en el día 25 del plazo');
   });
 
+  // RF-TAB-01: con un buque elegido, las cifras son las de sus asignaciones.
   it('con un buque, las cifras son las de sus asignaciones', async () => {
     // Sin animación: la cifra salta al valor nuevo (MOV-03 reducido).
     await renderScreen(<DashboardScreen />, {

@@ -11,6 +11,7 @@ import type { ServerSetup } from '../../platform/platform';
 import { createSimulatedNetwork } from '../../platform/test-discovery';
 import { CreateServerScreen } from './CreateServer.screen';
 
+// HU-14: crear el servidor con un botón desde la app de escritorio, sin internet y viendo el progreso.
 // T127 · P-28 Crear servidor (ui-spec P-28, F-16): el hook real y la presentación de escritorio, con el ayudante de
 // instalación simulado (el real pide el permiso de Windows; se prueba en las máquinas virtuales de T135). La búsqueda de
 // otro servidor recorre los métodos de P-01 en la red simulada: unos 10 s por comprobación.

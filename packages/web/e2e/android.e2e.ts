@@ -1,3 +1,4 @@
+// HU-07 y HU-15: la alerta llega con la app cerrada; el teléfono encuentra el servidor y se empareja.
 // T122 · RNF-02 y plan §11.2: la app Android real en un emulador (Android 7 o 14), contra el servidor de extremo a
 // extremo: emparejar, iniciar sesión, primera sincronización, emitir una orden, recibir una alerta con la app cerrada
 // y trabajar sin conexión. Playwright maneja la interfaz por el WebView (depurable en el APK de prueba) y el resto por

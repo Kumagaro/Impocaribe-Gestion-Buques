@@ -1,3 +1,4 @@
+// HU-07: las alertas llegan en tiempo real (con la app cerrada, en android.e2e.ts).
 // T096 · P-17 contra el servidor real (ui-spec P-17, aceptación): una alerta que genera otra persona aparece en la
 // lista y en el contador del Operador en menos de 5 s, y el Operador no ve AL-05 (reservada a las Apoderadas). Las tres
 // clases corren a la vez, cada una con su buque, su DM y su camión.

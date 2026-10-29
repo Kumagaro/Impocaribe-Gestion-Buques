@@ -106,6 +106,7 @@ const open = (options: Parameters<typeof renderScreen>[1] = {}) =>
   });
 
 describe('P-07 lista', () => {
+  // RF-TAB-05: la sección de buques con los datos de RF-BUQ-06 (y, en la ficha, sus DM asignadas).
   it('desktop: viaje, estado, arribo y saldos (RF-BUQ-06)', async () => {
     await open();
     const row = (await screen.findByRole('cell', { name: 'Eagle 1 · V2' })).closest('tr')!;
@@ -154,6 +155,7 @@ describe('P-08 ficha', () => {
     expect(t.server.calls.find((c) => c.path === `/vessels/${OCEAN.id}/close`)!.body).toEqual({ expectedVersion: 3 });
   });
 
+  // RF-TAB-05: las DM asignadas a cada buque.
   it('las DM asignadas del buque', async () => {
     await open({ path: `/buques/${EAGLE.id}` });
     await userEvent.click(await screen.findByRole('tab', { name: 'DM (1)' }));

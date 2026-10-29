@@ -9,6 +9,7 @@ import { POWER_PROVIDER } from '../tokens.ts';
 import { Power } from './power.ts';
 import type { simulatedPower } from './provider.ts';
 
+// HU-16: con batería baja el servidor se protege solo y no deja órdenes a medias.
 // T132 · RF-ENE-01 a 05, plan §10.6, contra PostgreSQL real con el proveedor de energía simulado: al 15 % una emisión
 // en curso termina y la siguiente recibe SERVER_PROTECTED_MODE; al volver la corriente se aceptan escrituras; los
 // límites 15,0 % y 15,1 %; el aviso a las apps (server.power) y AL-20.

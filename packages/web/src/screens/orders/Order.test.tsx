@@ -31,6 +31,7 @@ const REASON = 'Peso corregido en la báscula del puerto';
 const withOrder = (o = ORDER) => local({ entityType: 'order', entityId: o.id, payload: o });
 
 describe('P-15 Orden', () => {
+  // RF-BIT-04: cada orden muestra su propio historial (las versiones con autor, cambios y motivo).
   it('el documento vigente, sus versiones con los cambios, y «Descargar el original» para quien la emitió', async () => {
     const v2 = version(2, { tons: '18.000', reason: REASON, issuedAt: '2026-10-14T15:00:00.000Z' });
     const order = { ...ORDER, current: v2, versions: [version(1, { status: 'replaced' }), v2] };
@@ -47,6 +48,19 @@ describe('P-15 Orden', () => {
     expect(versions.textContent).toContain('Toneladas: 17,280 t → 18,000 t');
     expect(versions.textContent).toContain(`Motivo: ${REASON}`);
     expect(screen.getByRole('button', { name: 'Descargar el original' })).not.toBeNull();
+  });
+
+  // RF-CON-08 y P-15: la orden ya abierta se ve sin conexión, con su documento, desde la copia del dispositivo.
+  it('sin conexión, la orden se ve con su documento desde la copia local', async () => {
+    await renderScreen(<OrderScreen />, {
+      path: `/ordenes/${ORDER.id}`,
+      route: '/ordenes/:id',
+      session: session('operador'),
+      local: withOrder(),
+      online: false,
+    });
+    const doc = await screen.findByRole('article', { name: 'Documento de la orden EAGLE1-2026-V2-0001' });
+    expect(doc.textContent).toContain('Harina de trigo17.280');
   });
 
   it('para otro usuario, o pasadas 24 h, la descarga es una copia; Solo lectura no corrige ni anula', async () => {
