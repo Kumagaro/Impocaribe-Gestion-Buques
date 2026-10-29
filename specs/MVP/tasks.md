@@ -895,6 +895,21 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RNF-02, plan §11.2
   - *Depende:* T121
   - *Terminado:* pasan en ambos emuladores en tres ejecuciones seguidas.
+  - *Decisión del responsable (2026-10-28):* las tres ejecuciones seguidas no se hacen en el equipo de desarrollo, que no tiene procesador ni memoria para el emulador junto al servidor de pruebas. Basta la ejecución completa que ya pasó en Android 14. Los fallos de las repeticiones fueron del equipo y no de la app: el sistema del emulador sin responder, el servidor de pruebas sin compilar por falta de memoria y la sesión cortada.
+  - *Estado (2026-10-28):* hecha en Android 14 con esa decisión.
+    - **Prueba** (`web/e2e/android.e2e.ts`, `pnpm --filter @impocaribe/web e2e:android` con el APK de prueba sin TLS):
+      - emparejar por dirección y código;
+      - entrar y la primera sincronización;
+      - emitir una orden en el teléfono;
+      - una alerta con la app cerrada;
+      - abrir sin conexión con la copia local.
+    - **Fallos de la app que encontró, ya corregidos:**
+      - el borrador esperaba a la sincronización para borrarse al emitir (RF-ORD-06);
+      - la versión de la app salía del paquete web;
+      - el plugin atendía todo en un solo hilo;
+      - el aviso fijo decía «conectado» mientras buscaba el servidor.
+    - **Para el equipo cargado:** el primer arranque solo crea la Apoderada (los 15 usuarios del navegador sobran aquí) y, antes de abrir la app, se cierran los diálogos del sistema.
+    - **Android 7 no se ejecutó en el emulador**, por la misma falta de recursos. Queda en la lista manual (T143), con el WebView actualizado con el Chrome 119 descargado y verificado (firma de Google).
 
 - [ ] **T123. Revisión de experiencia en dispositivos reales.** Recorrer todas las pantallas en:
   - el dispositivo de referencia (teléfono);

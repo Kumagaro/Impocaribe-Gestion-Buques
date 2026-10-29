@@ -35,9 +35,18 @@ async function appPage(device: AndroidDevice): Promise<Page> {
  * ya cerrada: la nueva llega como otra página de la misma conexión. Si Android terminó el proceso, la página está en
  * uno nuevo, con otra conexión.
  */
+/**
+ * Con el equipo cargado, el emulador a veces muestra «… isn't responding» (del lanzador, no de la app) encima de todo:
+ * se cierran los diálogos del sistema antes de abrir la app.
+ */
+async function startApp(device: AndroidDevice) {
+  await sh(device, 'am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS');
+  await sh(device, `am start -n ${PKG}/.EntryActivity`);
+}
+
 async function launch(device: AndroidDevice, previous?: Page): Promise<Page> {
   if (!previous) {
-    await sh(device, `am start -n ${PKG}/.EntryActivity`);
+    await startApp(device);
     return appPage(device);
   }
   const pid = async () => (await sh(device, `pidof ${PKG}`)).trim();
@@ -50,7 +59,7 @@ async function launch(device: AndroidDevice, previous?: Page): Promise<Page> {
       (p) => (sameProcess = p),
       () => undefined,
     );
-  await sh(device, `am start -n ${PKG}/.EntryActivity`);
+  await startApp(device);
   let page: Page | null = null;
   await expect
     .poll(
@@ -149,6 +158,8 @@ test('la app Android: emparejar, entrar, sincronizar, emitir, alertas con la app
     // P-13 en teléfono: emitir una orden (cuatro pasos). «Siguiente» y «Emitir» ocupan el mismo sitio: un toque en
     // «Siguiente» deja un clic retrasado que caería en «Emitir». Los pasos se pulsan sobre el elemento (sin toque).
     await page.evaluate(() => (location.hash = '#/ordenes/nueva'));
+    // El formulario espera los borradores de la copia local, que en el emulador van detrás de la primera sincronización.
+    await expect(page.getByLabel('DM', { exact: true })).toBeVisible({ timeout: 90_000 });
     await page.getByLabel('DM', { exact: true }).selectOption(w.dm.id);
     await button(page, 'Siguiente').dispatchEvent('click');
     await page.getByLabel('Transportista', { exact: true }).selectOption(w.carrier.id);
@@ -164,6 +175,9 @@ test('la app Android: emparejar, entrar, sincronizar, emitir, alertas con la app
     // La primera emisión arranca el Chromium del servidor para el PDF: con el equipo cargado tarda.
     await expect(page.getByText(number, { exact: true })).toBeVisible({ timeout: 90_000 });
     expect(await sql('SELECT status FROM load_orders WHERE number = $1', [number])).toEqual([{ status: 'official' }]);
+    // La orden llega a la copia local por la sincronización (es lo que se verá luego sin conexión).
+    await page.evaluate(() => (location.hash = '#/ordenes'));
+    await expect(page.getByText(number).first()).toBeVisible({ timeout: 90_000 });
 
     // RF-ALR-01: con la app cerrada, la alerta llega por el servicio en primer plano, cuando ya está conectado (una
     // alerta creada mientras no lo está no se notifica después: se ve en el contador al abrir la app).
@@ -189,6 +203,10 @@ test('la app Android: emparejar, entrar, sincronizar, emitir, alertas con la app
     await expect(page.getByText(/Sin conexión · datos al/)).toBeVisible({ timeout: 60_000 });
     await page.evaluate(() => (location.hash = '#/ordenes'));
     await expect(page.getByText(number).first()).toBeVisible();
+  } catch (err) {
+    // Lo que se veía en el emulador (la traza del WebView no guarda la pantalla).
+    await test.info().attach('emulador', { body: await device.screenshot(), contentType: 'image/png' });
+    throw err;
   } finally {
     await sh(device, 'svc wifi enable');
     await sh(device, 'svc data enable');

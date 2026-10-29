@@ -5,8 +5,16 @@
 import { defineConfig } from '@playwright/test';
 import base from './playwright.config';
 
+// El primer arranque crea solo la Apoderada (e2e/setup.e2e.ts): los usuarios de las pruebas del navegador sobran aquí.
+process.env.E2E_SOLO_APODERADA = '1';
+
 export default defineConfig({
   ...base,
+  // Con el emulador encendido, el equipo de desarrollo tarda más en preparar el servidor de la prueba.
+  webServer: (Array.isArray(base.webServer) ? base.webServer : [base.webServer!]).map((w) => ({
+    ...w,
+    timeout: 600_000,
+  })),
   // Un solo emulador: una prueba a la vez.
   workers: 1,
   fullyParallel: false,

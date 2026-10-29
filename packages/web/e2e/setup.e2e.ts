@@ -64,11 +64,13 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   expect(await sql("SELECT ok FROM audit_log WHERE action = 'setup.first_apoderada'")).toEqual([{ ok: true }]);
   expect(await sql('SELECT paired_method FROM devices WHERE revoked_at IS NULL')).toEqual([{ paired_method: 'local' }]);
 
-  // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen.
+  // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen. La de Android solo usa la
+  // Apoderada: en el equipo con el emulador, los 135 argon2id de 64 MB de esos usuarios tardan más que la prueba.
   const api = await signedInDevice(APODERADA.username, APODERADA.password);
   const users = { acceso: {}, perfil: {}, rol: {}, operador: {}, lectura: {} } as E2EState['users'];
   let n = 0;
-  for (const [purpose, role] of Object.entries(PURPOSES) as [keyof typeof PURPOSES, Role][]) {
+  const purposes = process.env.E2E_SOLO_APODERADA ? [] : Object.entries(PURPOSES);
+  for (const [purpose, role] of purposes as [keyof typeof PURPOSES, Role][]) {
     for (const device of DEVICES) {
       const password = `clave-${device}-1`;
       const username = `${purpose}.${device}`;
