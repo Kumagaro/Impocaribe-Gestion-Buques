@@ -4,7 +4,7 @@ import type { ServerCheck } from './serverChecks.ts';
 
 /** Lo que hace el ayudante elevado (con el permiso de administrador de Windows). */
 export type SetupOperation =
-  'crear' | 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'deshacer' | 'restablecer';
+  'crear' | 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'desinstalar' | 'deshacer' | 'restablecer';
 
 /** La primera línea de la app: con qué datos (el código nunca va en la línea de comandos). */
 export interface SetupRequest {
@@ -16,6 +16,9 @@ export interface SetupRequest {
   move?: { file: string; password: string };
   /** T130: dónde guardar el archivo de traslado (preparar). */
   dest?: string;
+  /** T131: la palabra DESINSTALAR, y si se borran también los datos. */
+  confirm?: string;
+  wipe?: boolean;
 }
 
 /** T130 · P-28: de qué servidor es un archivo de traslado (lo lee el ayudante sin elevar, con la contraseña). */

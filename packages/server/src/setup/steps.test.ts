@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { runSteps, undoSteps, type Journal, type JournalData } from './engine.ts';
 import { layout, SERVICES } from './layout.ts';
-import { acDc, createSteps, updateKeep, updateSteps, type Sys } from './steps.ts';
+import { acDc, createSteps, uninstallSteps, updateKeep, updateSteps, type Sys } from './steps.ts';
 
 // T126 · plan §10.3: los pasos de «Crear servidor» sobre una PC simulada que reproduce el efecto de cada comando. Un
 // fallo inyectado en cada paso y Deshacer deja la PC como estaba; lo que ya existía (otra instalación) se conserva.
@@ -297,6 +297,65 @@ describe('crear desde un traslado', () => {
       step: 'estructura',
     });
     expect(await undoSteps('create', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.snapshot()).toEqual(before);
+  });
+});
+
+// T131 · RF-INS-08: desinstalar. Respaldo final, servicios, reglas y energía fuera; los datos se guardan aparte salvo
+// que se pida borrarlos (entonces solo queda el respaldo final, cifrado); el programa se quita.
+describe('desinstalar el servidor', () => {
+  const DAY = '2026-10-29';
+  const keep = `${l.data}\\desinstalado-${DAY}`;
+  async function installedPc() {
+    const pc = fakePc();
+    const before = pc.snapshot();
+    const created = createSteps(pc.sys, l, input);
+    expect(await runSteps('create', created, pc.journal, () => undefined)).toEqual({ ok: true });
+    pc.files.set(`${l.data}\\data\\backups\\final.icbak`, 'respaldo cifrado');
+    const run = pc.sys.run.bind(pc.sys);
+    pc.sys.run = async (file, args, opts) =>
+      args[1] === 'backup-final' ? `${l.data}\\data\\backups\\final.icbak\n` : run(file, args, opts);
+    const previousPower = (await pc.journal.load())!.steps.find((s) => s.id === 'energia')!.info.previous as Record<
+      string,
+      [number, number]
+    >;
+    return { pc, before, previousPower };
+  }
+
+  it('conserva los datos aparte y deja Windows como antes de crear el servidor', async () => {
+    const { pc, before, previousPower } = await installedPc();
+    const steps = uninstallSteps(pc.sys, l, { wipe: false, day: DAY, previousPower });
+    expect(await runSteps('uninstall', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    const after = pc.snapshot();
+    expect(after.services).toEqual([]);
+    expect(after.rules).toEqual([]);
+    expect(after.power).toEqual(before.power);
+    expect(after.files.filter((f) => f.startsWith(l.program))).toEqual([]);
+    expect(pc.files.has(`${keep}\\pgdata\\PG_VERSION`)).toBe(true);
+    expect(pc.files.has(`${keep}\\identity\\identity.json`)).toBe(true);
+    expect(pc.files.has(`${keep}\\data\\backups\\final.icbak`)).toBe(true);
+    expect(after.files.filter((f) => f.startsWith(`${l.data}\\`) && !f.startsWith(keep))).toEqual([]);
+  });
+
+  it('con «Borrar también los datos» solo queda el respaldo final', async () => {
+    const { pc, previousPower } = await installedPc();
+    const steps = uninstallSteps(pc.sys, l, { wipe: true, day: DAY, previousPower });
+    expect(await runSteps('uninstall', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.snapshot().files.filter((f) => f.startsWith(`${l.data}\\`))).toEqual([`${keep}\\respaldo-final.icbak`]);
+    expect(pc.files.get(`${keep}\\respaldo-final.icbak`)).toBe('respaldo cifrado');
+  });
+
+  it('sin respaldo final no sigue: no se quita nada', async () => {
+    const { pc } = await installedPc();
+    const before = pc.snapshot();
+    pc.sys.run = async () => {
+      throw new Error('Sin contraseña de respaldo no se puede hacer el respaldo final.');
+    };
+    const steps = uninstallSteps(pc.sys, l, { wipe: false, day: DAY });
+    expect(await runSteps('uninstall', steps, pc.journal, () => undefined)).toMatchObject({
+      ok: false,
+      step: 'respaldo',
+    });
     expect(pc.snapshot()).toEqual(before);
   });
 });

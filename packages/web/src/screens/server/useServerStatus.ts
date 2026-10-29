@@ -15,6 +15,7 @@ import {
   emergencyResetSchema,
   installationCodeSchema,
   prepareMoveSchema,
+  uninstallSchema,
   type pendingPairingSchema,
   type ServerStatus,
 } from '@impocaribe/shared/validation';
@@ -28,7 +29,7 @@ import { useAppSession } from '../../session/SessionProvider';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
 export type PendingPairing = z.infer<typeof pendingPairingSchema>;
-export type Maintenance = 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'restablecer';
+export type Maintenance = 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'restablecer' | 'desinstalar';
 
 /** Cada cuánto se pide el estado y las solicitudes (una solicitud vale 5 minutos). */
 export const STATUS_EVERY_MS = 5000;
@@ -43,6 +44,7 @@ export const MAINTENANCE_TITLE: Record<Maintenance, string> = {
   reiniciar: 'Reiniciar el servicio',
   actualizar: 'Actualizar el servidor',
   trasladar: 'Preparar traslado',
+  desinstalar: 'Desinstalar el servidor',
   restablecer: 'Restablecer la contraseña de una Apoderada',
 };
 
@@ -172,7 +174,7 @@ export function useServerStatus() {
 
   const runHelper = async (
     operation: Maintenance,
-    request: { code: string; username?: string; password?: string; dest?: string },
+    request: { code: string; username?: string; password?: string; dest?: string; confirm?: string; wipe?: boolean },
   ) => {
     if (!setup) return;
     setProgress(emptySetupProgress());
@@ -183,7 +185,14 @@ export function useServerStatus() {
       if (!alive.current) return;
       setOutcome(result);
       if (!result.ok && result.step === 'permisos') {
-        const field = operation === 'restablecer' ? reset : operation === 'trasladar' ? moveForm : codeForm;
+        const field =
+          operation === 'restablecer'
+            ? reset
+            : operation === 'trasladar'
+              ? moveForm
+              : operation === 'desinstalar'
+                ? uninstallForm
+                : codeForm;
         field.form.setError('code', { type: 'server', message: CODE_INVALID });
       }
     } catch (err) {
@@ -240,10 +249,25 @@ export function useServerStatus() {
     },
   });
 
+  // T131 · RF-INS-08: desinstalar. La palabra DESINSTALAR, el código y si se borran también los datos.
+  const [wipe, setWipe] = useState(false);
+  const [uninstallDay, setUninstallDay] = useState<string | null>(null);
+  const uninstallForm = useValidatedForm({
+    schema: uninstallSchema,
+    defaultValues: { word: '', code: '' },
+    labels: { word: 'Escriba DESINSTALAR para confirmar', code: 'Código de instalación' },
+    onSubmit: async ({ word, code }) => {
+      setUninstallDay(new Date(session.now()).toISOString().slice(0, 10));
+      await runHelper('desinstalar', { code, confirm: word, wipe });
+    },
+  });
+
   const open = (which: Maintenance) => {
     setMaintenance(which);
     setMoveFolder(null);
     setUnderstood(false);
+    setWipe(false);
+    uninstallForm.reset();
     setMoveError(null);
     moveForm.reset();
     setProgress(emptySetupProgress());
@@ -310,6 +334,13 @@ export function useServerStatus() {
     moveCode: moveForm.field('code'),
     moveSummary: moveForm.summary,
     submitMove: moveForm.submit,
+    wipe,
+    setWipe,
+    uninstallFolder: uninstallDay ? `C:\\ProgramData\\Impocaribe\\desinstalado-${uninstallDay}` : null,
+    uninstallWord: uninstallForm.field('word'),
+    uninstallCode: uninstallForm.field('code'),
+    uninstallSummary: uninstallForm.summary,
+    submitUninstall: uninstallForm.submit,
     submitReset: reset.submit,
     progress,
     running,

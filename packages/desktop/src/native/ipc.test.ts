@@ -112,6 +112,14 @@ describe('canales del puente nativo', () => {
     });
     expect(() => h['setup.run']('crear', { move: { file: 1 } })).toThrow('Falta el archivo de traslado.');
 
+    // T131: desinstalar, con la palabra y si se borran los datos (solo «true» los borra).
+    await h['setup.run']('desinstalar', { code: 'K7QM-3XTP-R2HW', confirm: 'DESINSTALAR', wipe: 'sí' });
+    expect(setup.run).toHaveBeenLastCalledWith('desinstalar', {
+      code: 'K7QM-3XTP-R2HW',
+      confirm: 'DESINSTALAR',
+      wipe: false,
+    });
+
     const light = nativeHandlers(as({ ...services(), setup: null } as never));
     expect(() => light['setup.facts']()).toThrow('no la puso el instalador completo');
     expect(light['setup.state']()).toEqual({ running: false, operation: null, messages: [] });

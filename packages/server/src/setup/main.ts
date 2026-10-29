@@ -1,6 +1,6 @@
 // T126 · DT-17 y plan §10.3: impocaribe-setup.exe, el ayudante de instalación. La app de escritorio lo lanza con permiso
 // de administrador de Windows:
-//   impocaribe-setup.exe crear|reparar|reiniciar|actualizar|trasladar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
+//   impocaribe-setup.exe crear|reparar|reiniciar|actualizar|trasladar|desinstalar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
 // y por la tubería le manda {network, code} (crear), {code} (reparar) o {code, username, password} (restablecer). Va
 // dentro de server-bundle, que es de donde copia el programa. Al crear, el código se compara con la comprobación que
 // trae el instalador; al reparar, con la que guarda el servidor (RF-INS-02).
@@ -11,7 +11,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { canCreateServer, checkServerPc, compareVersions } from '@impocaribe/shared';
-import { installationCodeSchema } from '@impocaribe/shared/validation';
+import { installationCodeSchema, UNINSTALL_WORD } from '@impocaribe/shared/validation';
 import { verifySecret } from '../auth/password.ts';
 import { runSteps, undoSteps, type Outcome, type Step } from './engine.ts';
 import { gatherFacts } from './facts.ts';
@@ -19,7 +19,7 @@ import { fileJournal, journalPath } from './journal.ts';
 import { appDatabaseUrl, layout, paths, SERVICES } from './layout.ts';
 import { progressTo, type Progress } from './progress.ts';
 import { MIGRATED_MESSAGE } from '../server-state.ts';
-import { createSteps, machine, updateSteps } from './steps.ts';
+import { createSteps, machine, uninstallSteps, updateSteps } from './steps.ts';
 import { windowsSys } from './windows-sys.ts';
 
 /** Reparar rehace estos pasos sin tocar la base ni la identidad (plan §10.3). */
@@ -27,7 +27,16 @@ export const REPAIR = ['copiar', 'servicio-base', 'servicio', 'firewall', 'energ
 
 const operation = process.argv[2];
 /** Las operaciones que piden el permiso de Windows (las demás, comprobar, codigo y traslado, no tocan la PC). */
-const ELEVATED = ['crear', 'reparar', 'reiniciar', 'actualizar', 'trasladar', 'deshacer', 'restablecer'] as const;
+const ELEVATED = [
+  'crear',
+  'reparar',
+  'reiniciar',
+  'actualizar',
+  'trasladar',
+  'desinstalar',
+  'deshacer',
+  'restablecer',
+] as const;
 const pipeAt = process.argv.indexOf('--tuberia');
 const pipe = pipeAt > 0 ? process.argv[pipeAt + 1] : undefined;
 const bundle = dirname(process.execPath);
@@ -49,6 +58,8 @@ async function main(progress: Progress): Promise<Outcome> {
     move?: { file?: unknown; password?: unknown };
     dest?: unknown;
     password?: unknown;
+    confirm?: unknown;
+    wipe?: unknown;
   };
   const code = installationCodeSchema.safeParse(String(request.code ?? ''));
   const journal = fileJournal(journalPath());
@@ -79,12 +90,30 @@ async function main(progress: Progress): Promise<Outcome> {
   }
 
   // RF-INS-02: el mantenimiento, con el código que guarda el servidor (una Apoderada puede haberlo cambiado).
-  const maintenance = ['reparar', 'reiniciar', 'actualizar', 'trasladar'].includes(operation ?? '');
+  const maintenance = ['reparar', 'reiniciar', 'actualizar', 'trasladar', 'desinstalar'].includes(operation ?? '');
   if (maintenance && !(await serverCodeOk(code.success ? code.data : '')))
     return fail('permisos', 'INSTALL_CODE_INVALID: el código de instalación no es correcto.');
   // D14: un servidor trasladado no se repara, ni se arranca, ni se actualiza aquí.
-  if (maintenance && (await installed('server-state')).trim() === 'migrated')
+  // Desinstalar sí: es como se limpia la PC anterior después de un traslado.
+  if (maintenance && operation !== 'desinstalar' && (await installed('server-state')).trim() === 'migrated')
     return fail('comprobacion', MIGRATED_MESSAGE);
+
+  if (operation === 'desinstalar') {
+    // T131 · RF-INS-08: además del código, la palabra.
+    if (request.confirm !== UNINSTALL_WORD)
+      return fail('confirmacion', `Escriba exactamente ${UNINSTALL_WORD}, en mayúsculas.`);
+    // La energía vuelve a como estaba antes de crear el servidor, con lo que guardó el diario de la creación.
+    const created = await journal.load();
+    const previousPower = created?.steps.find((s) => s.id === 'energia')?.info.previous as
+      Record<string, [number, number]> | undefined;
+    const steps = uninstallSteps(windowsSys, l, {
+      wipe: request.wipe === true,
+      day: new Date().toISOString().slice(0, 10),
+      ...(previousPower ? { previousPower } : {}),
+    });
+    plan(progress, steps);
+    return runSteps('desinstalar', steps, { load: async () => null, save: async () => undefined }, report);
+  }
 
   if (operation === 'trasladar') {
     // T130 · RF-INS-07: el archivo de traslado donde se eligió, y este servidor detenido y deshabilitado.
@@ -198,7 +227,7 @@ async function main(progress: Progress): Promise<Outcome> {
 
   return fail(
     'inicio',
-    `Operación desconocida: ${String(operation)}. Use crear, reparar, reiniciar, actualizar, trasladar, deshacer o restablecer.`,
+    `Operación desconocida: ${String(operation)}. Use crear, reparar, reiniciar, actualizar, trasladar, desinstalar, deshacer o restablecer.`,
   );
 }
 

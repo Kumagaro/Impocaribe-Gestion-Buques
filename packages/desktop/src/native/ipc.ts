@@ -70,6 +70,7 @@ const OPERATIONS: readonly SetupOperation[] = [
   'reiniciar',
   'actualizar',
   'trasladar',
+  'desinstalar',
   'deshacer',
   'restablecer',
 ];
@@ -86,6 +87,8 @@ const setupRequest = (v: unknown): SetupRequest => {
     out.move = { file: str(m.file, 'el archivo de traslado'), password: str(m.password, 'la contraseña de respaldo') };
   }
   if (r.dest !== undefined) out.dest = str(r.dest, 'dónde guardar el archivo');
+  if (r.confirm !== undefined) out.confirm = str(r.confirm, 'la palabra de confirmación');
+  if (r.wipe !== undefined) out.wipe = r.wipe === true;
   for (const key of ['code', 'username', 'password'] as const)
     if (r[key] !== undefined)
       out[key] = str(r[key], key === 'code' ? 'el código' : key === 'username' ? 'el usuario' : 'la contraseña');

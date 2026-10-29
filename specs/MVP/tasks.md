@@ -1016,7 +1016,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
       - 8 de componente de P-29 y AL-22;
       - 1 de P-30, 1 del login y 2 del formulario F-16;
       - la de los canales del escritorio.
-    - **Faltan, con su tarea:** actualizar (T129), preparar traslado (T130) y desinstalar (T131), que se añaden a «Mantenimiento» cuando existan.
+    - Actualizar (T129), preparar traslado (T130) y desinstalar (T131) se añadieron después a «Mantenimiento».
 
 - [ ] **T129. Actualizar el servidor.** Respaldo previo, copia de la versión anterior, migración, comprobación, vuelta atrás si falla y publicación del instalador ligero y del APK.
   - *Cubre:* RF-INS-06, RF-UPD-01
@@ -1070,6 +1070,20 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS-08
   - *Depende:* T130
   - *Pruebas:* sin escribir "DESINSTALAR" no procede; los datos quedan en la carpeta de conservación salvo que se marque borrarlos.
+  - *Estado (2026-10-29):* hecha; falta la prueba real en las máquinas virtuales (T135).
+    - **Ayudante, operación `desinstalar`** (`uninstallSteps`):
+      1. respaldo final (tarea `backup-final`; sin contraseña de respaldo no sigue y no se quita nada);
+      2. detener y quitar los dos servicios;
+      3. quitar las reglas del firewall;
+      4. devolver la energía de Windows a como estaba (con lo que guardó el diario de la creación);
+      5. los datos (base, identidad, archivos y servicio) a `ProgramDataImpocaribedesinstalado-<fecha>`. Con «Borrar también los datos» se borran, y solo se conserva el respaldo final, que va cifrado;
+      6. quitar el programa.
+
+      Pide el código que guarda el servidor y la palabra DESINSTALAR. También desinstala una PC ya trasladada: es como se limpia. No se deshace.
+    - **P-29:** «Desinstalar el servidor», con lo que pasará, «Borrar también los datos», la palabra (F-16, `uninstallSchema`) y el código. Al terminar dice dónde quedaron los datos y cómo quitar también la app.
+    - **Pruebas:**
+      - 3 de los pasos en el PC simulado: conserva los datos y deja Windows como antes de crear el servidor; borra los datos salvo el respaldo final; sin respaldo final no toca nada;
+      - 1 del formulario, 1 de componente y la de los canales.
 
 - [ ] **T132. Energía.** Proveedor de estado de energía, `server.power`, AL-20, modo protegido al 15 %, parada al 5 % y reanudación; avisos en todas las apps.
   - *Cubre:* RF-ENE-01 a 05, Const. art. XV, HU-16

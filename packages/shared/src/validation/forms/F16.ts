@@ -91,3 +91,7 @@ export const emergencyResetSchema = z
 
 /** T130 · F-16 y RF-INS-07: preparar el traslado. La contraseña de respaldo (cifra el archivo) y el código de instalación. */
 export const prepareMoveSchema = backupPasswordSchema.extend({ code: installationCodeSchema });
+
+/** T131 · RF-INS-08: desinstalar el servidor exige escribir esta palabra y el código de instalación. */
+export const UNINSTALL_WORD = 'DESINSTALAR';
+export const uninstallSchema = z.object({ word: confirmWordSchema(UNINSTALL_WORD), code: installationCodeSchema });

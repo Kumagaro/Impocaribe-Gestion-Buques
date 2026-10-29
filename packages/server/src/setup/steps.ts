@@ -466,6 +466,105 @@ export function updateSteps(sys: Sys, l: Layout, input: { bundle: string }): Ste
   ];
 }
 
+/**
+ * T131 · RF-INS-08 y plan §10.5: desinstalar el servidor. Un respaldo final (el servidor tiene que estar en marcha),
+ * detener y quitar los servicios, las reglas del firewall y el ajuste de energía (con lo que guardó el diario de la
+ * creación), los datos a `desinstalado-<fecha>` (o borrados, salvo el respaldo final, que va cifrado) y el programa.
+ * No se deshace: es lo que se pidió, con la palabra DESINSTALAR y el código.
+ */
+export function uninstallSteps(
+  sys: Sys,
+  l: Layout,
+  input: { wipe: boolean; day: string; previousPower?: Record<string, [number, number]> },
+): Step[] {
+  const { p, tasks, stopServices } = machine(sys, l);
+  const keep = join(l.data, `desinstalado-${input.day}`);
+  const serviceExe = join(p.serviceDir, `${SERVICES.server}.exe`);
+  const exists = (service: string) => sys.succeeds('sc.exe', ['query', service]);
+  let finalBackup: string | null = null;
+  return [
+    {
+      id: 'respaldo',
+      title: 'Hacer un respaldo final',
+      async run(log) {
+        finalBackup = (await tasks('backup-final')).trim();
+        log(`Respaldo final: ${finalBackup}`);
+      },
+      async undo() {},
+    },
+    {
+      id: 'detener',
+      title: 'Detener el servidor y la base de datos',
+      async run() {
+        const running = [];
+        for (const service of [SERVICES.server, SERVICES.database]) if (await exists(service)) running.push(service);
+        if (running.length) await stopServices(...running);
+      },
+      async undo() {},
+    },
+    {
+      id: 'servicios',
+      title: 'Quitar los servicios de Windows',
+      async run() {
+        if (await exists(SERVICES.server)) await sys.run(serviceExe, ['uninstall']);
+        if (await exists(SERVICES.database))
+          await sys.run(join(p.pgBin, 'pg_ctl.exe'), ['unregister', '-N', SERVICES.database]);
+      },
+      async undo() {},
+    },
+    {
+      id: 'firewall',
+      title: 'Quitar las reglas del firewall',
+      async run() {
+        for (const rule of FIREWALL_RULES)
+          if (await sys.succeeds('netsh', ['advfirewall', 'firewall', 'show', 'rule', `name=${rule.name}`]))
+            await sys.run('netsh', ['advfirewall', 'firewall', 'delete', 'rule', `name=${rule.name}`]);
+      },
+      async undo() {},
+    },
+    {
+      id: 'energia',
+      title: 'Devolver la energía de Windows a como estaba',
+      async run(log) {
+        const previous = input.previousPower ?? {};
+        if (!Object.keys(previous).length) return log('No hay ajustes de energía que devolver.');
+        for (const [setting, [ac, dc]] of Object.entries(previous)) {
+          await sys.run('powercfg', ['/setacvalueindex', 'SCHEME_CURRENT', 'SUB_SLEEP', setting, String(ac)]);
+          await sys.run('powercfg', ['/setdcvalueindex', 'SCHEME_CURRENT', 'SUB_SLEEP', setting, String(dc)]);
+        }
+        await sys.run('powercfg', ['/setactive', 'SCHEME_CURRENT']);
+      },
+      async undo() {},
+    },
+    {
+      id: 'datos',
+      title: input.wipe
+        ? 'Borrar los datos (se conserva el respaldo final)'
+        : 'Guardar los datos en una carpeta aparte',
+      async run(log) {
+        const dirs = [p.pgdata, p.identityDir, p.dataDir, p.serviceDir];
+        if (input.wipe) {
+          if (finalBackup) await sys.copy(finalBackup, join(keep, 'respaldo-final.icbak'));
+        } else
+          for (const dir of dirs)
+            if (await sys.exists(dir)) await sys.copy(dir, join(keep, dir.slice(l.data.length + 1)));
+        for (const dir of [...dirs, updateKeep(l)]) await sys.remove(dir);
+        for (const file of ['setup-journal.json', 'actualizacion-diario.json']) await sys.remove(join(l.data, file));
+        log(`${input.wipe ? 'Respaldo final' : 'Datos'} en ${keep}.`);
+      },
+      async undo() {},
+    },
+    {
+      id: 'programa',
+      title: 'Quitar el programa del servidor',
+      async run() {
+        await sys.remove(l.program);
+      },
+      async undo() {},
+    },
+  ];
+}
+
 /** Suspensión e hibernación por inactividad: el servidor tiene que poder aplicar su modo protegido y su parada. */
 export const SLEEP_SETTINGS = ['STANDBYIDLE', 'HIBERNATEIDLE'];
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { backupPasswordSchema, emergencyResetSchema, prepareMoveSchema, setBackupPasswordSchema } from './F16.ts';
+import {
+  backupPasswordSchema,
+  emergencyResetSchema,
+  prepareMoveSchema,
+  setBackupPasswordSchema,
+  uninstallSchema,
+} from './F16.ts';
 
 // T105 · F-16.
 const issues = (r: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
@@ -73,6 +79,19 @@ describe('F-16 preparar el traslado', () => {
     expect(issues(prepareMoveSchema.safeParse({ password: '', code: '' }))).toEqual([
       ['password', 'Escriba la contraseña de respaldo.'],
       ['code', 'El código tiene la forma XXXX-XXXX-XXXX, como K7QM-3XTP-R2HW.'],
+    ]);
+  });
+});
+
+// T131 · RF-INS-08: desinstalar.
+describe('F-16 desinstalar', () => {
+  it('sin escribir DESINSTALAR, en mayúsculas, no procede', () => {
+    expect(uninstallSchema.parse({ word: 'DESINSTALAR', code: 'K7QM-3XTP-R2HW' })).toEqual({
+      word: 'DESINSTALAR',
+      code: 'K7QM-3XTP-R2HW',
+    });
+    expect(issues(uninstallSchema.safeParse({ word: 'desinstalar', code: 'K7QM-3XTP-R2HW' }))).toEqual([
+      ['word', 'Escriba exactamente DESINSTALAR, en mayúsculas.'],
     ]);
   });
 });

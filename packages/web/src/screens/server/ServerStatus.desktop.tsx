@@ -216,18 +216,22 @@ function MaintenanceActions({ m }: { m: ServerStatusModel }) {
       </div>
       {m.canMaintain ? (
         <div className="srv-actions">
-          {(['reparar', 'reiniciar', 'actualizar', 'trasladar', 'restablecer'] as Maintenance[]).map((w) => (
-            <Button
-              key={w}
-              variant="secondary"
-              onClick={() => m.open(w)}
-              {...(w === 'actualizar' && !m.updateTo
-                ? { disabledReason: 'Para actualizar, instale en esta PC el instalador completo de la versión nueva.' }
-                : {})}
-            >
-              {w === 'actualizar' && m.updateTo ? `Actualizar el servidor a la ${m.updateTo}` : MAINTENANCE_TITLE[w]}
-            </Button>
-          ))}
+          {(['reparar', 'reiniciar', 'actualizar', 'trasladar', 'restablecer', 'desinstalar'] as Maintenance[]).map(
+            (w) => (
+              <Button
+                key={w}
+                variant="secondary"
+                onClick={() => m.open(w)}
+                {...(w === 'actualizar' && !m.updateTo
+                  ? {
+                      disabledReason: 'Para actualizar, instale en esta PC el instalador completo de la versión nueva.',
+                    }
+                  : {})}
+              >
+                {w === 'actualizar' && m.updateTo ? `Actualizar el servidor a la ${m.updateTo}` : MAINTENANCE_TITLE[w]}
+              </Button>
+            ),
+          )}
           <span className="srv-actions__note">
             <ShieldCheck aria-hidden="true" />
             Piden permiso de administrador de Windows y el código de instalación.
@@ -251,14 +255,48 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
       <Button variant="ghost" onClick={m.close}>
         Cancelar
       </Button>
-      <Button type="submit" form="srv-mnt-form" variant={which === 'trasladar' ? 'danger' : 'primary'}>
-        {which === 'restablecer' ? 'Restablecer' : MAINTENANCE_TITLE[which]}
+      <Button
+        type="submit"
+        form="srv-mnt-form"
+        variant={which === 'trasladar' || which === 'desinstalar' ? 'danger' : 'primary'}
+      >
+        {which === 'restablecer' ? 'Restablecer' : which === 'desinstalar' ? 'Desinstalar' : MAINTENANCE_TITLE[which]}
       </Button>
     </>
   );
   const done = m.outcome?.ok;
   return (
     <Dialog title={MAINTENANCE_TITLE[which]} onClose={m.close} footer={footer}>
+      {!started && which === 'desinstalar' && (
+        <form id="srv-mnt-form" className="srv-mnt-form" noValidate onSubmit={(e) => void m.submitUninstall(e)}>
+          <div className="srv-consequence">
+            <b>Lo que pasará</b>
+            <ul>
+              <li>Se hace un respaldo final, cifrado con la contraseña de respaldo.</li>
+              <li>Se quitan los servicios, las reglas del firewall y el programa del servidor.</li>
+              <li>Los dispositivos no podrán conectarse.</li>
+              <li>
+                {m.wipe
+                  ? 'Se borran los datos; solo se conserva el respaldo final, en C:\\ProgramData\\Impocaribe\\desinstalado-<fecha>.'
+                  : 'Los datos se guardan en C:\\ProgramData\\Impocaribe\\desinstalado-<fecha>.'}
+              </li>
+            </ul>
+          </div>
+          <ErrorSummary errors={m.uninstallSummary} />
+          <Checkbox label="Borrar también los datos" checked={m.wipe} onChange={m.setWipe} />
+          <Field label="Escriba DESINSTALAR para confirmar" {...m.uninstallWord.state}>
+            <TextField {...m.uninstallWord.control} autoComplete="off" spellCheck={false} />
+          </Field>
+          <Field
+            label="Código de instalación"
+            help="El código impreso que se entregó aparte"
+            exacting
+            {...m.uninstallCode.state}
+          >
+            <TextField {...m.uninstallCode.control} uppercase autoComplete="off" spellCheck={false} />
+          </Field>
+        </form>
+      )}
       {!started && which === 'trasladar' && (
         <form id="srv-mnt-form" className="srv-mnt-form" noValidate onSubmit={(e) => void m.submitMove(e)}>
           <div className="srv-consequence">
@@ -304,7 +342,7 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
           />
         </form>
       )}
-      {!started && which !== 'restablecer' && which !== 'trasladar' && (
+      {!started && (which === 'reparar' || which === 'reiniciar' || which === 'actualizar') && (
         <form id="srv-mnt-form" className="srv-mnt-form" noValidate onSubmit={(e) => void m.submitCode(e)}>
           <p>
             {which === 'reparar'
@@ -375,9 +413,11 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
                   ? 'El servidor quedó reparado y en marcha.'
                   : which === 'actualizar'
                     ? 'El servidor quedó actualizado y en marcha. Las apps de los dispositivos se avisan de la versión nueva.'
-                    : which === 'trasladar'
-                      ? `Archivo de traslado creado: ${m.moveDest ?? ''}. Este servidor quedó detenido. En la PC nueva, instale el instalador completo y use «Crear servidor desde un respaldo de traslado».`
-                      : 'El servidor volvió a arrancar.'}
+                    : which === 'desinstalar'
+                      ? `El servidor se desinstaló. ${m.wipe ? 'Se borraron los datos; el respaldo final quedó' : 'Los datos quedaron'} en ${m.uninstallFolder ?? ''}. Para quitar también esta app, use Configuración de Windows › Aplicaciones.`
+                      : which === 'trasladar'
+                        ? `Archivo de traslado creado: ${m.moveDest ?? ''}. Este servidor quedó detenido. En la PC nueva, instale el instalador completo y use «Crear servidor desde un respaldo de traslado».`
+                        : 'El servidor volvió a arrancar.'}
             </Notice>
           )}
           {m.outcome && !m.outcome.ok && (

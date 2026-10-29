@@ -6,6 +6,7 @@
 //   node dist/setup/tasks.js prepare-move <archivo> | read-move <archivo> | restore-move <archivo> | server-state
 //     (T130, traslado; la contraseña de respaldo por la entrada)
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { stdin } from 'node:process';
 import { AppError, systemClock } from '@impocaribe/shared';
 import { installationCodeSchema } from '@impocaribe/shared/validation';
@@ -14,6 +15,7 @@ import pg from 'pg';
 import { verifySecret } from '../auth/password.ts';
 import { config, type Config } from '../config.ts';
 import { createAppPool } from '../db/db.ts';
+import { runBackup } from '../backups/backup.ts';
 import { prepareMove, readMove, restoreMove } from '../backups/move.ts';
 import { readServerState } from '../server-state.ts';
 import { publishBundled } from '../updates/bundled.ts';
@@ -88,6 +90,33 @@ const commands: Record<string, () => Promise<string>> = {
     const pool = createAppPool(cfg().databaseUrl);
     try {
       return (await publishBundled(drizzle(pool), systemClock, cfg().dataDir, dir)).join('\n');
+    } finally {
+      await pool.end();
+    }
+  },
+  /** T131 · RF-INS-08: el respaldo final antes de desinstalar; escribe la ruta del archivo. */
+  async 'backup-final'() {
+    const pool = createAppPool(cfg().databaseUrl);
+    try {
+      const row = await runBackup(
+        {
+          db: drizzle(pool),
+          clock: systemClock,
+          dataDir: cfg().dataDir,
+          maintenanceUrl: cfg().databaseUrl,
+          pgBin: process.env.IMPOCARIBE_PG_BIN ?? '',
+        },
+        'manual',
+      );
+      if (!row)
+        return failed(
+          new AppError(
+            'VALIDATION_ERROR',
+            'Sin contraseña de respaldo no se puede hacer el respaldo final: defínala en Respaldos y restauración.',
+          ),
+        );
+      if (row.status !== 'ok' || !row.filePath) return failed(new Error(`El respaldo final falló: ${row.error ?? ''}`));
+      return join(cfg().dataDir, row.filePath);
     } finally {
       await pool.end();
     }

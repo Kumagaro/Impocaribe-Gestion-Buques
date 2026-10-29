@@ -275,6 +275,36 @@ describe('P-29 Estado del servidor', () => {
     expect(await within(dialog).findByText('La contraseña de respaldo no es correcta.')).not.toBeNull();
   });
 
+  // T131 · RF-INS-08: desinstalar. Sin escribir DESINSTALAR no procede; con «Borrar también los datos», lo dice.
+  it('desinstalar: sin la palabra no procede; con ella y el código, por el ayudante', async () => {
+    const { setup, runs } = fakeSetup({ ok: true });
+    await open({ serverSetup: setup });
+    await userEvent.click(await screen.findByRole('button', { name: 'Desinstalar el servidor' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Desinstalar el servidor' });
+    expect(within(dialog).getByText('Los dispositivos no podrán conectarse.')).not.toBeNull();
+    await userEvent.type(within(dialog).getByLabelText('Escriba DESINSTALAR para confirmar'), 'desinstalar');
+    await userEvent.type(within(dialog).getByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Desinstalar' }));
+    expect(
+      (await within(dialog).findAllByText('Escriba exactamente DESINSTALAR, en mayúsculas.')).length,
+    ).toBeGreaterThan(0);
+    expect(runs).toEqual([]);
+
+    await userEvent.clear(within(dialog).getByLabelText('Escriba DESINSTALAR para confirmar'));
+    await userEvent.type(within(dialog).getByLabelText('Escriba DESINSTALAR para confirmar'), 'DESINSTALAR');
+    await userEvent.click(within(dialog).getByLabelText('Borrar también los datos'));
+    expect(within(dialog).getByText(/Se borran los datos; solo se conserva el respaldo final/)).not.toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Desinstalar' }));
+    expect(
+      await within(dialog).findByText(
+        /^El servidor se desinstaló\. Se borraron los datos; el respaldo final quedó en C:.ProgramData.Impocaribe.desinstalado-2026-10-14\./,
+      ),
+    ).not.toBeNull();
+    expect(runs).toEqual([
+      { operation: 'desinstalar', request: { code: 'K7QM-3XTP-R2HW', confirm: 'DESINSTALAR', wipe: true } },
+    ]);
+  });
+
   it('sin el instalador completo no hay mantenimiento', async () => {
     await open();
     expect(
