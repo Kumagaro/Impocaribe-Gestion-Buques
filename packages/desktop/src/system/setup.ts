@@ -4,7 +4,14 @@
 // tubería con nombre al azar: le manda la petición (con el código, que no va en la línea de comandos) y recibe su
 // progreso. La app guarda lo recibido: si la ventana se cierra o se recarga, P-28 sigue donde iba.
 import { lineReader } from '@impocaribe/shared';
-import type { PcFacts, SetupMessage, SetupOperation, SetupOutcome, SetupRequest } from '@impocaribe/shared';
+import type {
+  MoveFileInfo,
+  PcFacts,
+  SetupMessage,
+  SetupOperation,
+  SetupOutcome,
+  SetupRequest,
+} from '@impocaribe/shared';
 import { execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:net';
@@ -65,6 +72,24 @@ export class SetupHelper {
       child.on('error', reject);
       child.on('close', () => resolve(out.trim() === 'ok'));
       child.stdin.end(code);
+    });
+  }
+
+  /**
+   * T130 · P-28: de qué servidor es un archivo de traslado y si la contraseña lo abre, sin elevar. Un error del
+   * ayudante («CÓDIGO: mensaje») llega como el mensaje solo.
+   */
+  readMove(file: string, password: string): Promise<MoveFileInfo> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(this.exe, ['traslado'], { windowsHide: true });
+      let out = '';
+      child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()));
+      child.on('error', reject);
+      child.on('close', (code) => {
+        if (code === 0) return resolve(JSON.parse(out) as MoveFileInfo);
+        reject(new Error(out.trim().replace(/^[A-Z_]+: /, '') || 'No se pudo leer el archivo de traslado.'));
+      });
+      child.stdin.end(JSON.stringify({ file, password }));
     });
   }
 

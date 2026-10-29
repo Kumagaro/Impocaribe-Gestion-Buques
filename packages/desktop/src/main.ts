@@ -127,6 +127,22 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
+      // T130: el archivo de traslado que se abre en P-28 y la carpeta donde se guarda en P-29 (una USB, normalmente).
+      pickFile: async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(window!, {
+          title: 'Archivo de traslado',
+          filters: [{ name: 'Respaldo de traslado', extensions: ['icmove'] }],
+          properties: ['openFile'],
+        });
+        return canceled ? null : (filePaths[0] ?? null);
+      },
+      pickFolder: async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(window!, {
+          title: 'Guardar el archivo de traslado en',
+          properties: ['openDirectory', 'createDirectory'],
+        });
+        return canceled ? null : (filePaths[0] ?? null);
+      },
       // AL-22: una solicitud de emparejamiento nueva trae la ventana al frente, aunque esté en la bandeja.
       attention: () => {
         show();

@@ -31,6 +31,9 @@ export const NATIVE_CHANNELS = [
   'setup.run',
   'setup.state',
   'window.attention',
+  'setup.move',
+  'setup.pickFile',
+  'setup.pickFolder',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 

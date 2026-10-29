@@ -107,9 +107,14 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
         </Button>
         <Alternatives model={model} />
         {model.canCreateServer && (
-          <Button variant="secondary" onClick={model.createServer}>
-            Crear servidor en este equipo
-          </Button>
+          <>
+            <Button variant="secondary" onClick={model.createServer}>
+              Crear servidor en este equipo
+            </Button>
+            <Button variant="ghost" onClick={model.createServerFromMove}>
+              Crear servidor desde un respaldo de traslado
+            </Button>
+          </>
         )}
       </>
     );

@@ -1,6 +1,13 @@
 // T019 · DT-03, plan §7.1 y Const. art. IX.3: lo único que la interfaz pide al sistema operativo. Cada cascarón
 // (Electron, Android) registra su implementación al arrancar; las pruebas usan test-platform.ts.
-import type { PcFacts, SetupMessage, SetupOperation, SetupOutcome, SetupRequest } from '@impocaribe/shared';
+import type {
+  MoveFileInfo,
+  PcFacts,
+  SetupMessage,
+  SetupOperation,
+  SetupOutcome,
+  SetupRequest,
+} from '@impocaribe/shared';
 
 export interface DeviceInfo {
   platform: 'windows' | 'android';
@@ -117,6 +124,11 @@ export interface ServerSetup {
   /** Lo que va haciendo (o hizo) el ayudante: P-28 lo retoma si la ventana se cerró o se recargó. */
   state(): Promise<{ running: boolean; operation: SetupOperation | null; messages: SetupMessage[] }>;
   listen(listener: (message: SetupMessage) => void): void;
+  /** T130: de qué servidor es un archivo de traslado y si la contraseña lo abre (sin elevar). */
+  readMove(file: string, password: string): Promise<MoveFileInfo>;
+  /** T130: elegir el archivo de traslado, o la carpeta donde guardarlo; null si se cancela. */
+  pickFile(): Promise<string | null>;
+  pickFolder(): Promise<string | null>;
 }
 
 export interface Platform {

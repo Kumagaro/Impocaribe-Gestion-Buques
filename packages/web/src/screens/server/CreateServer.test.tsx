@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event';
 import type { PcFacts, SetupMessage, SetupOperation, SetupOutcome, SetupRequest } from '@impocaribe/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { renderScreen } from '../../../test/screen';
+import { serverStatusSchema } from '@impocaribe/shared/validation';
+import { sampleOf } from '../../../test/fake-server';
+import { localApi } from '../../api/endpoints/local';
 import { postLocalQr } from '../../api/endpoints/pairing';
 import type { ServerSetup } from '../../platform/platform';
 import { createSimulatedNetwork } from '../../platform/test-discovery';
@@ -44,6 +47,12 @@ function fakeSetup(
   const runs: { operation: SetupOperation; request: SetupRequest }[] = [];
   const setup: ServerSetup = {
     bundleVersion: '1.0.0',
+    readMove: async (_file, password) => {
+      if (password !== 'respaldo de prueba 2026') throw new Error('La contraseña de respaldo no es correcta.');
+      return { serverName: 'IMPOCARIBE-7F3C', createdAt: '2026-10-27T18:40:00.000Z', devices: 9 };
+    },
+    pickFile: async () => 'E:\\IMPOCARIBE-7F3C-2026-10-27.icmove',
+    pickFolder: async () => null,
     facts: async () => FACTS,
     checkCode: async (code) => code === 'K7QM-3XTP-R2HW',
     state: async () => state,
@@ -61,20 +70,30 @@ function fakeSetup(
   return { setup, runs };
 }
 
-async function open(setup: ServerSetup, network = createSimulatedNetwork()) {
+async function open(setup: ServerSetup, network = createSimulatedNetwork(), path = '/servidor/crear') {
   return renderScreen(<CreateServerScreen />, {
-    path: '/servidor/crear',
+    path,
+    route: '/servidor/crear',
     pairing: null,
     discovery: network,
     serverSetup: setup,
     otherRoutes: ['/conexion'],
-    before: (server) =>
+    before: (server) => {
       server.respond(postLocalQr, {
         qrToken: 'token-del-qr',
         serverId: SERVER_ID,
         caFingerprint: 'AB:CD',
         expiresAt: '2026-10-27T19:05:00.000Z',
-      }),
+      });
+      server.respond(
+        localApi.status,
+        sampleOf(serverStatusSchema, {
+          serverId: SERVER_ID,
+          startedAt: '2026-10-27T19:00:00.000Z',
+          network: { setup: 'hotspot', address: '192.168.43.20', port: 8443 },
+        }),
+      );
+    },
   });
 }
 
@@ -208,5 +227,68 @@ describe('P-28 Crear servidor', () => {
     expect(within(list).getByRole('img', { name: 'En curso' })).not.toBeNull();
     expect(within(list).getByRole('img', { name: 'Pendiente' })).not.toBeNull();
     expect(screen.getByText('Paso 1 de 2')).not.toBeNull();
+  });
+});
+
+// T130 · RF-INS-07: P-28 desde un respaldo de traslado: el archivo y la contraseña en vez del montaje, que se conserva.
+describe('P-28 desde un respaldo de traslado', () => {
+  it('pide el archivo y su contraseña, comprueba que es del servidor y traslada con la misma identidad', async () => {
+    const network = createSimulatedNetwork();
+    const created = {
+      messages: [PLAN, ...steps(['copiar', 'running'], ['copiar', 'done'])],
+      outcome: { ok: true } as const,
+    };
+    const { setup, runs } = fakeSetup({ crear: created });
+    await open(
+      {
+        ...setup,
+        run: async (operation, request) => {
+          network.servers.push({
+            address: '127.0.0.1',
+            port: 8443,
+            serverId: SERVER_ID,
+            caFingerprint: 'AB:CD',
+            version: '1.0.0',
+          });
+          return setup.run(operation, request);
+        },
+      },
+      network,
+      '/servidor/crear?traslado',
+    );
+    await screen.findByRole('list', { name: 'Comprobación de esta PC' }, { timeout: 30_000 });
+    expect(screen.getByText('Trasladar el servidor')).not.toBeNull();
+    expect(screen.getByText('Archivo de traslado')).not.toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+    await userEvent.type(await screen.findByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+
+    // Sin archivo no sigue; con una contraseña que no lo abre, lo dice en el campo.
+    await userEvent.type(await screen.findByLabelText('Contraseña de respaldo'), 'otra contraseña');
+    await userEvent.click(screen.getByRole('button', { name: 'Trasladar a esta PC' }));
+    expect(await screen.findByText('Elija el archivo de traslado (.icmove).')).not.toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Elegir el archivo' }));
+    expect(screen.getByText('IMPOCARIBE-7F3C-2026-10-27.icmove')).not.toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Trasladar a esta PC' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Contraseña de respaldo').getAttribute('aria-invalid')).toBe('true'),
+    );
+    expect(runs).toEqual([]);
+
+    await userEvent.clear(screen.getByLabelText('Contraseña de respaldo'));
+    await userEvent.type(screen.getByLabelText('Contraseña de respaldo'), 'respaldo de prueba 2026');
+    await userEvent.click(screen.getByRole('button', { name: 'Trasladar a esta PC' }));
+    expect(await screen.findByRole('heading', { name: 'El servidor está listo' }, { timeout: 15_000 })).not.toBeNull();
+    expect(runs).toEqual([
+      {
+        operation: 'crear',
+        request: {
+          code: 'K7QM-3XTP-R2HW',
+          move: { file: 'E:\\IMPOCARIBE-7F3C-2026-10-27.icmove', password: 'respaldo de prueba 2026' },
+        },
+      },
+    ]);
+    // El montaje conservado (hotspot), en la guía.
+    expect(await screen.findByText(/Deje el celular del hotspot junto a esta PC/)).not.toBeNull();
   });
 });

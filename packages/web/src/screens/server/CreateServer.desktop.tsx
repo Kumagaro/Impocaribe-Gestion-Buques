@@ -2,13 +2,13 @@
 // servidor (Const. art. XIV.1, excepción de P-28, P-29 y P-31).
 import type { ServerCheck } from '@impocaribe/shared';
 import { ShieldCheck, Wifi } from 'lucide-react';
-import { Button, TextField } from '../../ui/controls';
+import { Button, PasswordField, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { AppLogo } from '../../ui/logo';
 import { Notice, ProgressBar, Skeleton } from '../../ui/presentation';
 import { QrCode } from '../../ui/qr';
 import { minutes, StepList, TechnicalLog } from './SetupParts';
-import { CREATE_STEPS, type CreateServerModel } from './useCreateServer';
+import type { CreateServerModel } from './useCreateServer';
 
 const MARK = { ok: '✓', warn: '!', bad: '✕' } as const;
 
@@ -18,12 +18,12 @@ function Steps({ m }: { m: CreateServerModel }) {
       <div className="wizard__brand">
         <AppLogo size={32} />
         <div>
-          <b>Crear servidor</b>
+          <b>{m.moving ? 'Trasladar el servidor' : 'Crear servidor'}</b>
           <span>Esta PC</span>
         </div>
       </div>
       <ol className="wizard__steps">
-        {CREATE_STEPS.map((s, i) => {
+        {m.steps.map((s, i) => {
           const state = i < m.stepIndex ? 'done' : i === m.stepIndex ? 'now' : 'next';
           return (
             <li key={s.id} className="wstep" data-state={state} aria-current={state === 'now' ? 'step' : undefined}>
@@ -201,6 +201,61 @@ const NETWORKS = [
   },
 ] as const;
 
+/** T130 · RF-INS-07: el archivo de traslado (.icmove) y la contraseña de respaldo con que se cifró. */
+function MoveFile({ m }: { m: CreateServerModel }) {
+  const { control, state } = m.movePassword;
+  const name = m.moveFile?.split(/[\\/]/).pop();
+  return (
+    <form className="wizard__form" noValidate onSubmit={(e) => void m.submitMove(e)}>
+      <div>
+        <h2 className="wizard__title">Archivo de traslado</h2>
+        <p className="wizard__lead">
+          El que creó «Preparar traslado» en la PC anterior. La base, la identidad y el montaje de red vienen en él.
+        </p>
+      </div>
+      {m.notice && <Notice tone="bad">{m.notice}</Notice>}
+      <ErrorSummary errors={m.moveSummary} />
+      <div className="up-file">
+        <div>
+          <b>{name ?? 'Ningún archivo elegido'}</b>
+          {m.moveFile && <span>{m.moveFile}</span>}
+        </div>
+        <Button variant="ghost" onClick={() => void m.pickMoveFile()}>
+          {m.moveFile ? 'Cambiar' : 'Elegir el archivo'}
+        </Button>
+      </div>
+      <div className="wizard__field">
+        <Field
+          label="Contraseña de respaldo"
+          help="La misma con la que se cifran los respaldos de la empresa."
+          {...state}
+        >
+          <PasswordField {...control} autoComplete="off" />
+        </Field>
+      </div>
+      {m.moveInfo && (
+        <div className="server-id">
+          <ShieldCheck aria-hidden="true" />
+          <div>
+            <b>Servidor {m.moveInfo.serverName}</b>
+            <span>
+              {`Misma identidad: los ${m.moveInfo.devices} dispositivos emparejados se reconectarán solos. El montaje de red se conserva.`}
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="srv-foot">
+        <Button variant="ghost" onClick={() => m.back('permisos')}>
+          Atrás
+        </Button>
+        <Button type="submit" busy={m.checkingMove} busyLabel="Comprobando el archivo…">
+          Trasladar a esta PC
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function Network({ m }: { m: CreateServerModel }) {
   return (
     <>
@@ -319,7 +374,9 @@ function Creating({ m }: { m: CreateServerModel }) {
   return (
     <>
       <div>
-        <h2 className="wizard__title">Creando el servidor</h2>
+        <h2 className="wizard__title">
+          {m.moving ? `Trasladando el servidor${m.moveInfo ? ` ${m.moveInfo.serverName}` : ''}` : 'Creando el servidor'}
+        </h2>
         <p className="wizard__lead">Suele tardar menos de 20 minutos. Puede seguir usando la PC.</p>
       </div>
       <div className="srv-progress">
@@ -411,6 +468,7 @@ export function CreateServerDesktop({ m }: { m: CreateServerModel }) {
         {m.step === 'comprobacion' && <Checking m={m} />}
         {m.step === 'permisos' && <Permissions m={m} />}
         {m.step === 'montaje' && <Network m={m} />}
+        {m.step === 'archivo' && <MoveFile m={m} />}
         {m.step === 'creacion' && <Creating m={m} />}
         {m.step === 'listo' && <Ready m={m} />}
       </section>

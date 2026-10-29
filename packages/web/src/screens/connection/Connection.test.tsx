@@ -239,6 +239,9 @@ describe('P-01: crear el servidor en esta PC', () => {
   const PC: DeviceInfo = { platform: 'windows', appVersion: '1.0.0', smallestWidthDp: 1024, name: 'PC-ALMACEN' };
   const setup = {
     bundleVersion: null,
+    readMove: vi.fn(),
+    pickFile: vi.fn(),
+    pickFolder: vi.fn(),
     facts: vi.fn(),
     checkCode: vi.fn(),
     run: vi.fn(),
@@ -255,6 +258,8 @@ describe('P-01: crear el servidor en esta PC', () => {
       otherRoutes: ['/login', '/servidor/crear'],
     });
     await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    // T130: también desde un respaldo de traslado.
+    expect(screen.getByRole('button', { name: 'Crear servidor desde un respaldo de traslado' })).not.toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Crear servidor en este equipo' }));
     expect(t.router.state.location.pathname).toBe('/servidor/crear');
     t.view.unmount();

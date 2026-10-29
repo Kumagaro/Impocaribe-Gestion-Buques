@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { backupPasswordSchema, emergencyResetSchema, setBackupPasswordSchema } from './F16.ts';
+import { backupPasswordSchema, emergencyResetSchema, prepareMoveSchema, setBackupPasswordSchema } from './F16.ts';
 
 // T105 · F-16.
 const issues = (r: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
@@ -60,5 +60,19 @@ describe('F-16 restablecimiento de emergencia', () => {
         }),
       ),
     ).toEqual([['confirm', 'Las contraseñas no coinciden.']]);
+  });
+});
+
+// T130 · F-16: preparar el traslado.
+describe('F-16 preparar el traslado', () => {
+  it('pide la contraseña de respaldo y el código de instalación', () => {
+    expect(prepareMoveSchema.parse({ password: 'respaldo 2026 A', code: 'k7qm3xtpr2hw' })).toEqual({
+      password: 'respaldo 2026 A',
+      code: 'K7QM-3XTP-R2HW',
+    });
+    expect(issues(prepareMoveSchema.safeParse({ password: '', code: '' }))).toEqual([
+      ['password', 'Escriba la contraseña de respaldo.'],
+      ['code', 'El código tiene la forma XXXX-XXXX-XXXX, como K7QM-3XTP-R2HW.'],
+    ]);
   });
 });

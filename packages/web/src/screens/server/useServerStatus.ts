@@ -14,6 +14,7 @@ import {
 import {
   emergencyResetSchema,
   installationCodeSchema,
+  prepareMoveSchema,
   type pendingPairingSchema,
   type ServerStatus,
 } from '@impocaribe/shared/validation';
@@ -23,10 +24,11 @@ import { ApiError } from '../../api/client';
 import { devicesApi, localApi } from '../../api/endpoints/local';
 import { postLocalQr } from '../../api/endpoints/pairing';
 import { useAppSession } from '../../session/SessionProvider';
+
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
 export type PendingPairing = z.infer<typeof pendingPairingSchema>;
-export type Maintenance = 'reparar' | 'reiniciar' | 'actualizar' | 'restablecer';
+export type Maintenance = 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'restablecer';
 
 /** Cada cuánto se pide el estado y las solicitudes (una solicitud vale 5 minutos). */
 export const STATUS_EVERY_MS = 5000;
@@ -40,6 +42,7 @@ export const MAINTENANCE_TITLE: Record<Maintenance, string> = {
   reparar: 'Reparar el servidor',
   reiniciar: 'Reiniciar el servicio',
   actualizar: 'Actualizar el servidor',
+  trasladar: 'Preparar traslado',
   restablecer: 'Restablecer la contraseña de una Apoderada',
 };
 
@@ -167,7 +170,10 @@ export function useServerStatus() {
     setup?.listen((m: SetupMessage) => setProgress((p) => applySetupMessage(p, m, Date.now())));
   }, [setup]);
 
-  const runHelper = async (operation: Maintenance, request: { code: string; username?: string; password?: string }) => {
+  const runHelper = async (
+    operation: Maintenance,
+    request: { code: string; username?: string; password?: string; dest?: string },
+  ) => {
     if (!setup) return;
     setProgress(emptySetupProgress());
     setOutcome(null);
@@ -177,7 +183,7 @@ export function useServerStatus() {
       if (!alive.current) return;
       setOutcome(result);
       if (!result.ok && result.step === 'permisos') {
-        const field = operation === 'restablecer' ? reset : codeForm;
+        const field = operation === 'restablecer' ? reset : operation === 'trasladar' ? moveForm : codeForm;
         field.form.setError('code', { type: 'server', message: CODE_INVALID });
       }
     } catch (err) {
@@ -213,8 +219,33 @@ export function useServerStatus() {
     },
   });
 
+  // T130 · RF-INS-07: preparar el traslado. Dónde guardar el archivo (una USB), la contraseña de respaldo con que se
+  // cifra, la confirmación de que esta PC deja de ser el servidor y el código de instalación.
+  const [moveFolder, setMoveFolder] = useState<string | null>(null);
+  const [understood, setUnderstood] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [moveDest, setMoveDest] = useState<string | null>(null);
+  const moveForm = useValidatedForm({
+    schema: prepareMoveSchema,
+    defaultValues: { password: '', code: '' },
+    labels: { password: 'Contraseña de respaldo', code: 'Código de instalación' },
+    onSubmit: async ({ password, code }) => {
+      if (!moveFolder) return setMoveError('Elija dónde guardar el archivo de traslado.');
+      if (!understood) return setMoveError('Marque que entiende que esta PC dejará de ser el servidor.');
+      setMoveError(null);
+      const day = new Date(session.now()).toISOString().slice(0, 10);
+      const dest = `${moveFolder.replace(/[\\/]+$/, '')}\\${serverName(status!.serverId)}-${day}.icmove`;
+      setMoveDest(dest);
+      await runHelper('trasladar', { code, password, dest });
+    },
+  });
+
   const open = (which: Maintenance) => {
     setMaintenance(which);
+    setMoveFolder(null);
+    setUnderstood(false);
+    setMoveError(null);
+    moveForm.reset();
     setProgress(emptySetupProgress());
     setOutcome(null);
     codeForm.reset();
@@ -263,6 +294,22 @@ export function useServerStatus() {
       code: reset.field('code'),
     },
     resetSummary: reset.summary,
+    moveFolder,
+    pickMoveFolder: async () => {
+      const folder = await setup?.pickFolder();
+      if (folder) {
+        setMoveFolder(folder);
+        setMoveError(null);
+      }
+    },
+    understood,
+    setUnderstood,
+    moveError,
+    moveDest,
+    movePassword: moveForm.field('password'),
+    moveCode: moveForm.field('code'),
+    moveSummary: moveForm.summary,
+    submitMove: moveForm.submit,
     submitReset: reset.submit,
     progress,
     running,

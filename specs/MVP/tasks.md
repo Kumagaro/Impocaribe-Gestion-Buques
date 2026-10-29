@@ -971,7 +971,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T127. (PP, solo escritorio) Pantalla P-28 Crear servidor**, incluida la variante desde un respaldo de traslado y el paso a P-02.
   - *Cubre:* RF-INS-03, RNF-18, HU-14
   - *Depende:* T126, T124, T038
-  - *Estado (2026-10-28):* hecha salvo la variante desde un respaldo de traslado, que necesita el archivo `.icmove` de T130 y se hace allí.
+  - *Estado (2026-10-28):* hecha. La variante desde un respaldo de traslado llegó con T130.
     - **P-01:** «Crear servidor en este equipo» solo en escritorio con el instalador completo; desactivado, con el motivo, si ya hay un servidor en la red.
     - **P-28** (`web/src/screens/server/`, maqueta T124):
       - comprobación: busca otro servidor por los métodos de P-01 y por la difusión del ayudante, y comprueba la PC; con uno en la red o una marca roja no deja continuar;
@@ -1044,6 +1044,27 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS-07, D14
   - *Depende:* T129, T107
   - *Pruebas:* los dispositivos emparejados se reconectan al servidor nuevo sin emparejarse; la PC anterior no puede volver a arrancar como servidor.
+  - *Estado (2026-10-28):* hecha; falta la prueba real entre dos máquinas virtuales (T135).
+    - **Archivo `.icmove`** (`server/src/backups/move.ts`):
+      - lleva el volcado de la base, los archivos y la identidad, cifrado como los respaldos (DT-07);
+      - la identidad va con sus claves: en la PC anterior están protegidas por esa máquina (DPAPI), y en la nueva se protegen con la suya (`exportIdentity` e `importIdentity`, que nunca pisa una identidad existente);
+      - la clave privada sellada con la contraseña de respaldo va en la cabecera: en la PC nueva aún no hay base, y la contraseña basta.
+    - **D14:** columna `system_settings.server_state` (migración 0017). Al preparar el traslado la base queda `migrated` (después del volcado, que va `active`). Un servidor `migrated` no arranca, y el ayudante no lo repara, reinicia, actualiza ni vuelve a trasladar. Queda en la bitácora (`server.move`).
+    - **Ayudante:**
+      - `trasladar` (PC anterior): el código del servidor; crea el archivo donde se eligió, detiene el servicio y lo deshabilita;
+      - `crear` con el archivo (PC nueva): en «estructura» restaura la base, los archivos y la identidad del archivo antes de migrar (puede ser de una versión anterior: se migra), y conserva el montaje y el código. Si falla, Deshacer quita también lo traído;
+      - `traslado`, sin elevar, lee de qué servidor es el archivo y comprueba la contraseña con el servidor que trae el instalador.
+    - **P-29:** «Preparar traslado» con:
+      - lo que pasará;
+      - dónde guardar el archivo (con el nombre del servidor y la fecha);
+      - la contraseña de respaldo;
+      - «Entiendo que esta PC dejará de ser el servidor»;
+      - el código de instalación.
+    - **P-01 y P-28:** «Crear servidor desde un respaldo de traslado»: el paso 3 pide el archivo y la contraseña, y comprueba que es un traslado y que la abre antes de pedir el permiso de Windows.
+    - **Pruebas:**
+      - 4 de integración contra PostgreSQL con `pg_dump` y `pg_restore` reales. Preparar deja la base `migrated`, sin la identidad ni los datos en claro en el archivo; con otra contraseña no hace nada. Restaurar en una base vacía da la misma identidad, los mismos dispositivos y los archivos, activa. Un archivo que no es de traslado se rechaza;
+      - 2 de la identidad, 2 de los pasos, 1 del formulario F-16, 3 de componente (P-28 y P-29) y la de los canales.
+    - **Arreglo encontrado al probar el ejecutable:** una operación desconocida creaba y bloqueaba `C:ProgramDataImpocaribe` antes de rechazarse. Ahora se rechaza sin tocar nada.
 
 - [ ] **T131. Desinstalar el servidor.**
   - *Cubre:* RF-INS-08

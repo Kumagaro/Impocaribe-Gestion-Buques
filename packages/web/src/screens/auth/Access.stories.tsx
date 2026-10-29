@@ -50,6 +50,7 @@ const connection = (phase: ConnectionPhase, extra: Partial<ConnectionModel> = {}
   goLogin: noop,
   canCreateServer: false,
   createServer: noop,
+  createServerFromMove: noop,
   openDiagnostics: noop,
   ...extra,
 });

@@ -63,6 +63,8 @@ export const officialStamps = pgTable('official_stamps', {
 });
 
 export const networkSetup = pgEnum('network_setup', ['router', 'hotspot']);
+/** T130 · plan §4.2 y D14: un servidor trasladado (`migrated`) no vuelve a arrancar. */
+export const serverState = pgEnum('server_state', ['active', 'migrated']);
 
 /**
  * Una sola fila (id = 1), creada por la migración. Los valores por defecto son los de RF-CFG-02; el montaje y el código
@@ -97,6 +99,7 @@ export const systemSettings = pgTable(
     backupConfirmPostponedUntil: timestamp('backup_confirm_postponed_until', { withTimezone: true }),
     /** T108 · RF-RES-03 (7): tras restaurar sin respaldo previo, no se emiten órdenes hasta confirmar la numeración. */
     numberingConfirmationRequired: boolean('numbering_confirmation_required').notNull().default(false),
+    serverState: serverState('server_state').notNull().default('active'),
     rowVersion: integer('row_version').notNull().default(1),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },

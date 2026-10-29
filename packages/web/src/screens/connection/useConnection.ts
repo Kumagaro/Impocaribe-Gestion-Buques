@@ -204,6 +204,8 @@ export function useConnection() {
     /** T127 · RF-INS-03: solo en escritorio con el instalador completo (el que trae el ayudante de instalación). */
     canCreateServer: platform.serverSetup !== undefined && device === 'desktop',
     createServer: () => void navigate('/servidor/crear'),
+    /** T130 · RF-INS-07: con el archivo de «Preparar traslado» de la PC anterior. */
+    createServerFromMove: () => void navigate('/servidor/crear?traslado'),
   };
 }
 

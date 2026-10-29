@@ -71,3 +71,6 @@ export function TechnicalLog({ progress }: { progress: SetupProgress }) {
     </details>
   );
 }
+
+/** «node.exe terminó con 3: BACKUP_PASSWORD_INVALID: La contraseña…» → «La contraseña…»: lo que entiende una persona. */
+export const plainError = (error: string) => error.replace(/^.*? terminó con \d+: /, '').replace(/^[A-Z][A-Z_]+: /, '');

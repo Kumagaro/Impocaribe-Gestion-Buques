@@ -95,6 +95,23 @@ describe('canales del puente nativo', () => {
     withWindow['window.attention']();
     expect(attention).toHaveBeenCalledTimes(1);
 
+    // T130: el traslado, con sus campos y nada más.
+    await h['setup.run']('trasladar', { code: 'K7QM-3XTP-R2HW', password: 'respaldo', dest: 'E:/traslado.icmove' });
+    expect(setup.run).toHaveBeenLastCalledWith('trasladar', {
+      code: 'K7QM-3XTP-R2HW',
+      password: 'respaldo',
+      dest: 'E:/traslado.icmove',
+    });
+    await h['setup.run']('crear', {
+      code: 'K7QM-3XTP-R2HW',
+      move: { file: 'E:/traslado.icmove', password: 'respaldo', otro: 1 },
+    });
+    expect(setup.run).toHaveBeenLastCalledWith('crear', {
+      code: 'K7QM-3XTP-R2HW',
+      move: { file: 'E:/traslado.icmove', password: 'respaldo' },
+    });
+    expect(() => h['setup.run']('crear', { move: { file: 1 } })).toThrow('Falta el archivo de traslado.');
+
     const light = nativeHandlers(as({ ...services(), setup: null } as never));
     expect(() => light['setup.facts']()).toThrow('no la puso el instalador completo');
     expect(light['setup.state']()).toEqual({ running: false, operation: null, messages: [] });

@@ -4,11 +4,17 @@ import type { ServerInfo } from './discovery/discovery.controller.ts';
 import { startBroadcastResponder, startMdnsAnnouncer } from './discovery/announce.ts';
 import { windowsMachineProtector } from './identity/protector.ts';
 import { serverTls } from './identity/tls.ts';
+import { MIGRATED_MESSAGE, readServerState } from './server-state.ts';
 import { SERVER_INFO } from './tokens.ts';
 
 // T033: HTTPS con la identidad del servidor (DT-18). En desarrollo, sin identidad, HTTP
 // (pnpm --filter @impocaribe/server identity:create la crea).
 const cfg = config();
+// D14: un servidor trasladado no arranca.
+if ((await readServerState(cfg.databaseUrl)) === 'migrated') {
+  console.error(MIGRATED_MESSAGE);
+  process.exit(1);
+}
 const tls = await serverTls(cfg, windowsMachineProtector());
 const app = await createApp(tls ?? undefined);
 await app.listen(cfg.port);

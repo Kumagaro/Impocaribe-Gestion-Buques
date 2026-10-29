@@ -5,6 +5,7 @@ import type {
   NativeRequest,
   NativeServer,
   NativeUpdate,
+  MoveFileInfo,
   PcFacts,
   SetupOperation,
   SetupOutcome,
@@ -39,7 +40,11 @@ export interface NativeServices {
     checkCode(code: string): Promise<boolean>;
     run(operation: SetupOperation, request: SetupRequest): Promise<SetupOutcome>;
     current(): SetupState;
+    readMove(file: string, password: string): Promise<MoveFileInfo>;
   } | null;
+  /** T130: elegir el archivo de traslado (.icmove) o la carpeta donde guardarlo; null si se cancela. */
+  pickFile(): Promise<string | null>;
+  pickFolder(): Promise<string | null>;
 }
 
 type Handler = (...args: unknown[]) => unknown;
@@ -64,6 +69,7 @@ const OPERATIONS: readonly SetupOperation[] = [
   'reparar',
   'reiniciar',
   'actualizar',
+  'trasladar',
   'deshacer',
   'restablecer',
 ];
@@ -75,6 +81,11 @@ const setupRequest = (v: unknown): SetupRequest => {
     if (r.network !== 'router' && r.network !== 'hotspot') throw new Error('Montaje de red desconocido.');
     out.network = r.network;
   }
+  if (r.move !== undefined) {
+    const m = r.move as Record<string, unknown>;
+    out.move = { file: str(m.file, 'el archivo de traslado'), password: str(m.password, 'la contraseña de respaldo') };
+  }
+  if (r.dest !== undefined) out.dest = str(r.dest, 'dónde guardar el archivo');
   for (const key of ['code', 'username', 'password'] as const)
     if (r[key] !== undefined)
       out[key] = str(r[key], key === 'code' ? 'el código' : key === 'username' ? 'el usuario' : 'la contraseña');
@@ -131,6 +142,11 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
     },
     'setup.state': () => s.setup?.current() ?? { running: false, operation: null, messages: [] },
     'window.attention': () => s.attention(),
+    // T130: el traslado (leer el archivo sin elevar, y elegir archivo o carpeta).
+    'setup.move': (file, password) =>
+      setup(s).readMove(str(file, 'el archivo de traslado'), str(password, 'la contraseña de respaldo')),
+    'setup.pickFile': () => s.pickFile(),
+    'setup.pickFolder': () => s.pickFolder(),
   };
 }
 

@@ -6,6 +6,7 @@ import type {
   NativeBridge,
   NativeResponse,
   NativeSocketEvent,
+  MoveFileInfo,
   PcFacts,
   SetupMessage,
   SetupOperation,
@@ -157,6 +158,9 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
             state: () =>
               invoke<{ running: boolean; operation: SetupOperation | null; messages: SetupMessage[] }>('setup.state'),
             listen: (listener: (message: SetupMessage) => void) => bridge.onSetupMessage(listener),
+            readMove: (file: string, password: string) => invoke<MoveFileInfo>('setup.move', file, password),
+            pickFile: () => invoke<string | null>('setup.pickFile'),
+            pickFolder: () => invoke<string | null>('setup.pickFolder'),
           },
         }
       : {}),

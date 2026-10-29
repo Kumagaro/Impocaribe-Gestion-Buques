@@ -1,13 +1,13 @@
 // T128 · P-29 Estado del servidor en escritorio (ui-spec P-29 y maqueta T124). Solo existe en la PC servidor
 // (Const. art. XIV.1, excepción de P-28, P-29 y P-31).
 import { ShieldCheck } from 'lucide-react';
-import { Button, PasswordField, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { Dialog } from '../../ui/overlays';
 import { Badge, Notice, ProgressBar, Skeleton } from '../../ui/presentation';
 import { QrCode } from '../../ui/qr';
 import { selectOf } from '../catalogs/Fleet.parts';
-import { clock, StepList, TechnicalLog } from './SetupParts';
+import { clock, plainError, StepList, TechnicalLog } from './SetupParts';
 import { MAINTENANCE_TITLE, type Maintenance, type ServerStatusModel } from './useServerStatus';
 
 const MB = 2 ** 20;
@@ -216,7 +216,7 @@ function MaintenanceActions({ m }: { m: ServerStatusModel }) {
       </div>
       {m.canMaintain ? (
         <div className="srv-actions">
-          {(['reparar', 'reiniciar', 'actualizar', 'restablecer'] as Maintenance[]).map((w) => (
+          {(['reparar', 'reiniciar', 'actualizar', 'trasladar', 'restablecer'] as Maintenance[]).map((w) => (
             <Button
               key={w}
               variant="secondary"
@@ -251,7 +251,7 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
       <Button variant="ghost" onClick={m.close}>
         Cancelar
       </Button>
-      <Button type="submit" form="srv-mnt-form">
+      <Button type="submit" form="srv-mnt-form" variant={which === 'trasladar' ? 'danger' : 'primary'}>
         {which === 'restablecer' ? 'Restablecer' : MAINTENANCE_TITLE[which]}
       </Button>
     </>
@@ -259,7 +259,52 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
   const done = m.outcome?.ok;
   return (
     <Dialog title={MAINTENANCE_TITLE[which]} onClose={m.close} footer={footer}>
-      {!started && which !== 'restablecer' && (
+      {!started && which === 'trasladar' && (
+        <form id="srv-mnt-form" className="srv-mnt-form" noValidate onSubmit={(e) => void m.submitMove(e)}>
+          <div className="srv-consequence">
+            <b>Lo que pasará</b>
+            <ul>
+              <li>
+                Se crea el archivo de traslado con los datos y la identidad, cifrado con la contraseña de respaldo.
+              </li>
+              <li>El servidor se detiene: los dispositivos no podrán trabajar hasta crearlo en la PC nueva.</li>
+              <li>Esta PC no podrá volver a ser el servidor.</li>
+            </ul>
+          </div>
+          {m.moveError && <Notice tone="bad">{m.moveError}</Notice>}
+          <ErrorSummary errors={m.moveSummary} />
+          <div className="up-file">
+            <div>
+              <b>Guardar en</b>
+              <span>{m.moveFolder ?? 'Elija una carpeta (una memoria USB, por ejemplo)'}</span>
+            </div>
+            <Button variant="ghost" onClick={() => void m.pickMoveFolder()}>
+              {m.moveFolder ? 'Cambiar' : 'Elegir la carpeta'}
+            </Button>
+          </div>
+          <Field
+            label="Contraseña de respaldo"
+            help="La misma de los respaldos: hará falta en la PC nueva."
+            {...m.movePassword.state}
+          >
+            <PasswordField {...m.movePassword.control} autoComplete="off" />
+          </Field>
+          <Field
+            label="Código de instalación"
+            help="El código impreso que se entregó aparte"
+            exacting
+            {...m.moveCode.state}
+          >
+            <TextField {...m.moveCode.control} uppercase autoComplete="off" spellCheck={false} />
+          </Field>
+          <Checkbox
+            label="Entiendo que esta PC dejará de ser el servidor"
+            checked={m.understood}
+            onChange={m.setUnderstood}
+          />
+        </form>
+      )}
+      {!started && which !== 'restablecer' && which !== 'trasladar' && (
         <form id="srv-mnt-form" className="srv-mnt-form" noValidate onSubmit={(e) => void m.submitCode(e)}>
           <p>
             {which === 'reparar'
@@ -330,7 +375,9 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
                   ? 'El servidor quedó reparado y en marcha.'
                   : which === 'actualizar'
                     ? 'El servidor quedó actualizado y en marcha. Las apps de los dispositivos se avisan de la versión nueva.'
-                    : 'El servidor volvió a arrancar.'}
+                    : which === 'trasladar'
+                      ? `Archivo de traslado creado: ${m.moveDest ?? ''}. Este servidor quedó detenido. En la PC nueva, instale el instalador completo y use «Crear servidor desde un respaldo de traslado».`
+                      : 'El servidor volvió a arrancar.'}
             </Notice>
           )}
           {m.outcome && !m.outcome.ok && (
@@ -341,7 +388,7 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
                   ? 'La actualización no se completó. El servidor volvió a la versión anterior con sus datos intactos: no se perdió nada y los dispositivos siguen conectados.'
                   : which === 'actualizar' && m.outcome.step !== 'comprobacion'
                     ? `La actualización no se completó y no se pudo volver atrás sola: ${m.outcome.error} Use «Reparar el servidor» o pida ayuda a quien instaló el sistema.`
-                    : m.outcome.error}
+                    : plainError(m.outcome.error)}
             </Notice>
           )}
           <TechnicalLog progress={m.progress} />

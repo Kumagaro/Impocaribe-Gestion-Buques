@@ -88,3 +88,6 @@ export const emergencyResetSchema = z
   })
   .superRefine(confirmMatches)
   .transform(dropConfirm);
+
+/** T130 · F-16 y RF-INS-07: preparar el traslado. La contraseña de respaldo (cifra el archivo) y el código de instalación. */
+export const prepareMoveSchema = backupPasswordSchema.extend({ code: installationCodeSchema });

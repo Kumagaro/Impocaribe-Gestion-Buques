@@ -61,6 +61,7 @@ const LABELS: Record<string, string> = {
   'auth.change_password': 'Cambiar contraseña',
   'auth.recover': 'Recuperar contraseña',
   'auth.emergency_reset': 'Restablecimiento de emergencia de la contraseña',
+  'server.move': 'Preparar el traslado del servidor',
   'auth.recovery_codes': 'Generar códigos de recuperación',
   'auth.device_token': 'Token de alertas del dispositivo',
   'auth.session_closed': 'Cerrar una sesión',

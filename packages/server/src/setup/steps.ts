@@ -48,6 +48,11 @@ export interface CreateInput {
   network: 'router' | 'hotspot';
   /** La comprobación (argon2id) del código de instalación de la empresa, que trae el instalador. */
   codeHash: string;
+  /**
+   * T130 · RF-INS-07: crear desde un respaldo de traslado. La base, los archivos y la identidad salen del archivo (la
+   * misma identidad: los dispositivos se reconectan solos) y se conserva su montaje de red.
+   */
+  move?: { file: string; password: string };
 }
 
 interface Secrets {
@@ -58,7 +63,7 @@ interface Secrets {
 const mine = (created: boolean): UndoInfo => ({ mine: created });
 
 /** Lo que comparten los pasos de crear y de actualizar: rutas, secretos, tareas del servidor y esperas. */
-function machine(sys: Sys, l: Layout) {
+export function machine(sys: Sys, l: Layout) {
   const p = paths(l);
   const secretsFile = join(p.serviceDir, 'secretos.json');
   const exe = (name: string) => join(p.pgBin, `${name}.exe`);
@@ -69,6 +74,7 @@ function machine(sys: Sys, l: Layout) {
     DATABASE_URL: appUrl(await secrets()),
     IMPOCARIBE_DATA_DIR: p.dataDir,
     IMPOCARIBE_IDENTITY_DIR: p.identityDir,
+    IMPOCARIBE_PG_BIN: p.pgBin,
   });
   /** Una tarea del servidor instalado (tasks.js), con su propio Node y el entorno del servicio. */
   const tasks = async (command: string, stdin?: string, args: string[] = []) =>
@@ -221,11 +227,26 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
         );
         if ((await psql(`SELECT 1 FROM pg_database WHERE datname = '${DATABASE}'`)).trim() !== '1')
           await psql(`CREATE DATABASE ${DATABASE} OWNER ${DB_USER}`);
+        if (input.move) {
+          try {
+            log(await tasks('restore-move', input.move.password, [input.move.file]));
+          } catch (err) {
+            // Lo que el traslado dejó a medias (la identidad, los archivos) no se queda.
+            await sys.remove(p.identityDir);
+            await sys.remove(join(p.dataDir, 'files'));
+            throw err;
+          }
+        }
         log(await tasks('migrate'));
-        return {};
+        return { moved: input.move !== undefined };
       },
-      // La base se borra con su carpeta (paso «base»); si ya existía, se conserva con sus datos.
-      async undo() {},
+      // La base se borra con su carpeta (paso «base»); si ya existía, se conserva con sus datos. Lo traído de un
+      // traslado (la identidad y los archivos) se quita.
+      async undo(info) {
+        if (!info.moved) return;
+        await sys.remove(p.identityDir);
+        await sys.remove(join(p.dataDir, 'files'));
+      },
     },
     {
       id: 'identidad',
@@ -309,6 +330,10 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
       id: 'montaje',
       title: 'Guardar el montaje de red',
       async run(log) {
+        if (input.move) {
+          log('Se conservan el montaje de red y el código de instalación del servidor trasladado.');
+          return {};
+        }
         log(await tasks('settings', JSON.stringify({ network: input.network, codeHash: input.codeHash })));
         return {};
       },

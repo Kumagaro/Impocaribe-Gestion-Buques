@@ -79,7 +79,7 @@ async function readState(d: BackupDeps) {
 type State = Awaited<ReturnType<typeof readState>>;
 
 /** Copia a la carpeta de datos los archivos del respaldo que falten (se nombran por su SHA-256: no chocan). */
-async function restoreFiles(from: string, dataDir: string) {
+export async function restoreFiles(from: string, dataDir: string) {
   const walk = async (dir: string, rel: string): Promise<void> => {
     let items;
     try {

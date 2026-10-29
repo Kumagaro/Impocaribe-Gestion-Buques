@@ -2,27 +2,31 @@
 // RNF-18, RNF-19 y F-16. Comprueba la PC y busca otro servidor en la red (paso 1), comprueba el código de instalación
 // (paso 2), pide el montaje de red (paso 3) y lanza el ayudante con el permiso de Windows (paso 4), con Reintentar y
 // Deshacer si un paso falla. Al terminar (paso 5): el nombre, el QR y el paso a la primera Apoderada (P-02).
+// T130 · RF-INS-07: con `?traslado`, desde un respaldo de traslado: el paso 3 pide el archivo y la contraseña de
+// respaldo en vez del montaje (se conserva el del servidor trasladado), y la identidad es la misma.
 import {
   applySetupMessage,
   canCreateServer,
   checkServerPc,
   emptySetupProgress,
   serverName,
+  type MoveFileInfo,
   type PcFacts,
   type ServerCheck,
   type SetupMessage,
   type SetupProgress,
 } from '@impocaribe/shared';
-import { installationCodeSchema } from '@impocaribe/shared/validation';
+import { backupPasswordSchema, installationCodeSchema } from '@impocaribe/shared/validation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
+import { localApi } from '../../api/endpoints/local';
 import { z } from 'zod';
 import { postLocalQr } from '../../api/endpoints/pairing';
 import { findServer, probeServer, SERVER_PORT } from '../../connection/discovery';
 import { useAppSession } from '../../session/SessionProvider';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
-export type CreateStep = 'comprobacion' | 'permisos' | 'montaje' | 'creacion' | 'listo';
+export type CreateStep = 'comprobacion' | 'permisos' | 'montaje' | 'archivo' | 'creacion' | 'listo';
 export const CREATE_STEPS: { id: CreateStep; label: string }[] = [
   { id: 'comprobacion', label: 'Comprobación' },
   { id: 'permisos', label: 'Permisos' },
@@ -30,6 +34,10 @@ export const CREATE_STEPS: { id: CreateStep; label: string }[] = [
   { id: 'creacion', label: 'Creación' },
   { id: 'listo', label: 'Listo' },
 ];
+/** T130: desde un traslado, el paso 3 es el archivo (el montaje se conserva). */
+export const MOVE_STEPS: { id: CreateStep; label: string }[] = CREATE_STEPS.map((s) =>
+  s.id === 'montaje' ? { id: 'archivo', label: 'Archivo de traslado' } : s,
+);
 
 export type NetworkSetup = 'router' | 'hotspot';
 
@@ -69,6 +77,12 @@ export function useCreateServer() {
   const navigate = useNavigate();
   const platform = session.device;
   const setup = platform.serverSetup;
+  const moving = useSearchParams()[0].has('traslado');
+  const steps = moving ? MOVE_STEPS : CREATE_STEPS;
+  const third: CreateStep = moving ? 'archivo' : 'montaje';
+  const [moveFile, setMoveFile] = useState<string | null>(null);
+  const [moveInfo, setMoveInfo] = useState<MoveFileInfo | null>(null);
+  const movePassword = useRef('');
   const [step, setStep] = useState<CreateStep>('comprobacion');
   const [facts, setFacts] = useState<PcFacts | null>(null);
   const [checks, setChecks] = useState<ServerCheck[] | null>(null);
@@ -104,9 +118,16 @@ export function useCreateServer() {
       } catch {
         // Sin QR: los dispositivos lo encuentran solos o se emparejan con el código (P-01).
       }
+      // El montaje del servidor trasladado (se conservó), para la guía.
+      if (moving)
+        await session
+          .apiFor('127.0.0.1', SERVER_PORT, found)
+          .request(localApi.status)
+          .then((st) => setNetwork(st.network.setup ?? 'router'))
+          .catch(() => undefined);
       setReady({ name: serverName(found.serverId), address, port: SERVER_PORT, qr });
     },
-    [platform, session],
+    [platform, session, moving],
   );
 
   const check = useCallback(async () => {
@@ -176,7 +197,7 @@ export function useCreateServer() {
         return;
       }
       code.current = value;
-      setStep('montaje');
+      setStep(third);
     },
   });
 
@@ -190,7 +211,13 @@ export function useCreateServer() {
     }
     setStep('creacion');
     try {
-      const outcome = await setup.run(operation, operation === 'crear' ? { network, code: code.current } : {});
+      const request =
+        operation === 'deshacer'
+          ? {}
+          : moving && moveFile
+            ? { code: code.current, move: { file: moveFile, password: movePassword.current } }
+            : { network, code: code.current };
+      const outcome = await setup.run(operation, request);
       if (operation === 'deshacer') setUndone(outcome.ok);
       else if (outcome.ok) {
         setStep('listo');
@@ -199,11 +226,36 @@ export function useCreateServer() {
     } catch (err) {
       // Sin el permiso de Windows no empezó nada: se vuelve a donde estaba.
       setNotice(err instanceof Error ? err.message : String(err));
-      if (operation === 'crear' && progress.steps.length === 0) setStep('montaje');
+      if (operation === 'crear' && progress.steps.length === 0) setStep(third);
     } finally {
       setRunning(null);
     }
   };
+
+  // T130: el archivo y su contraseña se comprueban sin elevar (el ayudante lee la cabecera) antes de trasladar.
+  const moveForm = useValidatedForm({
+    schema: backupPasswordSchema,
+    defaultValues: { password: '' },
+    labels: { password: 'Contraseña de respaldo' },
+    onSubmit: async ({ password }) => {
+      if (!setup) return;
+      if (!moveFile) {
+        setNotice('Elija el archivo de traslado (.icmove).');
+        return;
+      }
+      setNotice(null);
+      try {
+        setMoveInfo(await setup.readMove(moveFile, password));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (/contraseña/i.test(message)) moveForm.form.setError('password', { type: 'server', message });
+        else setNotice(message);
+        return;
+      }
+      movePassword.current = password;
+      await run('crear');
+    },
+  });
 
   const failed = progress.outcome && !progress.outcome.ok ? progress.outcome : null;
   const failedStep = failed ? progress.steps.find((s) => s.id === failed.step) : undefined;
@@ -211,7 +263,9 @@ export function useCreateServer() {
   return {
     available: setup !== undefined,
     step,
-    stepIndex: CREATE_STEPS.findIndex((s) => s.id === step),
+    steps,
+    moving,
+    stepIndex: steps.findIndex((s) => s.id === step),
     // Paso 1
     checks,
     searchSeconds,
@@ -228,6 +282,21 @@ export function useCreateServer() {
     setNetwork,
     wifiPc: facts?.network?.kind === 'wifi',
     create: () => void run('crear'),
+    // Paso 3 del traslado
+    moveFile,
+    moveInfo,
+    pickMoveFile: async () => {
+      const file = await setup?.pickFile();
+      if (file) {
+        setMoveFile(file);
+        setMoveInfo(null);
+        setNotice(null);
+      }
+    },
+    movePassword: moveForm.field('password'),
+    moveSummary: moveForm.summary,
+    checkingMove: moveForm.form.formState.isSubmitting,
+    submitMove: moveForm.submit,
     // Paso 4
     progress,
     running,

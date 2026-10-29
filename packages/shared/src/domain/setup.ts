@@ -3,7 +3,8 @@
 import type { ServerCheck } from './serverChecks.ts';
 
 /** Lo que hace el ayudante elevado (con el permiso de administrador de Windows). */
-export type SetupOperation = 'crear' | 'reparar' | 'reiniciar' | 'actualizar' | 'deshacer' | 'restablecer';
+export type SetupOperation =
+  'crear' | 'reparar' | 'reiniciar' | 'actualizar' | 'trasladar' | 'deshacer' | 'restablecer';
 
 /** La primera línea de la app: con qué datos (el código nunca va en la línea de comandos). */
 export interface SetupRequest {
@@ -11,6 +12,17 @@ export interface SetupRequest {
   code?: string;
   username?: string;
   password?: string;
+  /** T130: crear desde un respaldo de traslado. */
+  move?: { file: string; password: string };
+  /** T130: dónde guardar el archivo de traslado (preparar). */
+  dest?: string;
+}
+
+/** T130 · P-28: de qué servidor es un archivo de traslado (lo lee el ayudante sin elevar, con la contraseña). */
+export interface MoveFileInfo {
+  serverName: string;
+  createdAt: string;
+  devices: number;
 }
 
 export type SetupStepStatus = 'running' | 'done' | 'failed' | 'undoing' | 'undone';

@@ -631,3 +631,45 @@
     padding: 16px;
   }
 }
+
+/* T130 · P-28 desde un traslado: el archivo elegido. */
+.up-file {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  max-width: 560px;
+}
+.up-file > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.up-file b {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.up-file span {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+.srv-consequence {
+  border: 1px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  font-size: var(--t-sm);
+  color: var(--ink);
+}
+.srv-consequence ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}

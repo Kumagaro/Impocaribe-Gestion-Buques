@@ -268,3 +268,35 @@ describe('actualizar el servidor', () => {
     expect(log).toContain('No se publicaron (publíquelos en Versiones de la app): no hay carpeta publicar');
   });
 });
+
+// T130 · RF-INS-07: crear desde un respaldo de traslado. La base, los archivos y la identidad salen del archivo; el
+// montaje y el código se conservan. Si la restauración falla, Deshacer deja la PC como estaba.
+describe('crear desde un traslado', () => {
+  const MOVE = { file: 'E:\\IMPOCARIBE-7F3C.icmove', password: 'respaldo de prueba 2026' };
+
+  it('restaura el archivo antes de migrar y no toca el montaje', async () => {
+    const pc = fakePc();
+    const ran: { args: string[]; input?: string }[] = [];
+    const run = pc.sys.run.bind(pc.sys);
+    pc.sys.run = async (file, args, opts) => {
+      if (file.endsWith('node.exe')) ran.push({ args: args.slice(1), ...(opts?.input ? { input: opts.input } : {}) });
+      return run(file, args, opts);
+    };
+    const steps = createSteps(pc.sys, l, { ...input, move: MOVE });
+    expect(await runSteps('create', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(ran.map((r) => r.args[0])).toEqual(['restore-move', 'migrate', 'identity']);
+    expect(ran[0]).toEqual({ args: ['restore-move', MOVE.file], input: MOVE.password });
+  });
+
+  it('si el archivo no se puede restaurar, Deshacer deja la PC como estaba', async () => {
+    const pc = fakePc({ fail: (file, args) => file.endsWith('node.exe') && args[1] === 'restore-move' });
+    const before = pc.snapshot();
+    const steps = createSteps(pc.sys, l, { ...input, move: MOVE });
+    expect(await runSteps('create', steps, pc.journal, () => undefined)).toMatchObject({
+      ok: false,
+      step: 'estructura',
+    });
+    expect(await undoSteps('create', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.snapshot()).toEqual(before);
+  });
+});

@@ -59,6 +59,9 @@ function fakeSetup(outcome: SetupOutcome, bundleVersion: string | null = '1.4.0'
   const runs: { operation: SetupOperation; request: SetupRequest }[] = [];
   const setup: ServerSetup = {
     bundleVersion,
+    readMove: vi.fn(),
+    pickFile: vi.fn(),
+    pickFolder: async () => 'E:\\',
     facts: vi.fn(),
     checkCode: vi.fn(),
     state: async () => ({ running: false, operation: null, messages: [] }),
@@ -217,6 +220,59 @@ describe('P-29 Estado del servidor', () => {
         'La actualización no se completó. El servidor volvió a la versión anterior con sus datos intactos: no se perdió nada y los dispositivos siguen conectados.',
       ),
     ).not.toBeNull();
+  });
+
+  // T130 · RF-INS-07: preparar el traslado (archivo en una USB, contraseña de respaldo, confirmación y código).
+  it('preparar el traslado: dónde, la contraseña, la confirmación y el código; el archivo lleva el nombre del servidor', async () => {
+    const { setup, runs } = fakeSetup({ ok: true });
+    await open({ serverSetup: setup });
+    await userEvent.click(await screen.findByRole('button', { name: 'Preparar traslado' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Preparar traslado' });
+    expect(within(dialog).getByText('Esta PC no podrá volver a ser el servidor.')).not.toBeNull();
+    await userEvent.type(within(dialog).getByLabelText('Contraseña de respaldo'), 'respaldo de prueba 2026');
+    await userEvent.type(within(dialog).getByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Preparar traslado' }));
+    expect(await within(dialog).findByText('Elija dónde guardar el archivo de traslado.')).not.toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Elegir la carpeta' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Preparar traslado' }));
+    expect(
+      await within(dialog).findByText('Marque que entiende que esta PC dejará de ser el servidor.'),
+    ).not.toBeNull();
+    expect(runs).toEqual([]);
+    await userEvent.click(within(dialog).getByLabelText('Entiendo que esta PC dejará de ser el servidor'));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Preparar traslado' }));
+    expect(
+      await within(dialog).findByText(
+        /Archivo de traslado creado: E:\\IMPOCARIBE-7F3C-2026-10-14\.icmove\. Este servidor quedó detenido\./,
+      ),
+    ).not.toBeNull();
+    expect(runs).toEqual([
+      {
+        operation: 'trasladar',
+        request: {
+          code: 'K7QM-3XTP-R2HW',
+          password: 'respaldo de prueba 2026',
+          dest: 'E:\\IMPOCARIBE-7F3C-2026-10-14.icmove',
+        },
+      },
+    ]);
+  });
+
+  it('con otra contraseña de respaldo lo dice en palabras', async () => {
+    const { setup } = fakeSetup({
+      ok: false,
+      step: 'archivo',
+      error: 'node.exe terminó con 3: BACKUP_PASSWORD_INVALID: La contraseña de respaldo no es correcta.',
+    });
+    await open({ serverSetup: setup });
+    await userEvent.click(await screen.findByRole('button', { name: 'Preparar traslado' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Preparar traslado' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Elegir la carpeta' }));
+    await userEvent.type(within(dialog).getByLabelText('Contraseña de respaldo'), 'otra');
+    await userEvent.type(within(dialog).getByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(within(dialog).getByLabelText('Entiendo que esta PC dejará de ser el servidor'));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Preparar traslado' }));
+    expect(await within(dialog).findByText('La contraseña de respaldo no es correcta.')).not.toBeNull();
   });
 
   it('sin el instalador completo no hay mantenimiento', async () => {
