@@ -42,6 +42,8 @@ export interface NativeServices {
     current(): SetupState;
     readMove(file: string, password: string): Promise<MoveFileInfo>;
   } | null;
+  /** T133 · P-31: los dispositivos conectados si esta PC es la servidor (null si no): el aviso al apagar. */
+  serverPc(devices: number | null): void;
   /** T130: elegir el archivo de traslado (.icmove) o la carpeta donde guardarlo; null si se cancela. */
   pickFile(): Promise<string | null>;
   pickFolder(): Promise<string | null>;
@@ -150,6 +152,7 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
       setup(s).readMove(str(file, 'el archivo de traslado'), str(password, 'la contraseña de respaldo')),
     'setup.pickFile': () => s.pickFile(),
     'setup.pickFolder': () => s.pickFolder(),
+    'server.devices': (n) => s.serverPc(n === null ? null : num(n, 'los dispositivos conectados')),
   };
 }
 

@@ -1110,6 +1110,11 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS-09, RF-INS-10
   - *Depende:* T128
   - *Terminado:* verificado en Windows 10 y 11 (lista manual).
+  - *Estado (2026-10-29):* hecha; falta la verificación en Windows 10 y 11 (lista manual, T143).
+    - **Aviso (RF-INS-09, P-31):** en la PC servidor, la ventana retrasa el fin de la sesión (`query-session-end`), y Windows muestra el motivo con «Apagar de todos modos»: «Esta PC es el servidor de Órdenes de Carga: hay X dispositivos conectados». El texto lo fija `ShutdownBlockReasonCreate` de user32. Solo acepta la ventana del propio proceso, así que se llama desde la app con `koffi` 3.3.3 (FFI con binarios ya compilados, MIT; nueva dependencia del escritorio).
+    - **El número:** la interfaz de la PC servidor lo pide cada 30 s a `/local/status` (la firma del dispositivo la hace ella) y se lo pasa a la parte nativa (canal `server.devices`). En otra PC dice que no es la servidor, y no se bloquea nada.
+    - **Inicio con Windows (RF-INS-10):** la primera vez que la app sabe que es la PC servidor, lo activa; si alguien lo quita después desde la bandeja, se respeta.
+    - **Pruebas:** 3 del escritorio (el texto, cuándo se bloquea y el inicio con Windows) y 2 de componente.
 
 - [ ] **T134. Límite de dispositivos con hotspot.** AL-21 con 8 o más dispositivos conectados y montaje `hotspot`.
   - *Cubre:* RF-RED-01

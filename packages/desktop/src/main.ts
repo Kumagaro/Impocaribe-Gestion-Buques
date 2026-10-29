@@ -17,11 +17,14 @@ import { registerNative } from './native/ipc.ts';
 import { SecureStore } from './native/secure-storage.ts';
 import { NativeTransport } from './native/transport.ts';
 import { SetupHelper } from './system/setup.ts';
+import { ServerPcGuard, windowsShutdownBlocker } from './system/shutdown.ts';
 import { hideOnClose, loginItem, saveFilters, startsHidden, trayMenu } from './system/tray.ts';
 import { downloadUpdate, installerPath, resolveUpdate, verifySignature } from './system/updater.ts';
 
 /** Donde la interfaz guarda el emparejamiento (web/src/connection/pairing.ts). */
 const PAIRING_KEY = 'impocaribe.pairing';
+/** T133 · RF-INS-10: si ya se decidió el inicio con Windows (la app lo activa una vez en la PC servidor). */
+const AUTOSTART_KEY = 'impocaribe.autostart-decided';
 
 // T117: instalada, la interfaz va en los recursos de la app (extraResources); en desarrollo, el build de web del monorepo.
 const webDist = app.isPackaged
@@ -60,6 +63,8 @@ protocol.registerSchemesAsPrivileged([
 
 let window: BrowserWindow | null = null;
 let tray: Tray | null = null;
+/** T133 · P-31: el aviso al apagar la PC servidor (se crea con la ventana, que es la que lleva el motivo). */
+let serverPc: ServerPcGuard | null = null;
 /** «Salir», el apagado o la actualización: entonces cerrar la ventana sí cierra la app. */
 let quitting = false;
 
@@ -127,6 +132,7 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
+      serverPc: (devices) => serverPc?.update(devices),
       // T130: el archivo de traslado que se abre en P-28 y la carpeta donde se guarda en P-29 (una USB, normalmente).
       pickFile: async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(window!, {
@@ -217,6 +223,10 @@ else {
       event.preventDefault();
       window?.hide();
     });
+    // T133 · P-31: en la PC servidor, Windows muestra el motivo y «Apagar de todos modos» (RF-INS-09).
+    window.on('query-session-end', (event) => {
+      if (serverPc?.shouldBlock()) event.preventDefault();
+    });
 
     tray = new Tray(icon);
     tray.setToolTip('Órdenes de Carga');
@@ -227,6 +237,7 @@ else {
             open: show,
             setStartWithWindows: (enabled) => {
               app.setLoginItemSettings(loginItem(enabled));
+              void secure.set(AUTOSTART_KEY, '1');
               refreshMenu();
             },
             quit: () => app.quit(),
@@ -235,6 +246,19 @@ else {
       );
     refreshMenu();
     tray.on('click', show);
+    if (process.platform === 'win32')
+      void windowsShutdownBlocker(window.getNativeWindowHandle()).then(
+        (blocker) =>
+          (serverPc = new ServerPcGuard(blocker, {
+            // RF-INS-10: la PC servidor arranca la app con Windows; si alguien lo quita después, se respeta.
+            configured: () => secure.get(AUTOSTART_KEY) !== null,
+            enable: () => {
+              app.setLoginItemSettings(loginItem(true));
+              void secure.set(AUTOSTART_KEY, '1');
+              refreshMenu();
+            },
+          })),
+      );
     // Nada fuera de la app: ni navegación ni ventanas nuevas (Const. art. X).
     window.webContents.on('will-navigate', (event, url) => {
       if (!url.startsWith(APP_ORIGIN)) event.preventDefault();

@@ -5,19 +5,24 @@ import { Navigate, Outlet, useLocation } from 'react-router';
 import { DiagnosticsStandalone } from '../screens/diagnostics/DiagnosticsStandalone';
 import { PairingAttention } from '../screens/server/PairingAttention';
 import { ServerStatusStandalone } from '../screens/server/ServerStatusStandalone';
+import { ShutdownReport } from '../screens/server/ShutdownReport';
 import { Skeleton } from '../ui/presentation';
 import { useAppSession } from './SessionProvider';
 
 const ACCESS = ['/conexion', '/setup', '/login', '/recuperar'];
 const UNPAIRED = ['/conexion', '/servidor/crear'];
 
-/** T128: en la PC servidor, las solicitudes de emparejamiento (AL-22) se ven en cualquier pantalla. */
+/**
+ * T128: en la PC servidor, las solicitudes de emparejamiento (AL-22) se ven en cualquier pantalla. T133: y la parte
+ * nativa sabe cuántos dispositivos hay conectados, para el aviso al apagar Windows (P-31).
+ */
 export function SessionGate() {
   const { state } = useAppSession();
   return (
     <>
       <Gate />
       {state.pairing?.isServerPc && <PairingAttention />}
+      {state.status !== 'loading' && <ShutdownReport />}
     </>
   );
 }

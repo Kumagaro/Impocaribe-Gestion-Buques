@@ -20,6 +20,8 @@ export async function createTestPlatform(
     serverSetup?: Platform['serverSetup'];
     /** T128 · AL-22: traer la ventana al frente (solo la PC la tiene). */
     attention?: Platform['attention'];
+    /** T133: el aviso al apagar la PC servidor. */
+    reportServerPc?: Platform['reportServerPc'];
   } = {},
 ): Promise<TestPlatform> {
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -63,5 +65,6 @@ export async function createTestPlatform(
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
     ...(options.attention ? { attention: options.attention } : {}),
+    ...(options.reportServerPc ? { reportServerPc: options.reportServerPc } : {}),
   };
 }

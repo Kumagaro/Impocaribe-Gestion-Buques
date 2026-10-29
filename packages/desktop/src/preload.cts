@@ -41,6 +41,7 @@ const PRELOAD_CHANNELS: readonly NativeChannel[] = [
   'setup.move',
   'setup.pickFile',
   'setup.pickFolder',
+  'server.devices',
 ];
 const allowed = new Set<string>(PRELOAD_CHANNELS);
 

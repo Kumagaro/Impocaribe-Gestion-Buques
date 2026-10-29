@@ -66,6 +66,8 @@ export async function renderScreen(
     serverSetup?: Platform['serverSetup'];
     /** T128 · AL-22: traer la ventana al frente. */
     attention?: Platform['attention'];
+    /** T133: el aviso al apagar la PC servidor. */
+    reportServerPc?: Platform['reportServerPc'];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -82,6 +84,7 @@ export async function renderScreen(
     ...(options.installUpdate ? { installUpdate: options.installUpdate } : {}),
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
     ...(options.attention ? { attention: options.attention } : {}),
+    ...(options.reportServerPc ? { reportServerPc: options.reportServerPc } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

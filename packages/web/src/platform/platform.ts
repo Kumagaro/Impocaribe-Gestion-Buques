@@ -162,6 +162,11 @@ export interface Platform {
     start(labels: Record<string, string>, token?: string): Promise<boolean>;
     stop(): Promise<void>;
   };
+  /**
+   * T133 · P-31: en la PC servidor, cuántos dispositivos hay conectados (el aviso al apagar Windows); null si esta PC no
+   * es la servidor. Solo en la PC.
+   */
+  reportServerPc?(devices: number | null): Promise<void>;
   /** T128 · AL-22: trae la ventana al frente con aviso (solo en la PC; en el navegador de pruebas no existe). */
   attention?(): Promise<void>;
   /** T127: solo en la PC con el instalador completo (el que trae el servidor). */
