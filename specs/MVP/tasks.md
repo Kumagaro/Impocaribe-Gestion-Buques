@@ -1154,6 +1154,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 
 - [ ] **T139. Simulación de un mes.** 15 usuarios concurrentes; verificación de D1 a D15, con cortes de red aleatorios y reintentos al final de cada día simulado.
   - *Depende:* T138
+  - *Decisión del responsable (2026-10-29):* pospuesta a una actualización de calidad posterior a la entrega, por el plazo. Antes de la entrega solo se cierran F10 y F11, la accesibilidad (T141) y el extremo a extremo completo (T138).
 
 - [ ] **T140. Rendimiento.**
   - Servidor: RNF-03, RNF-04, RNF-12 y RNF-14 en la PC servidor real.
@@ -1161,6 +1162,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - Interfaz: RNF-13, **RNF-15** y **RNF-20** en el dispositivo de referencia.
   - Consumo de recursos (RNF-21): en una máquina virtual Windows 10 con **4 GB** de RAM, con el servidor y la app de escritorio abiertos y 8 dispositivos simulados, se miden la memoria en reposo y en operación y los tiempos de RNF-03; en el dispositivo de referencia, la memoria de la app Android.
   - *Depende:* T139
+  - *Decisión del responsable (2026-10-29):* pospuesta a una actualización de calidad posterior a la entrega, por el plazo. Antes de la entrega solo se cierran F10 y F11, la accesibilidad (T141) y el extremo a extremo completo (T138).
 
 - [ ] **T141. Accesibilidad.** Revisión automática de todas las pantallas en las tres clases, más una revisión manual: teclado en escritorio, texto al 130 % y lector de pantalla en las acciones principales.
   - *Cubre:* RNF-16
@@ -1193,10 +1195,12 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T144. Auditoría de pruebas.** Historial de cambios de pruebas, ausencia de casos especiales, mutación por módulo, una muestra de 20 pruebas con oráculo desde la spec, y una muestra de 10 pruebas de interfaz que verifican lo que ve el usuario y no detalles internos.
   - *Cubre:* Const. art. XIII
   - *Depende:* T142
+  - *Decisión del responsable (2026-10-29):* pospuesta a una actualización de calidad posterior a la entrega, por el plazo. Antes de la entrega solo se cierran F10 y F11, la accesibilidad (T141) y el extremo a extremo completo (T138).
 
 - [ ] **T145. Verificación constitucional**, incluido el Artículo XIV pantalla por pantalla.
   - *Depende:* T144, T143, T123
   - *Terminado:* firmado por el responsable.
+  - *Decisión del responsable (2026-10-29):* pospuesta a una actualización de calidad posterior a la entrega, por el plazo. Antes de la entrega solo se cierran F10 y F11, la accesibilidad (T141) y el extremo a extremo completo (T138).
 
 
 
