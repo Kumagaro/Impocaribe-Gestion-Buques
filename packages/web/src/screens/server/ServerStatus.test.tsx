@@ -54,10 +54,11 @@ const APODERADA: StoredSession = {
   }),
 };
 
-function fakeSetup(outcome: SetupOutcome) {
+function fakeSetup(outcome: SetupOutcome, bundleVersion: string | null = '1.4.0') {
   let listener: (m: SetupMessage) => void = () => undefined;
   const runs: { operation: SetupOperation; request: SetupRequest }[] = [];
   const setup: ServerSetup = {
+    bundleVersion,
     facts: vi.fn(),
     checkCode: vi.fn(),
     state: async () => ({ running: false, operation: null, messages: [] }),
@@ -173,6 +174,49 @@ describe('P-29 Estado del servidor', () => {
       await within(dialog).findByText('El código de instalación no es correcto. Revíselo en la hoja impresa.'),
     ).not.toBeNull();
     expect(runs).toEqual([{ operation: 'reparar', request: { code: 'K7QM-3XTP-R2HX' } }]);
+  });
+
+  // T129 · RF-INS-06: actualizar con el instalador completo nuevo, con la vuelta atrás si falla.
+  it('sin un instalador más nuevo, actualizar está desactivado y dice por qué', async () => {
+    await open({ serverSetup: fakeSetup({ ok: true }, '1.4.0').setup });
+    const button = await screen.findByRole('button', { name: 'Actualizar el servidor' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      screen.getByText('Para actualizar, instale en esta PC el instalador completo de la versión nueva.'),
+    ).not.toBeNull();
+  });
+
+  it('con el instalador de la 1.5.0 actualiza con el código del servidor', async () => {
+    const { setup, runs } = fakeSetup({ ok: true }, '1.5.0');
+    await open({ serverSetup: setup });
+    await userEvent.click(await screen.findByRole('button', { name: 'Actualizar el servidor a la 1.5.0' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Actualizar el servidor' });
+    expect(within(dialog).getByText(/Pasa el servidor de la 1\.4\.0 a la 1\.5\.0/)).not.toBeNull();
+    await userEvent.type(within(dialog).getByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Actualizar el servidor' }));
+    expect(
+      await within(dialog).findByText(
+        'El servidor quedó actualizado y en marcha. Las apps de los dispositivos se avisan de la versión nueva.',
+      ),
+    ).not.toBeNull();
+    expect(runs).toEqual([{ operation: 'actualizar', request: { code: 'K7QM-3XTP-R2HW' } }]);
+  });
+
+  it('si la actualización falla y vuelve atrás, lo dice: no se perdió nada', async () => {
+    const { setup } = fakeSetup(
+      { ok: false, step: 'estructura', error: 'migración 0017 falló', rolledBack: true },
+      '1.5.0',
+    );
+    await open({ serverSetup: setup });
+    await userEvent.click(await screen.findByRole('button', { name: 'Actualizar el servidor a la 1.5.0' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Actualizar el servidor' });
+    await userEvent.type(within(dialog).getByLabelText('Código de instalación'), 'K7QM-3XTP-R2HW');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Actualizar el servidor' }));
+    expect(
+      await within(dialog).findByText(
+        'La actualización no se completó. El servidor volvió a la versión anterior con sus datos intactos: no se perdió nada y los dispositivos siguen conectados.',
+      ),
+    ).not.toBeNull();
   });
 
   it('sin el instalador completo no hay mantenimiento', async () => {

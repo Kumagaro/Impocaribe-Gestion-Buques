@@ -64,6 +64,8 @@ export interface NativeDeviceInfo {
   plainHttp?: boolean;
   /** T127: la app la puso el instalador completo (con el ayudante): ofrece crear el servidor en esta PC (P-28). */
   serverInstaller?: boolean;
+  /** T129: la versión del servidor que trae ese instalador (server-bundle/manifest.json): P-29 ofrece actualizar. */
+  serverBundleVersion?: string;
 }
 
 /** Lo que ve la interfaz en `window.impocaribeNative`. */

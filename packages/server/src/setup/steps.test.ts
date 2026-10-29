@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { runSteps, undoSteps, type Journal, type JournalData } from './engine.ts';
 import { layout, SERVICES } from './layout.ts';
-import { acDc, createSteps, type Sys } from './steps.ts';
+import { acDc, createSteps, updateKeep, updateSteps, type Sys } from './steps.ts';
 
 // T126 · plan §10.3: los pasos de «Crear servidor» sobre una PC simulada que reproduce el efecto de cada comando. Un
 // fallo inyectado en cada paso y Deshacer deja la PC como estaba; lo que ya existía (otra instalación) se conserva.
@@ -41,6 +41,8 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
         files.set(`${l.data}\\identity\\ca.crt`, 'CA');
         return JSON.stringify({ created, name: 'IMPOCARIBE-7F3C' });
       } else if (name === 'node.exe') return `ok ${args[1]} ${opts?.input ?? ''}`;
+      else if (name === 'powershell.exe' && args.at(-1)!.startsWith('Stop-Service'))
+        for (const service of args.at(-1)!.split(' ')[2]!.split(',')) running.delete(service);
       else if (name === `${SERVICES.server}.exe` && args[0] === 'install') services.add(SERVICES.server);
       else if (name === `${SERVICES.server}.exe` && args[0] === 'uninstall') services.delete(SERVICES.server);
       else if (name === 'netsh' && args[2] === 'add') rules.add(args[4]!.slice('name='.length));
@@ -103,7 +105,7 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
       saved = JSON.parse(JSON.stringify(d)) as JournalData;
     },
   };
-  return { sys, snapshot, journal, files, services, rules, power };
+  return { sys, snapshot, journal, files, services, rules, power, running };
 }
 
 const input = { bundle: BUNDLE, network: 'hotspot' as const, codeHash: '$argon2id$v=19$m=65536,t=3,p=1$c2Fs$aGFzaA' };
@@ -174,5 +176,95 @@ describe('energía (powercfg)', () => {
       'GUID de configuración: 29f6c1db-86da\n  Índice de configuración de CA actual: 0x00000708\n  Índice de configuración de CC actual: 0x00000384\n';
     expect(acDc(es)).toEqual([1800, 900]);
     expect(() => acDc('sin números')).toThrow('No se pudo leer la configuración de energía actual.');
+  });
+});
+
+// T129 · RF-INS-06 y plan §10.5: actualizar con el programa de un instalador completo nuevo; con un fallo en la
+// migración, el servidor vuelve a la versión anterior con sus datos intactos.
+describe('actualizar el servidor', () => {
+  const installed = () => {
+    const pc = fakePc({ existingInstall: true });
+    pc.files.set(`${l.program}\\server\\package.json`, '1.4.0');
+    pc.files.set(`${l.program}\\node\\node.exe`, 'node 1.4.0');
+    pc.files.set(`${l.data}\\pgdata\\base`, 'datos de la 1.4.0');
+    pc.files.set(`${BUNDLE}\\server\\package.json`, '1.5.0');
+    pc.files.set(`${l.data}\\identity\\ca.crt`, 'CA');
+    pc.services.add(SERVICES.server);
+    pc.running.add(SERVICES.database);
+    pc.running.add(SERVICES.server);
+    return pc;
+  };
+
+  it('detiene, guarda la copia, pone la nueva versión, migra, arranca y publica la app ligera y el APK', async () => {
+    const pc = installed();
+    const ran: string[][] = [];
+    const run = pc.sys.run.bind(pc.sys);
+    pc.sys.run = async (file, args, opts) => {
+      ran.push(args);
+      return run(file, args, opts);
+    };
+    const steps = updateSteps(pc.sys, l, { bundle: BUNDLE });
+    expect(steps.map((s) => s.id)).toEqual(['detener', 'copia', 'programa', 'estructura', 'arranque', 'publicar']);
+    expect(await runSteps('update', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.files.get(`${l.program}\\server\\package.json`)).toBe('1.5.0');
+    // Lo que el programa nuevo no trae, no queda: se copió entero sobre una carpeta vacía.
+    expect(pc.files.has(`${l.program}\\node\\node.exe`)).toBe(true);
+    expect(pc.files.get(`${l.program}\\node\\node.exe`)).toBe('node');
+    expect(pc.files.get(`${updateKeep(l)}\\programa\\server\\package.json`)).toBe('1.4.0');
+    expect(pc.files.get(`${updateKeep(l)}\\pgdata\\base`)).toBe('datos de la 1.4.0');
+    expect([...pc.running].sort()).toEqual([SERVICES.database, SERVICES.server].sort());
+    expect(ran.filter((a) => a[1] === 'migrate' || a[1] === 'publish-bundled').map((a) => a.slice(1))).toEqual([
+      ['migrate'],
+      ['publish-bundled', `${l.program}\\publicar`],
+    ]);
+  });
+
+  it('con un fallo en la migración vuelve a la versión anterior con sus datos y la arranca', async () => {
+    const pc = installed();
+    const run = pc.sys.run.bind(pc.sys);
+    pc.sys.run = async (file, args, opts) => {
+      if (args[1] === 'migrate') {
+        // La migración deja la base a medias antes de fallar.
+        pc.files.set(`${l.data}\\pgdata\\base`, 'a medias');
+        throw new Error('migración 0017 falló: relation already exists');
+      }
+      return run(file, args, opts);
+    };
+    const steps = updateSteps(pc.sys, l, { bundle: BUNDLE });
+    expect(await runSteps('update', steps, pc.journal, () => undefined)).toEqual({
+      ok: false,
+      step: 'estructura',
+      error: 'migración 0017 falló: relation already exists',
+    });
+    expect(await undoSteps('update', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.files.get(`${l.program}\\server\\package.json`)).toBe('1.4.0');
+    expect(pc.files.get(`${l.program}\\node\\node.exe`)).toBe('node 1.4.0');
+    expect(pc.files.get(`${l.data}\\pgdata\\base`)).toBe('datos de la 1.4.0');
+    expect([...pc.running].sort()).toEqual([SERVICES.database, SERVICES.server].sort());
+  });
+
+  it('si el servidor nuevo no responde, también vuelve atrás', async () => {
+    const pc = installed();
+    pc.sys.ok = async () => false;
+    const steps = updateSteps(pc.sys, l, { bundle: BUNDLE });
+    expect(await runSteps('update', steps, pc.journal, () => undefined)).toMatchObject({ ok: false, step: 'arranque' });
+    expect(await undoSteps('update', steps, pc.journal, () => undefined)).toEqual({ ok: true });
+    expect(pc.files.get(`${l.program}\\server\\package.json`)).toBe('1.4.0');
+    expect(pc.files.get(`${l.data}\\pgdata\\base`)).toBe('datos de la 1.4.0');
+  });
+
+  it('si no se puede publicar, la actualización sigue hecha y se dice cómo publicar a mano', async () => {
+    const pc = installed();
+    const run = pc.sys.run.bind(pc.sys);
+    pc.sys.run = async (file, args, opts) => {
+      if (args[1] === 'publish-bundled') throw new Error('no hay carpeta publicar');
+      return run(file, args, opts);
+    };
+    const log: string[] = [];
+    const steps = updateSteps(pc.sys, l, { bundle: BUNDLE });
+    expect(await runSteps('update', steps, pc.journal, (e) => e.type === 'log' && log.push(e.line))).toEqual({
+      ok: true,
+    });
+    expect(log).toContain('No se publicaron (publíquelos en Versiones de la app): no hay carpeta publicar');
   });
 });

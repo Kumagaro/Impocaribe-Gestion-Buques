@@ -1,6 +1,6 @@
 // T126 · DT-17 y plan §10.3: impocaribe-setup.exe, el ayudante de instalación. La app de escritorio lo lanza con permiso
 // de administrador de Windows:
-//   impocaribe-setup.exe crear|reparar|reiniciar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
+//   impocaribe-setup.exe crear|reparar|reiniciar|actualizar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
 // y por la tubería le manda {network, code} (crear), {code} (reparar) o {code, username, password} (restablecer). Va
 // dentro de server-bundle, que es de donde copia el programa. Al crear, el código se compara con la comprobación que
 // trae el instalador; al reparar, con la que guarda el servidor (RF-INS-02).
@@ -9,7 +9,7 @@
 //   impocaribe-setup.exe codigo      lee el código por la entrada y escribe «ok» o INSTALL_CODE_INVALID
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { canCreateServer, checkServerPc } from '@impocaribe/shared';
+import { canCreateServer, checkServerPc, compareVersions } from '@impocaribe/shared';
 import { installationCodeSchema } from '@impocaribe/shared/validation';
 import { verifySecret } from '../auth/password.ts';
 import { runSteps, undoSteps, type Outcome, type Step } from './engine.ts';
@@ -17,7 +17,7 @@ import { gatherFacts } from './facts.ts';
 import { fileJournal, journalPath } from './journal.ts';
 import { appDatabaseUrl, layout, paths, SERVICES } from './layout.ts';
 import { progressTo, type Progress } from './progress.ts';
-import { createSteps } from './steps.ts';
+import { createSteps, updateSteps } from './steps.ts';
 import { windowsSys } from './windows-sys.ts';
 
 /** Reparar rehace estos pasos sin tocar la base ni la identidad (plan §10.3). */
@@ -64,8 +64,34 @@ async function main(progress: Progress): Promise<Outcome> {
   }
 
   // RF-INS-02: el mantenimiento, con el código que guarda el servidor (una Apoderada puede haberlo cambiado).
-  if ((operation === 'reparar' || operation === 'reiniciar') && !(await serverCodeOk(code.success ? code.data : '')))
+  if (
+    (operation === 'reparar' || operation === 'reiniciar' || operation === 'actualizar') &&
+    !(await serverCodeOk(code.success ? code.data : ''))
+  )
     return fail('permisos', 'INSTALL_CODE_INVALID: el código de instalación no es correcto.');
+
+  if (operation === 'actualizar') {
+    // T129 · RF-INS-06: solo con un instalador más nuevo que el servidor instalado.
+    const version = async (dir: string) =>
+      (JSON.parse(await readFile(join(dir, 'server', 'package.json'), 'utf8')) as { version: string }).version;
+    const installed = await version(l.program);
+    const incoming = await version(bundle);
+    if (compareVersions(incoming, installed) <= 0)
+      return fail('comprobacion', `Este instalador trae la ${incoming} y el servidor ya tiene la ${installed}.`);
+    const updateJournal = fileJournal(join(dirname(journalPath()), 'actualizacion-diario.json'));
+    const steps = updateSteps(windowsSys, l, { bundle });
+    plan(progress, steps);
+    // Una actualización anterior a medias (un corte de luz) se deshace antes de empezar; una completa se olvida.
+    const previous = await updateJournal.load();
+    if (previous && steps.every((s) => previous.steps.some((d) => d.id === s.id && d.status === 'done')))
+      await updateJournal.save({ operation: 'update', steps: [] });
+    else if (previous?.steps.length) await undoSteps('update', steps, updateJournal, report);
+    const outcome = await runSteps('update', steps, updateJournal, report);
+    if (outcome.ok) return outcome;
+    // Vuelta atrás automática: la versión anterior con sus datos.
+    const back = await undoSteps('update', steps, updateJournal, report);
+    return { ...outcome, rolledBack: back.ok };
+  }
 
   if (operation === 'reiniciar') {
     // T128 · P-29: detener y volver a arrancar con la comprobación de «arranque». Sin diario: no hay nada que deshacer,
@@ -118,7 +144,7 @@ async function main(progress: Progress): Promise<Outcome> {
 
   return fail(
     'inicio',
-    `Operación desconocida: ${String(operation)}. Use crear, reparar, reiniciar, deshacer o restablecer.`,
+    `Operación desconocida: ${String(operation)}. Use crear, reparar, reiniciar, actualizar, deshacer o restablecer.`,
   );
 }
 

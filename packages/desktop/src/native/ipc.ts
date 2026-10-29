@@ -59,7 +59,14 @@ const server = (v: unknown): NativeServer | undefined => {
 };
 const params = (v: unknown): SqlValue[] => (Array.isArray(v) ? (v as SqlValue[]) : []);
 
-const OPERATIONS: readonly SetupOperation[] = ['crear', 'reparar', 'reiniciar', 'deshacer', 'restablecer'];
+const OPERATIONS: readonly SetupOperation[] = [
+  'crear',
+  'reparar',
+  'reiniciar',
+  'actualizar',
+  'deshacer',
+  'restablecer',
+];
 /** Solo los campos conocidos, como texto; el ayudante vuelve a validarlos. */
 const setupRequest = (v: unknown): SetupRequest => {
   const r = (v ?? {}) as Record<string, unknown>;

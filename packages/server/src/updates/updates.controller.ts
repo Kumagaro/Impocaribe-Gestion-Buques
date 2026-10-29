@@ -54,7 +54,7 @@ const A = ['apoderada'] as const;
 /** El instalador ligero y el APK pesan decenas de MB; el completo (que no se publica) pasa de este límite. */
 export const MAX_INSTALLER_BYTES = 300 * 1024 * 1024;
 
-const MIME: Record<ReleasePlatform, string> = {
+export const RELEASE_MIME: Record<ReleasePlatform, string> = {
   windows: 'application/vnd.microsoft.portable-executable',
   android: 'application/vnd.android.package-archive',
   'android-webview-chrome': 'application/vnd.android.package-archive',
@@ -159,7 +159,7 @@ export class UpdatesController {
       : [];
     if (!p.success || !row) throw new AppError('NOT_FOUND', 'Esa versión no está publicada en este servidor.');
     res.set({
-      'Content-Type': MIME[p.data],
+      'Content-Type': RELEASE_MIME[p.data],
       'Content-Length': String(row.size),
       'Content-Disposition': `attachment; filename="${fileName(p.data, version)}"`,
       'X-Content-SHA256': row.sha256,
@@ -215,7 +215,14 @@ export class UpdatesController {
             .at(-1);
           if (newest && compareVersions(input.version, newest) < 0)
             throw invalid('version', `Ya está publicada la ${newest} de ${label}: publique una versión más nueva.`);
-          const stored = await storeFileFromPath(tx, this.clock, this.dataDir, file.path, sha256, MIME[input.platform]);
+          const stored = await storeFileFromPath(
+            tx,
+            this.clock,
+            this.dataDir,
+            file.path,
+            sha256,
+            RELEASE_MIME[input.platform],
+          );
           const [row] = await tx
             .insert(appReleases)
             .values({

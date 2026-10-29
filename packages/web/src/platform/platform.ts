@@ -108,6 +108,8 @@ export interface UpdatePackage {
  * reparar, deshacer y restablecer piden el permiso de administrador de Windows.
  */
 export interface ServerSetup {
+  /** T129: la versión del servidor que trae el instalador completo de esta app (P-29 ofrece actualizar a ella). */
+  bundleVersion: string | null;
   facts(): Promise<PcFacts>;
   checkCode(code: string): Promise<boolean>;
   /** El resultado al terminar; el progreso llega a `listen`. Sin el permiso de Windows, falla. */

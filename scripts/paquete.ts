@@ -61,11 +61,10 @@ if (webviews.length === 0) throw new Error(`No hay APK del WebView en ${webviewD
 const desktop = join(repo, 'packages/desktop');
 const code = newInstallationCode();
 
-// 1. server-bundle con la comprobación del código de esta empresa, y los dos instaladores de Windows.
+// 1. server-bundle con la comprobación del código de esta empresa, y el instalador ligero.
 run('pnpm', ['--filter', '@impocaribe/desktop', 'server-bundle']);
 writeFileSync(join(desktop, 'server-bundle', 'codigo-instalacion.hash'), `${await hashSecret(code)}\n`);
 run('pnpm', ['--filter', '@impocaribe/desktop', 'instalador']);
-run('pnpm', ['--filter', '@impocaribe/desktop', 'instalador:completo']);
 
 // 2. El APK firmado con la clave de la empresa (la misma siempre: si no, no se puede actualizar).
 run('pnpm', ['--filter', '@impocaribe/web', 'build']);
@@ -76,25 +75,49 @@ run(
   join(repo, 'packages/android/android'),
 );
 
-// 3. Las comprobaciones de la tarea: el ligero no lleva el servidor y el código no está en ningún archivo.
+// 3. T129 · RF-UPD-01: el ligero y el APK también van dentro del completo (server-bundle/publicar), para que al
+// actualizar el servidor se publiquen solos. Después, el completo.
+const version = JSON.parse(readFileSync(join(desktop, 'package.json'), 'utf8')).version as string;
+const apkVersion = JSON.parse(readFileSync(join(repo, 'packages/android/package.json'), 'utf8')).version as string;
+const lightExe = join(desktop, 'release/ligero', `impocaribe-${version}.exe`);
+const releaseApk = join(repo, 'packages/android/android/app/build/outputs/apk/release/app-release.apk');
+const publicar = join(desktop, 'server-bundle', 'publicar');
+mkdirSync(publicar, { recursive: true });
+copyFileSync(lightExe, join(publicar, basename(lightExe)));
+copyFileSync(releaseApk, join(publicar, `impocaribe-${apkVersion}.apk`));
+writeFileSync(
+  join(publicar, 'publicar.json'),
+  `${JSON.stringify(
+    [
+      {
+        platform: 'windows',
+        version,
+        file: basename(lightExe),
+        signature: readFileSync(`${lightExe}.sig`, 'utf8').trim(),
+      },
+      { platform: 'android', version: apkVersion, file: `impocaribe-${apkVersion}.apk` },
+    ],
+    null,
+    2,
+  )}\n`,
+);
+run('pnpm', ['--filter', '@impocaribe/desktop', 'instalador:completo']);
+
+// 4. Las comprobaciones de la tarea: el ligero no lleva el servidor y el código no está en ningún archivo.
 const unpacked = (flavor: string) => join(desktop, 'release', flavor, 'win-unpacked', 'resources');
 if (existsSync(join(unpacked('ligero'), 'server-bundle'))) throw new Error('El instalador ligero lleva server-bundle.');
 if (!existsSync(join(unpacked('completo'), 'server-bundle')))
   throw new Error('El instalador completo no lleva server-bundle.');
 
-// 4. El paquete.
-const version = JSON.parse(readFileSync(join(desktop, 'package.json'), 'utf8')).version as string;
+// 5. El paquete.
 mkdirSync(join(out, 'webview'), { recursive: true });
 const lines = [
   ship(
     join(desktop, 'release/completo', `impocaribe-completo-${version}.exe`),
     join(out, `impocaribe-completo-${version}.exe`),
   ),
-  ship(join(desktop, 'release/ligero', `impocaribe-${version}.exe`), join(out, `impocaribe-${version}.exe`)),
-  ship(
-    join(repo, 'packages/android/android/app/build/outputs/apk/release/app-release.apk'),
-    join(out, `impocaribe-${version}.apk`),
-  ),
+  ship(lightExe, join(out, `impocaribe-${version}.exe`)),
+  ship(releaseApk, join(out, `impocaribe-${apkVersion}.apk`)),
   ...webviews.map((f) => ship(join(webviewDir, f), join(out, 'webview', f))),
 ];
 for (const flavor of ['completo', 'ligero']) {
@@ -130,7 +153,7 @@ const leaked = leaks(
 if (leaked.length > 0)
   throw new Error(`El código de instalación aparece en: ${leaked.join(', ')}. No entregue este paquete.`);
 
-// 5. La hoja del código, fuera del paquete: se imprime y se borra.
+// 6. La hoja del código, fuera del paquete: se imprime y se borra.
 const sheet = join(repo, 'paquete', `${slug}-${fecha}-CODIGO-IMPRIMIR-Y-BORRAR.html`);
 writeFileSync(
   sheet,

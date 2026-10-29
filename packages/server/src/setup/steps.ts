@@ -57,7 +57,8 @@ interface Secrets {
 
 const mine = (created: boolean): UndoInfo => ({ mine: created });
 
-export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
+/** Lo que comparten los pasos de crear y de actualizar: rutas, secretos, tareas del servidor y esperas. */
+function machine(sys: Sys, l: Layout) {
   const p = paths(l);
   const secretsFile = join(p.serviceDir, 'secretos.json');
   const exe = (name: string) => join(p.pgBin, `${name}.exe`);
@@ -69,11 +70,28 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
     IMPOCARIBE_DATA_DIR: p.dataDir,
     IMPOCARIBE_IDENTITY_DIR: p.identityDir,
   });
-  const tasks = async (command: string, stdin?: string) =>
-    sys.run(p.node, [join(l.program, 'server', 'dist', 'setup', 'tasks.js'), command], {
+  /** Una tarea del servidor instalado (tasks.js), con su propio Node y el entorno del servicio. */
+  const tasks = async (command: string, stdin?: string, args: string[] = []) =>
+    sys.run(p.node, [join(l.program, 'server', 'dist', 'setup', 'tasks.js'), command, ...args], {
       env: await serverEnv(),
       ...(stdin === undefined ? {} : { input: stdin }),
     });
+  const until = async (what: string, check: () => Promise<boolean>, seconds: number) => {
+    for (let i = 0; i < seconds; i++) {
+      if (await check()) return;
+      await sys.sleep(1000);
+    }
+    throw new Error(`${what} no respondió en ${seconds} s.`);
+  };
+  const databaseReady = () => sys.succeeds(exe('pg_isready'), ['-h', 'localhost', '-p', String(PG_PORT)]);
+  /** Detiene los servicios y espera a que terminen (Stop-Service espera; sc.exe stop no). */
+  const stopServices = (...names: string[]) =>
+    sys.run('powershell.exe', ['-NoProfile', '-Command', `Stop-Service -Name ${names.join(',')} -Force`]);
+  return { p, secretsFile, exe, secrets, appUrl, tasks, until, databaseReady, stopServices };
+}
+
+export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
+  const { p, secretsFile, exe, secrets, appUrl, tasks, until } = machine(sys, l);
   const serviceExe = join(p.serviceDir, `${SERVICES.server}.exe`);
   const serviceConfig = join(p.serviceDir, `${SERVICES.server}.xml`);
   const removeRules = async (names: string[]) => {
@@ -86,14 +104,6 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
     }
     await sys.run('powercfg', ['/setactive', 'SCHEME_CURRENT']);
   };
-  const until = async (what: string, check: () => Promise<boolean>, seconds: number) => {
-    for (let i = 0; i < seconds; i++) {
-      if (await check()) return;
-      await sys.sleep(1000);
-    }
-    throw new Error(`${what} no respondió en ${seconds} s.`);
-  };
-
   return [
     {
       id: 'copiar',
@@ -318,6 +328,115 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
       async undo() {
         await sys.succeeds('sc.exe', ['stop', SERVICES.server]);
       },
+    },
+  ];
+}
+
+/** T129: la carpeta con la copia de la versión anterior (programa y base) mientras se actualiza. */
+export const updateKeep = (l: Layout) => join(l.data, 'actualizacion');
+
+/**
+ * T129 · RF-INS-06 y plan §10.5: actualizar el servidor con el programa de un instalador completo nuevo. Detiene los
+ * servicios, guarda en frío una copia del programa y de la base (el respaldo para volver atrás: queda en la carpeta de
+ * datos, solo para el sistema y los administradores, como la base misma), pone el programa nuevo, migra, arranca y
+ * comprueba, y publica el instalador ligero y el APK que trae. Si algo falla, Deshacer vuelve, en orden inverso, a la
+ * versión anterior con sus datos.
+ */
+export function updateSteps(sys: Sys, l: Layout, input: { bundle: string }): Step[] {
+  const { p, tasks, until, databaseReady, stopServices } = machine(sys, l);
+  const keep = updateKeep(l);
+  const oldProgram = join(keep, 'programa');
+  const oldPgdata = join(keep, 'pgdata');
+  const start = createSteps(sys, l, { bundle: input.bundle, network: 'router', codeHash: '' }).find(
+    (s) => s.id === 'arranque',
+  )!;
+  const startAll = async () => {
+    await sys.succeeds('sc.exe', ['start', SERVICES.database]);
+    await until('La base de datos', databaseReady, 60);
+    await sys.succeeds('sc.exe', ['start', SERVICES.server]);
+  };
+  const restore = async (copy: string, to: string) => {
+    await sys.remove(to);
+    await sys.copy(copy, to);
+  };
+  const restoreDatabase = async () => {
+    await stopServices(SERVICES.server, SERVICES.database);
+    await restore(oldPgdata, p.pgdata);
+  };
+
+  return [
+    {
+      id: 'detener',
+      title: 'Detener el servidor y la base de datos',
+      async run() {
+        await stopServices(SERVICES.server, SERVICES.database);
+      },
+      async undo() {
+        await startAll();
+      },
+    },
+    {
+      id: 'copia',
+      title: 'Guardar una copia de la versión anterior y de sus datos',
+      async run(log) {
+        await sys.remove(keep);
+        await sys.copy(l.program, oldProgram);
+        await sys.copy(p.pgdata, oldPgdata);
+        log(`Copia guardada en ${keep}.`);
+      },
+      // La copia se conserva: es lo que usan los pasos siguientes para volver atrás, y la próxima actualización la
+      // reemplaza.
+      async undo() {},
+    },
+    {
+      id: 'programa',
+      title: 'Copiar la nueva versión',
+      async run() {
+        try {
+          await sys.remove(l.program);
+          await sys.copy(input.bundle, l.program);
+        } catch (err) {
+          await restore(oldProgram, l.program);
+          throw err;
+        }
+      },
+      async undo() {
+        await restore(oldProgram, l.program);
+      },
+    },
+    {
+      id: 'estructura',
+      title: 'Actualizar la estructura de los datos',
+      async run(log) {
+        try {
+          await sys.succeeds('sc.exe', ['start', SERVICES.database]);
+          await until('La base de datos', databaseReady, 60);
+          log(await tasks('migrate'));
+        } catch (err) {
+          // Una migración a medias no se deja: la base vuelve a la copia en frío.
+          await restoreDatabase();
+          throw err;
+        }
+      },
+      async undo() {
+        await restoreDatabase();
+      },
+    },
+    start,
+    {
+      id: 'publicar',
+      title: 'Publicar la app ligera y el APK de la nueva versión',
+      async run(log) {
+        // RF-UPD-01: si no se pudo publicar, el servidor nuevo ya funciona: se publica a mano en P-26.
+        try {
+          log(await tasks('publish-bundled', undefined, [join(l.program, 'publicar')]));
+        } catch (err) {
+          log(
+            `No se publicaron (publíquelos en Versiones de la app): ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      },
+      async undo() {},
     },
   ];
 }

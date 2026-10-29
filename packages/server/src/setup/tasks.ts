@@ -2,6 +2,7 @@
 // del servicio (DATABASE_URL y las carpetas): aplicar las migraciones, crear la identidad (si ya hay una, se conserva:
 // reemplazarla dejaría huérfanos a los dispositivos) y guardar el montaje de red y la comprobación del código.
 //   node dist/setup/tasks.js migrate | identity | settings   (settings lee {network, codeHash} por la entrada)
+//   node dist/setup/tasks.js publish-bundled <carpeta publicar>   (T129, al actualizar)
 import { readFile } from 'node:fs/promises';
 import { stdin } from 'node:process';
 import { AppError, systemClock } from '@impocaribe/shared';
@@ -11,6 +12,7 @@ import pg from 'pg';
 import { verifySecret } from '../auth/password.ts';
 import { config } from '../config.ts';
 import { createAppPool } from '../db/db.ts';
+import { publishBundled } from '../updates/bundled.ts';
 import { emergencyReset } from './emergency.ts';
 import { runMigrations } from '../db/migrate.ts';
 import { createIdentity, IdentityExistsError } from '../identity/identity.ts';
@@ -58,6 +60,17 @@ const commands: Record<string, () => Promise<string>> = {
       await client.end();
     }
     return 'Montaje de red y código de instalación guardados.';
+  },
+  /** T129 · RF-UPD-01: publica el instalador ligero y el APK que trae el instalador completo (carpeta publicar). */
+  async 'publish-bundled'() {
+    const dir = process.argv[3];
+    if (!dir) throw new Error('Falta la carpeta publicar.');
+    const pool = createAppPool(cfg.databaseUrl);
+    try {
+      return (await publishBundled(drizzle(pool), systemClock, cfg.dataDir, dir)).join('\n');
+    } finally {
+      await pool.end();
+    }
   },
   /** RF-INS-11: lee {code, username, password} por la entrada (emergency.ts). */
   async 'emergency-reset'() {

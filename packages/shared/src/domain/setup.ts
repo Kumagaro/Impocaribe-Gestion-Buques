@@ -3,7 +3,7 @@
 import type { ServerCheck } from './serverChecks.ts';
 
 /** Lo que hace el ayudante elevado (con el permiso de administrador de Windows). */
-export type SetupOperation = 'crear' | 'reparar' | 'reiniciar' | 'deshacer' | 'restablecer';
+export type SetupOperation = 'crear' | 'reparar' | 'reiniciar' | 'actualizar' | 'deshacer' | 'restablecer';
 
 /** La primera línea de la app: con qué datos (el código nunca va en la línea de comandos). */
 export interface SetupRequest {
@@ -18,7 +18,8 @@ export type SetupStepStatus = 'running' | 'done' | 'failed' | 'undoing' | 'undon
 export type SetupEvent =
   { type: 'step'; id: string; status: SetupStepStatus; error?: string } | { type: 'log'; id: string; line: string };
 
-export type SetupOutcome = { ok: true } | { ok: false; step: string; error: string };
+/** `rolledBack`: al actualizar, si la vuelta atrás automática dejó la versión anterior con sus datos (T129). */
+export type SetupOutcome = { ok: true } | { ok: false; step: string; error: string; rolledBack?: boolean };
 
 /** Lo que manda el ayudante, una línea JSON por mensaje; la última es el resultado. */
 export type SetupMessage =

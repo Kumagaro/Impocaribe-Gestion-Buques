@@ -149,6 +149,7 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
     ...(bridge.info.serverInstaller
       ? {
           serverSetup: {
+            bundleVersion: bridge.info.serverBundleVersion ?? null,
             facts: () => invoke<PcFacts>('setup.facts'),
             checkCode: (code: string) => invoke<boolean>('setup.code', code),
             run: (operation: SetupOperation, request: SetupRequest) =>

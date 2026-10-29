@@ -238,6 +238,7 @@ describe('RF-RED-02 y F-01: sin servidor en la red', () => {
 describe('P-01: crear el servidor en esta PC', () => {
   const PC: DeviceInfo = { platform: 'windows', appVersion: '1.0.0', smallestWidthDp: 1024, name: 'PC-ALMACEN' };
   const setup = {
+    bundleVersion: null,
     facts: vi.fn(),
     checkCode: vi.fn(),
     run: vi.fn(),

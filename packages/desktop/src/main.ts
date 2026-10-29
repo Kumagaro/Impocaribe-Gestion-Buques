@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { rm, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { APP_ORIGIN, resolveAppFile } from './app-protocol.ts';
 import { LocalDatabases } from './native/database.ts';
@@ -45,6 +45,14 @@ const installer = (
   JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')) as { impocaribe?: { instalador?: string } }
 ).impocaribe?.instalador;
 const serverInstaller = !!setupExe && existsSync(setupExe) && (!app.isPackaged || installer === 'completo');
+/** T129: la versión del servidor que trae el instalador completo (manifest.json de server-bundle). */
+const serverBundleVersion = (() => {
+  try {
+    return (JSON.parse(readFileSync(join(dirname(setupExe!), 'manifest.json'), 'utf8')) as { server?: string }).server;
+  } catch {
+    return undefined;
+  }
+})();
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
@@ -87,6 +95,7 @@ else {
       name: hostname(),
       ...(plainHttp ? { plainHttp } : {}),
       ...(serverInstaller ? { serverInstaller } : {}),
+      ...(serverInstaller && serverBundleVersion ? { serverBundleVersion } : {}),
     };
     // P-28: el progreso va a la ventana; si se cierra (queda en la bandeja) la creación sigue, y al volver se retoma.
     const setup = serverInstaller

@@ -5,6 +5,7 @@
 import {
   applySetupMessage,
   emptySetupProgress,
+  compareVersions,
   serverName,
   type SetupMessage,
   type SetupOutcome,
@@ -25,7 +26,7 @@ import { useAppSession } from '../../session/SessionProvider';
 import { useValidatedForm } from '../../validation/useValidatedForm';
 
 export type PendingPairing = z.infer<typeof pendingPairingSchema>;
-export type Maintenance = 'reparar' | 'reiniciar' | 'restablecer';
+export type Maintenance = 'reparar' | 'reiniciar' | 'actualizar' | 'restablecer';
 
 /** Cada cuánto se pide el estado y las solicitudes (una solicitud vale 5 minutos). */
 export const STATUS_EVERY_MS = 5000;
@@ -38,6 +39,7 @@ export const HOTSPOT_LIMIT = 8;
 export const MAINTENANCE_TITLE: Record<Maintenance, string> = {
   reparar: 'Reparar el servidor',
   reiniciar: 'Reiniciar el servicio',
+  actualizar: 'Actualizar el servidor',
   restablecer: 'Restablecer la contraseña de una Apoderada',
 };
 
@@ -192,7 +194,8 @@ export function useServerStatus() {
     defaultValues: { code: '' },
     labels: { code: 'Código de instalación' },
     onSubmit: async ({ code }) => {
-      if (maintenance === 'reparar' || maintenance === 'reiniciar') await runHelper(maintenance, { code });
+      if (maintenance === 'reparar' || maintenance === 'reiniciar' || maintenance === 'actualizar')
+        await runHelper(maintenance, { code });
     },
   });
 
@@ -241,6 +244,11 @@ export function useServerStatus() {
     canRevoke: isApoderada,
     revoke: (id: string, name: string) => void revoke(id, name),
     canMaintain: setup !== undefined,
+    /** T129 · RF-INS-06: la versión a la que se puede actualizar (la que trae el instalador de esta app), o null. */
+    updateTo:
+      setup?.bundleVersion && status && compareVersions(setup.bundleVersion, status.version) > 0
+        ? setup.bundleVersion
+        : null,
     maintenance,
     open,
     close: () => !running && setMaintenance(null),

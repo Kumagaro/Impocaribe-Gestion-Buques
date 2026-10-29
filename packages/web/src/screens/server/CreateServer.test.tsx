@@ -43,6 +43,7 @@ function fakeSetup(
   let listener: (m: SetupMessage) => void = () => undefined;
   const runs: { operation: SetupOperation; request: SetupRequest }[] = [];
   const setup: ServerSetup = {
+    bundleVersion: '1.0.0',
     facts: async () => FACTS,
     checkCode: async (code) => code === 'K7QM-3XTP-R2HW',
     state: async () => state,

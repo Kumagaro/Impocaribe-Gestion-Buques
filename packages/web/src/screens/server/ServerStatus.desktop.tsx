@@ -216,9 +216,16 @@ function MaintenanceActions({ m }: { m: ServerStatusModel }) {
       </div>
       {m.canMaintain ? (
         <div className="srv-actions">
-          {(['reparar', 'reiniciar', 'restablecer'] as Maintenance[]).map((w) => (
-            <Button key={w} variant="secondary" onClick={() => m.open(w)}>
-              {MAINTENANCE_TITLE[w]}
+          {(['reparar', 'reiniciar', 'actualizar', 'restablecer'] as Maintenance[]).map((w) => (
+            <Button
+              key={w}
+              variant="secondary"
+              onClick={() => m.open(w)}
+              {...(w === 'actualizar' && !m.updateTo
+                ? { disabledReason: 'Para actualizar, instale en esta PC el instalador completo de la versión nueva.' }
+                : {})}
+            >
+              {w === 'actualizar' && m.updateTo ? `Actualizar el servidor a la ${m.updateTo}` : MAINTENANCE_TITLE[w]}
             </Button>
           ))}
           <span className="srv-actions__note">
@@ -257,7 +264,9 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
           <p>
             {which === 'reparar'
               ? 'Rehace los servicios, el firewall y la energía sin tocar los datos ni la identidad del servidor.'
-              : 'Detiene el servidor y lo vuelve a arrancar. Los dispositivos se reconectan solos.'}
+              : which === 'actualizar'
+                ? `Pasa el servidor de la ${m.status?.version ?? ''} a la ${m.updateTo ?? ''}: guarda antes una copia de la versión actual y de sus datos, y publica la app ligera y el APK nuevos. Si algo falla, vuelve sola a la versión actual con sus datos. Los dispositivos esperan unos minutos sin servidor.`
+                : 'Detiene el servidor y lo vuelve a arrancar. Los dispositivos se reconectan solos.'}
           </p>
           <ErrorSummary errors={m.codeSummary} />
           <Field
@@ -319,14 +328,20 @@ function MaintenanceDialog({ m }: { m: ServerStatusModel }) {
                 ? 'Contraseña restablecida: deberá cambiarla al entrar. Se cerraron sus sesiones y las Apoderadas recibieron el aviso.'
                 : which === 'reparar'
                   ? 'El servidor quedó reparado y en marcha.'
-                  : 'El servidor volvió a arrancar.'}
+                  : which === 'actualizar'
+                    ? 'El servidor quedó actualizado y en marcha. Las apps de los dispositivos se avisan de la versión nueva.'
+                    : 'El servidor volvió a arrancar.'}
             </Notice>
           )}
           {m.outcome && !m.outcome.ok && (
             <Notice tone="bad">
               {m.outcome.step === 'permisos'
                 ? 'El código de instalación no es correcto. Revíselo en la hoja impresa.'
-                : m.outcome.error}
+                : which === 'actualizar' && m.outcome.rolledBack
+                  ? 'La actualización no se completó. El servidor volvió a la versión anterior con sus datos intactos: no se perdió nada y los dispositivos siguen conectados.'
+                  : which === 'actualizar' && m.outcome.step !== 'comprobacion'
+                    ? `La actualización no se completó y no se pudo volver atrás sola: ${m.outcome.error} Use «Reparar el servidor» o pida ayuda a quien instaló el sistema.`
+                    : m.outcome.error}
             </Notice>
           )}
           <TechnicalLog progress={m.progress} />

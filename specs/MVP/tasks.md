@@ -1022,6 +1022,23 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS-06, RF-UPD-01
   - *Depende:* T128, T106, T113
   - *Pruebas:* con un fallo inyectado en la migración, el servidor vuelve a la versión anterior con sus datos intactos.
+  - *Estado (2026-10-28):* hecha; falta la prueba real en las máquinas virtuales (T135), porque instalaría el servidor en esta PC.
+    - **Cómo:** se actualiza con el instalador completo nuevo. Su app ve que el servidor que trae (`manifest.json` de server-bundle) es más nuevo que el instalado, y P-29 ofrece «Actualizar el servidor a la X», con el código que guarda el servidor.
+    - **Ayudante, operación `actualizar`** (`updateSteps`, plan §10.5):
+      1. detiene el servidor y la base;
+      2. guarda en frío una copia del programa y de la base (`ProgramDataImpocaribeactualizacion`, solo para el sistema y los administradores, como la base misma);
+      3. pone el programa nuevo entero;
+      4. arranca la base y migra;
+      5. arranca y comprueba;
+      6. publica el ligero y el APK.
+
+      Si un paso falla, vuelve atrás sola: la base y el programa anteriores, y los arranca. Una actualización que quedó a medias (corte de luz) se deshace antes de empezar otra; no toca el diario de la creación. Se niega si el instalador no es más nuevo.
+    - **Publicación (RF-UPD-01):** el paquete (`pnpm paquete`) mete el ligero (con su firma) y el APK en `server-bundle/publicar` antes de construir el completo. La tarea `publish-bundled` los publica como en P-26, sin Apoderada: en la bitácora, hecho por el instalador, con AL-15 a las apps. Lo ya publicado, o más viejo, se salta. Si no se puede publicar, la actualización sigue hecha y se dice que se publiquen a mano.
+    - **P-29:** el botón, desactivado con el motivo si no hay un instalador más nuevo; el progreso por pasos; y el resultado. Si volvió atrás: «La actualización no se completó. El servidor volvió a la versión anterior con sus datos intactos…».
+    - **Pruebas:**
+      - 4 de los pasos en el PC simulado: la actualización completa; un fallo en la migración que deja la base a medias (vuelve a la versión anterior con sus datos y la arranca); el servidor nuevo que no responde; la publicación que falla;
+      - 2 de integración de la publicación contra PostgreSQL;
+      - 3 de componente de P-29.
 
 - [ ] **T130. Trasladar el servidor.** Respaldo `.icmove`, estado `migrated`, creación desde traslado con la misma identidad.
   - *Cubre:* RF-INS-07, D14
