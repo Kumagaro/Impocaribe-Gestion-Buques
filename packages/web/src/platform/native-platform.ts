@@ -144,6 +144,7 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
           },
         }
       : {}),
+    ...(bridge.info.platform === 'windows' ? { attention: () => invoke<void>('window.attention') } : {}),
     // T127 · P-28: el ayudante de instalación, solo si la app la puso el instalador completo.
     ...(bridge.info.serverInstaller
       ? {

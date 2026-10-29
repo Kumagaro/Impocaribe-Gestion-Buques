@@ -3,6 +3,7 @@
 // con o sin sesión, y sin emparejar.
 import { havanaDateTime, serverName } from '@impocaribe/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { localApi } from '../../api/endpoints/local';
 import { DISCOVERY_TIMEOUTS, findServer, probeServer, type FoundServer } from '../../connection/discovery';
 import type { DiscoveryMethod, LanStatus } from '../../platform/platform';
 import { useAppSession } from '../../session/SessionProvider';
@@ -49,6 +50,8 @@ interface Result {
   found: FoundServer | null;
   lan: LanStatus | null;
   responseMs: number | null;
+  /** T128: en la PC servidor, su montaje de red y los dispositivos conectados ahora. */
+  local: { setup: 'router' | 'hotspot' | null; connected: number } | null;
 }
 
 export function useDiagnostics() {
@@ -71,9 +74,17 @@ export function useDiagnostics() {
       const again = await probeServer(discovery, found.address, found.port, DISCOVERY_TIMEOUTS.last);
       if (again) responseMs = Math.round(performance.now() - started);
     }
-    setResult({ found, lan, responseMs });
+    // T128 · P-30 en la PC servidor: el montaje y los conectados, de su propio estado (solo desde 127.0.0.1).
+    let local: Result['local'] = null;
+    if (pairing?.isServerPc && found)
+      local = await session
+        .api()
+        .request(localApi.status)
+        .then((s) => ({ setup: s.network.setup, connected: s.devices.filter((d) => d.connected).length }))
+        .catch(() => null);
+    setResult({ found, lan, responseMs, local });
     setRunning(false);
-  }, [discovery, pairing]);
+  }, [discovery, pairing, session]);
 
   useEffect(() => {
     void run();
@@ -126,6 +137,15 @@ export function useDiagnostics() {
       value: identity ? `${identity} · ${!pairing ? 'Sin emparejar' : found ? 'Verificada' : 'Sin verificar'}` : '—',
     },
     { label: 'Última sincronización', value: lastSync ?? '—' },
+    ...(result?.local
+      ? [
+          {
+            label: 'Montaje de red',
+            value: result.local.setup === 'hotspot' ? 'Hotspot de un celular' : 'Router wifi',
+          },
+          { label: 'Dispositivos conectados', value: String(result.local.connected) },
+        ]
+      : []),
   ];
 
   return {

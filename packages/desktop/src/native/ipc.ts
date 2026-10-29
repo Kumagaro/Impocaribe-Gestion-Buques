@@ -31,6 +31,8 @@ export interface NativeServices {
   secureScreen(enabled: boolean): void;
   /** T117: descarga, comprueba e instala la versión (la app se cierra para instalarla). */
   installUpdate(update: NativeUpdate): Promise<void>;
+  /** T128 · AL-22: trae la ventana al frente (también desde la bandeja) y la hace parpadear en la barra de tareas. */
+  attention(): void;
   /** T127: el ayudante de instalación (P-28); null si la app no la puso el instalador completo. */
   setup: {
     facts(): Promise<PcFacts>;
@@ -57,7 +59,7 @@ const server = (v: unknown): NativeServer | undefined => {
 };
 const params = (v: unknown): SqlValue[] => (Array.isArray(v) ? (v as SqlValue[]) : []);
 
-const OPERATIONS: readonly SetupOperation[] = ['crear', 'reparar', 'deshacer', 'restablecer'];
+const OPERATIONS: readonly SetupOperation[] = ['crear', 'reparar', 'reiniciar', 'deshacer', 'restablecer'];
 /** Solo los campos conocidos, como texto; el ayudante vuelve a validarlos. */
 const setupRequest = (v: unknown): SetupRequest => {
   const r = (v ?? {}) as Record<string, unknown>;
@@ -121,6 +123,7 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
       return setup(s).run(operation as SetupOperation, setupRequest(request));
     },
     'setup.state': () => s.setup?.current() ?? { running: false, operation: null, messages: [] },
+    'window.attention': () => s.attention(),
   };
 }
 

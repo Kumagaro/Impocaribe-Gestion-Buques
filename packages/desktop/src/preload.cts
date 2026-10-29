@@ -37,6 +37,7 @@ const PRELOAD_CHANNELS: readonly NativeChannel[] = [
   'setup.code',
   'setup.run',
   'setup.state',
+  'window.attention',
 ];
 const allowed = new Set<string>(PRELOAD_CHANNELS);
 

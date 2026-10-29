@@ -3,7 +3,7 @@
 import type { ServerCheck } from './serverChecks.ts';
 
 /** Lo que hace el ayudante elevado (con el permiso de administrador de Windows). */
-export type SetupOperation = 'crear' | 'reparar' | 'deshacer' | 'restablecer';
+export type SetupOperation = 'crear' | 'reparar' | 'reiniciar' | 'deshacer' | 'restablecer';
 
 /** La primera línea de la app: con qué datos (el código nunca va en la línea de comandos). */
 export interface SetupRequest {

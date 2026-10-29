@@ -13,5 +13,6 @@ import './alerts';
 import './consultas';
 import './backups';
 import './updates';
+import './local';
 
 export { apiRegistry, type Endpoint } from '../client';

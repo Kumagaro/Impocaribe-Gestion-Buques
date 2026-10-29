@@ -90,6 +90,11 @@ describe('canales del puente nativo', () => {
     expect(() => h['setup.code'](123)).toThrow('Falta el código.');
     expect(setup.run).toHaveBeenCalledTimes(1);
 
+    const attention = vi.fn();
+    const withWindow = nativeHandlers(as({ ...services(), setup, attention } as never));
+    withWindow['window.attention']();
+    expect(attention).toHaveBeenCalledTimes(1);
+
     const light = nativeHandlers(as({ ...services(), setup: null } as never));
     expect(() => light['setup.facts']()).toThrow('no la puso el instalador completo');
     expect(light['setup.state']()).toEqual({ running: false, operation: null, messages: [] });

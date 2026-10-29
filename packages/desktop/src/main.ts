@@ -118,6 +118,11 @@ else {
         n.show();
       },
       secureScreen: (enabled) => window?.setContentProtection(enabled),
+      // AL-22: una solicitud de emparejamiento nueva trae la ventana al frente, aunque esté en la bandeja.
+      attention: () => {
+        show();
+        window?.flashFrame(true);
+      },
       setup,
       // T117 · RF-UPD-05: descarga del servidor emparejado, comprueba la huella y la firma del proyecto, y abre el
       // instalador (que pide la confirmación del usuario); la app se cierra para que pueda reemplazarla.

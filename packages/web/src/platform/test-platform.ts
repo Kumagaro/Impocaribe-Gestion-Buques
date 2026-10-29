@@ -18,6 +18,8 @@ export async function createTestPlatform(
     installUpdate?: Platform['installUpdate'];
     /** T127: el ayudante de instalación simulado (solo la PC con el instalador completo lo tiene). */
     serverSetup?: Platform['serverSetup'];
+    /** T128 · AL-22: traer la ventana al frente (solo la PC la tiene). */
+    attention?: Platform['attention'];
   } = {},
 ): Promise<TestPlatform> {
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -60,5 +62,6 @@ export async function createTestPlatform(
     installUpdate: options.installUpdate ?? record('installUpdate'),
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
+    ...(options.attention ? { attention: options.attention } : {}),
   };
 }

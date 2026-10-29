@@ -1,23 +1,14 @@
 // T127 · P-28 en escritorio (ui-spec P-28 y maqueta T124): asistente con los pasos a la izquierda. Solo existe en la PC
 // servidor (Const. art. XIV.1, excepción de P-28, P-29 y P-31).
-import type { ServerCheck, SetupProgress } from '@impocaribe/shared';
+import type { ServerCheck } from '@impocaribe/shared';
 import { ShieldCheck, Wifi } from 'lucide-react';
 import { Button, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { AppLogo } from '../../ui/logo';
 import { Notice, ProgressBar, Skeleton } from '../../ui/presentation';
 import { QrCode } from '../../ui/qr';
+import { minutes, StepList, TechnicalLog } from './SetupParts';
 import { CREATE_STEPS, type CreateServerModel } from './useCreateServer';
-
-/** «4 min 12 s» o «0:41»: el total en palabras, cada paso como reloj. */
-export const minutes = (ms: number) => {
-  const s = Math.max(0, Math.round(ms / 1000));
-  return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`;
-};
-const clock = (ms: number) => {
-  const s = Math.max(0, Math.round(ms / 1000));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-};
 
 const MARK = { ok: '✓', warn: '!', bad: '✕' } as const;
 
@@ -269,58 +260,6 @@ function Network({ m }: { m: CreateServerModel }) {
         </Button>
       </div>
     </>
-  );
-}
-
-function StepList({ progress, now }: { progress: SetupProgress; now: number }) {
-  return (
-    <ul className="srv-checks" aria-label="Pasos de la creación">
-      {progress.steps.map((s) => {
-        const level =
-          s.state === 'done' || s.state === 'undone'
-            ? 'ok'
-            : s.state === 'failed'
-              ? 'bad'
-              : s.state === 'running' || s.state === 'undoing'
-                ? 'now'
-                : 'next';
-        const label = {
-          pending: 'Pendiente',
-          running: 'En curso',
-          done: 'Hecho',
-          failed: 'Fallido',
-          undoing: 'Deshaciendo',
-          undone: 'Deshecho',
-        }[s.state];
-        const ms = s.startedAt !== undefined ? (s.endedAt ?? now) - s.startedAt : null;
-        return (
-          <li key={s.id} data-state={s.state}>
-            <span className="srv-mark" data-level={level} role="img" aria-label={label}>
-              {level === 'ok' ? '✓' : level === 'bad' ? '✕' : ''}
-            </span>
-            <div>
-              <b>{s.title}</b>
-              {s.state === 'undone' && <span className="srv-detail">Deshecho.</span>}
-            </div>
-            <small>{ms !== null ? clock(ms) : ''}</small>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function TechnicalLog({ progress }: { progress: SetupProgress }) {
-  if (progress.log.length === 0) return null;
-  const time = (at: number) => new Date(at).toLocaleTimeString('es-CU', { hour12: false });
-  return (
-    <details className="srv-log">
-      <summary>Detalle técnico</summary>
-      <pre>
-        {progress.log.map((l) => `${time(l.at)} ${l.id} · ${l.line}`).join('\n')}
-        {progress.outcome && !progress.outcome.ok ? `\n${progress.outcome.step}: ${progress.outcome.error}` : ''}
-      </pre>
-    </details>
   );
 }
 

@@ -1,6 +1,6 @@
 // T126 · DT-17 y plan §10.3: impocaribe-setup.exe, el ayudante de instalación. La app de escritorio lo lanza con permiso
 // de administrador de Windows:
-//   impocaribe-setup.exe crear|reparar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
+//   impocaribe-setup.exe crear|reparar|reiniciar|deshacer|restablecer [--tuberia \\.\pipe\<nombre>]
 // y por la tubería le manda {network, code} (crear), {code} (reparar) o {code, username, password} (restablecer). Va
 // dentro de server-bundle, que es de donde copia el programa. Al crear, el código se compara con la comprobación que
 // trae el instalador; al reparar, con la que guarda el servidor (RF-INS-02).
@@ -15,7 +15,7 @@ import { verifySecret } from '../auth/password.ts';
 import { runSteps, undoSteps, type Outcome, type Step } from './engine.ts';
 import { gatherFacts } from './facts.ts';
 import { fileJournal, journalPath } from './journal.ts';
-import { appDatabaseUrl, layout, paths } from './layout.ts';
+import { appDatabaseUrl, layout, paths, SERVICES } from './layout.ts';
 import { progressTo, type Progress } from './progress.ts';
 import { createSteps } from './steps.ts';
 import { windowsSys } from './windows-sys.ts';
@@ -63,16 +63,36 @@ async function main(progress: Progress): Promise<Outcome> {
     return runSteps('create', steps, journal, report);
   }
 
+  // RF-INS-02: el mantenimiento, con el código que guarda el servidor (una Apoderada puede haberlo cambiado).
+  if ((operation === 'reparar' || operation === 'reiniciar') && !(await serverCodeOk(code.success ? code.data : '')))
+    return fail('permisos', 'INSTALL_CODE_INVALID: el código de instalación no es correcto.');
+
+  if (operation === 'reiniciar') {
+    // T128 · P-29: detener y volver a arrancar con la comprobación de «arranque». Sin diario: no hay nada que deshacer,
+    // y el de la creación se conserva (con él se deshace).
+    const start = createSteps(windowsSys, l, { bundle, network: 'router', codeHash: '' }).find(
+      (s) => s.id === 'arranque',
+    )!;
+    const steps: Step[] = [
+      {
+        id: 'detener',
+        title: 'Detener el servidor',
+        async run() {
+          await windowsSys.run('powershell.exe', [
+            '-NoProfile',
+            '-Command',
+            `Stop-Service -Name ${SERVICES.server} -Force`,
+          ]);
+        },
+        async undo() {},
+      },
+      start,
+    ];
+    plan(progress, steps);
+    return runSteps('reiniciar', steps, { load: async () => null, save: async () => undefined }, report);
+  }
+
   if (operation === 'reparar') {
-    // RF-INS-02: con el código que guarda el servidor (una Apoderada puede haberlo cambiado).
-    const check = await windowsSys
-      .run(paths(l).node, [join(l.program, 'server', 'dist', 'setup', 'tasks.js'), 'check-code'], {
-        input: code.success ? code.data : '',
-        env: { NODE_ENV: 'production', DATABASE_URL: await databaseUrl() },
-      })
-      .catch(() => 'INSTALL_CODE_INVALID');
-    if (check.trim() !== 'ok')
-      return fail('permisos', 'INSTALL_CODE_INVALID: el código de instalación no es correcto.');
     // Solo estos pasos: la base, la identidad y el montaje no se tocan aunque falte el diario.
     const steps = createSteps(windowsSys, l, { bundle, network: 'router', codeHash: '' }).filter((s) =>
       REPAIR.includes(s.id),
@@ -96,7 +116,21 @@ async function main(progress: Progress): Promise<Outcome> {
     return result === null ? { ok: true } : fail('restablecer', result);
   }
 
-  return fail('inicio', `Operación desconocida: ${String(operation)}. Use crear, reparar, deshacer o restablecer.`);
+  return fail(
+    'inicio',
+    `Operación desconocida: ${String(operation)}. Use crear, reparar, reiniciar, deshacer o restablecer.`,
+  );
+}
+
+/** Si el código es el que guarda el servidor (tasks.js check-code, con la conexión de la instalación). */
+async function serverCodeOk(code: string): Promise<boolean> {
+  const check = await windowsSys
+    .run(paths(l).node, [join(l.program, 'server', 'dist', 'setup', 'tasks.js'), 'check-code'], {
+      input: code,
+      env: { NODE_ENV: 'production', DATABASE_URL: await databaseUrl() },
+    })
+    .catch(() => 'INSTALL_CODE_INVALID');
+  return check.trim() === 'ok';
 }
 
 /** La conexión de la app a la base, de los secretos que guardó la instalación. */

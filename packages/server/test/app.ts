@@ -16,6 +16,7 @@ import {
   MAINTENANCE_DB_URL,
   DATA_DIR,
   DB,
+  MEMORY_PROBE,
   MIN_APP_VERSION,
   POWER_ENABLED,
   POWER_PROVIDER,
@@ -41,6 +42,9 @@ export interface TestApp {
   fetch(url: string, init?: RequestInit): Promise<Response>;
   close(): Promise<void>;
 }
+
+/** T128: la memoria simulada de PostgreSQL y de Chromium (abierto) que ve P-29. */
+export const SIMULATED_MEMORY = { databaseBytes: 268 * 2 ** 20, pdfBytes: 180 * 2 ** 20 };
 
 /** T132: cuántas veces se pidió detener el servidor (RF-ENE-04). */
 export const stops = { count: 0 };
@@ -93,6 +97,11 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     .useValue(async () => {
       stops.count++;
     })
+    .overrideProvider(MEMORY_PROBE)
+    .useValue(async (pdfOpen: boolean) => ({
+      databaseBytes: SIMULATED_MEMORY.databaseBytes,
+      pdfBytes: pdfOpen ? SIMULATED_MEMORY.pdfBytes : null,
+    }))
     .compile();
   // rawBody como en producción (createApp): la firma del dispositivo y la idempotencia usan el cuerpo tal como llegó.
   const app = configureApp(

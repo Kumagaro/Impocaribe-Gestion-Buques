@@ -64,6 +64,8 @@ export async function renderScreen(
     installUpdate?: Platform['installUpdate'];
     /** T127: el ayudante de instalación de la PC servidor (P-28). */
     serverSetup?: Platform['serverSetup'];
+    /** T128 · AL-22: traer la ventana al frente. */
+    attention?: Platform['attention'];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -79,6 +81,7 @@ export async function renderScreen(
     ...(options.scanQr ? { scanQr: options.scanQr } : {}),
     ...(options.installUpdate ? { installUpdate: options.installUpdate } : {}),
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
+    ...(options.attention ? { attention: options.attention } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

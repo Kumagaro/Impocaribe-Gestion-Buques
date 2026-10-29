@@ -30,6 +30,7 @@ export const NATIVE_CHANNELS = [
   'setup.code',
   'setup.run',
   'setup.state',
+  'window.attention',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 

@@ -21,3 +21,5 @@ export const POWER_PROVIDER = Symbol('POWER_PROVIDER');
 export const POWER_ENABLED = Symbol('POWER_ENABLED');
 /** T132: cómo se detiene el servidor al 5 % (RF-ENE-04). */
 export const POWER_SHUTDOWN = Symbol('POWER_SHUTDOWN');
+/** T128: cómo se mide la memoria de PostgreSQL y de Chromium para P-29 (las pruebas ponen una simulada). */
+export const MEMORY_PROBE = Symbol('MEMORY_PROBE');

@@ -49,6 +49,38 @@ export const deviceDtoSchema = z.object({
 });
 export const devicesSchema = z.array(deviceDtoSchema);
 
+/** RNF-21 y plan §10.7: lo que puede ocupar el servidor en operación (PostgreSQL, Node y Chromium abierto). */
+export const SERVER_MEMORY_BUDGET_BYTES = 1.2 * 1024 ** 3;
+
+/**
+ * T128 · P-29 y plan §6.2 (`GET /local/status`, solo desde la propia PC servidor): servicio, versión, energía, montaje,
+ * dirección, dispositivos (con los conectados ahora) y consumo de memoria contra el presupuesto.
+ */
+export const serverStatusSchema = z.object({
+  serverId: z.uuid(),
+  version: z.string(),
+  startedAt: z.iso.datetime(),
+  power: z.object({ onBattery: z.boolean(), percent: z.number().nullable(), protected: z.boolean() }),
+  network: z.object({
+    setup: z.enum(['router', 'hotspot']).nullable(),
+    address: z.string().nullable(),
+    port: z.number().int(),
+  }),
+  devices: z.array(deviceDtoSchema.omit({ revokedAt: true }).extend({ connected: z.boolean() })),
+  memory: z.object({
+    budgetBytes: z.number(),
+    serviceBytes: z.number(),
+    /** null si no se pudo medir (fuera de Windows). */
+    databaseBytes: z.number().nullable(),
+    /** null con Chromium cerrado. */
+    pdfBytes: z.number().nullable(),
+  }),
+});
+export type ServerStatus = z.infer<typeof serverStatusSchema>;
+
+/** T128 · RF-INS-11 y F-16: las Apoderadas activas, para el restablecimiento de emergencia (`GET /local/apoderadas`). */
+export const localApoderadasSchema = z.array(z.object({ username: z.string(), fullName: z.string() }));
+
 /**
  * Contenido del QR que muestra la PC servidor (P-29, RF-RED-04): identidad, huella de la CA, token de un solo uso y la
  * dirección actual, para emparejarse sin buscar.

@@ -1,5 +1,7 @@
 // T105 · F-16: la contraseña de respaldo (al definirla o cambiarla) y la que se escribe para confirmarla o restaurar.
 import { z } from 'zod';
+import { confirmMatches, dropConfirm, passwordSchema } from './F02.ts';
+import { installationCodeSchema } from './F06.ts';
 import { confirmWordSchema } from './F15.ts';
 
 export const BACKUP_PASSWORD_MIN = 12;
@@ -71,3 +73,18 @@ export const confirmNumberingSchema = z.object({
     }),
   ),
 });
+
+/**
+ * T128 · F-16 y RF-INS-11: el restablecimiento de emergencia en la PC servidor. La Apoderada de la lista, la contraseña
+ * temporal (al menos 8 caracteres, con su confirmación) y el código de instalación (lo comprueba el servidor).
+ */
+export const EMERGENCY_RESET_WARNING = 'Se registrará en la bitácora y se avisará a todas las Apoderadas';
+export const emergencyResetSchema = z
+  .object({
+    username: z.string().min(1, 'Elija la Apoderada.'),
+    password: passwordSchema,
+    confirm: z.string(),
+    code: installationCodeSchema,
+  })
+  .superRefine(confirmMatches)
+  .transform(dropConfirm);

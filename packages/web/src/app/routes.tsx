@@ -24,6 +24,7 @@ import { SearchScreen } from '../screens/search/Search.screen';
 import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
 import { CreateServerScreen } from '../screens/server/CreateServer.screen';
+import { ServerStatusScreen } from '../screens/server/ServerStatus.screen';
 import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
@@ -142,6 +143,8 @@ export const appRoutes: RouteObject[] = [
               { path: '/bitacora', handle: { title: 'Bitácora' }, element: <AuditScreen /> },
               { path: '/respaldos', handle: { title: 'Respaldos y restauración' }, element: <BackupsScreen /> },
               { path: '/versiones', handle: { title: 'Versiones de la app' }, element: <ReleasesScreen /> },
+              // T128 · P-29: solo en la PC servidor (la sección lo exige, navigation.ts).
+              { path: '/servidor', handle: { title: 'Estado del servidor' }, element: <ServerStatusScreen /> },
               { path: '/buscar', handle: { title: 'Buscar' }, element: <SearchScreen /> },
               { path: '/ordenes', handle: { title: 'Órdenes' }, element: <OrderListScreen /> },
               { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },

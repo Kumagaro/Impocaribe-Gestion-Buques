@@ -993,6 +993,30 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
 - [ ] **T128. (PP, solo escritorio) Pantalla P-29 Estado del servidor:** estado, energía, montaje, QR, solicitudes de emparejamiento (AL-22, con la ventana al frente), dispositivos, consumo de memoria y acciones de mantenimiento, incluido el restablecimiento de emergencia. Añade también a P-30, en la PC servidor, los dispositivos conectados y el montaje de red (pendiente de T048).
   - *Cubre:* RF-INS-04, RF-RED-04, 05, RF-INS-11
   - *Depende:* T127, T035
+  - *Estado (2026-10-28):* hecha, salvo las referencias visuales y la E2E (pendientes, igual que en P-28; las pide `pnpm trace`).
+    - **Servidor:** `GET /local/status`, solo desde 127.0.0.1, con:
+      - versión, arranque y energía;
+      - montaje y dirección (la de un adaptador real, como en T126);
+      - dispositivos, con los conectados ahora;
+      - memoria contra el presupuesto de 1,2 GB (RNF-21, plan §10.7). Node mide su propio proceso; PostgreSQL y Chromium se miden con PowerShell, inyectable como la energía.
+
+      Además, `GET /local/apoderadas` para el restablecimiento de emergencia.
+    - **Ayudante:** operación `reiniciar`. Comprueba el código que guarda el servidor, detiene el servicio y lo arranca con la comprobación de «arranque». No toca el diario de la creación.
+    - **P-29** (`web/src/screens/server/`, maqueta T124):
+      - servicio, energía, red y memoria, y el aviso de 8 o más dispositivos con hotspot;
+      - las solicitudes de emparejamiento con Confirmar y Rechazar, y los dispositivos (Revocar solo con una Apoderada con sesión, nunca la propia PC);
+      - el QR, que se renueva antes de que caduque su token;
+      - mantenimiento por el ayudante: reparar, reiniciar y restablecer la contraseña de una Apoderada (F-16).
+
+      Sin sesión, en la PC servidor, se abre desde el login.
+    - **AL-22:** en la PC servidor, una solicitud nueva trae la ventana al frente (también desde la bandeja, canal `window.attention`) con el código y Confirmar o Rechazar, en cualquier pantalla.
+    - **P-30:** en la PC servidor añade el montaje de red y los dispositivos conectados.
+    - **Pruebas:**
+      - 4 de integración del estado (incluido el 403 desde otra IP) y 1 de la medida de memoria;
+      - 8 de componente de P-29 y AL-22;
+      - 1 de P-30, 1 del login y 2 del formulario F-16;
+      - la de los canales del escritorio.
+    - **Faltan, con su tarea:** actualizar (T129), preparar traslado (T130) y desinstalar (T131), que se añaden a «Mantenimiento» cuando existan.
 
 - [ ] **T129. Actualizar el servidor.** Respaldo previo, copia de la versión anterior, migración, comprobación, vuelta atrás si falla y publicación del instalador ligero y del APK.
   - *Cubre:* RF-INS-06, RF-UPD-01

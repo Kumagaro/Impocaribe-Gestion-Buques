@@ -37,6 +37,11 @@ export function LoginForm({ model }: { model: LoginModel }) {
       <Link className="auth-link" to="/recuperar">
         ¿Olvidó la contraseña?
       </Link>
+      {model.isServerPc && (
+        <Link className="auth-link" to="/servidor">
+          Estado del servidor y emparejamientos
+        </Link>
+      )}
       <p className="auth-caption">Conectado a {model.serverName}</p>
     </form>
   );

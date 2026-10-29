@@ -148,6 +148,8 @@ export interface Platform {
     start(labels: Record<string, string>, token?: string): Promise<boolean>;
     stop(): Promise<void>;
   };
+  /** T128 · AL-22: trae la ventana al frente con aviso (solo en la PC; en el navegador de pruebas no existe). */
+  attention?(): Promise<void>;
   /** T127: solo en la PC con el instalador completo (el que trae el servidor). */
   serverSetup?: ServerSetup;
 }

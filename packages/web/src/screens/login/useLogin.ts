@@ -76,6 +76,8 @@ export function useLogin() {
   return {
     phase,
     serverName: pairing.serverName,
+    /** T128 · P-29: en la PC servidor, su estado y los emparejamientos también sin sesión. */
+    isServerPc: pairing.isServerPc,
     username,
     password: { ...password, state: passwordState },
     keepSignedIn: form.form.watch('keepSignedIn') as boolean,

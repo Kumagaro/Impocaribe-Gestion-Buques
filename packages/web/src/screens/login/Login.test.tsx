@@ -188,6 +188,16 @@ describe('P-02: sistema sin configurar', () => {
     );
     await waitFor(() => expect(t.router.state.location.pathname).toBe('/setup'));
   });
+
+  // T128 · P-29: ante la PC servidor, su estado y los emparejamientos también sin sesión.
+  it('en la PC servidor enlaza su estado; en otro dispositivo no', async () => {
+    const t = await open({ pairing: { ...TEST_PAIRING, isServerPc: true }, otherRoutes: ['/servidor'] });
+    await userEvent.click(screen.getByRole('link', { name: 'Estado del servidor y emparejamientos' }));
+    expect(t.router.state.location.pathname).toBe('/servidor');
+    t.view.unmount();
+    await open();
+    expect(screen.queryByRole('link', { name: 'Estado del servidor y emparejamientos' })).toBeNull();
+  });
 });
 
 describe('MOV-07: acción en curso', () => {

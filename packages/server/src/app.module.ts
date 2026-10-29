@@ -42,6 +42,7 @@ import { Realtime } from './sync/realtime.ts';
 import { Power } from './power/power.ts';
 import { windowsPower } from './power/provider.ts';
 import { stopServer } from './power/shutdown.ts';
+import { windowsMemory } from './pairing/memory.ts';
 import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
 import {
   ALERT_CONDITIONS_ENABLED,
@@ -53,6 +54,7 @@ import {
   DB,
   DEVICE_GUARD_ENABLED,
   DEVICE_REGISTRY,
+  MEMORY_PROBE,
   MIN_APP_VERSION,
   POWER_ENABLED,
   POWER_PROVIDER,
@@ -111,6 +113,8 @@ import {
     { provide: POWER_ENABLED, useValue: true },
     { provide: POWER_SHUTDOWN, useValue: stopServer },
     Power,
+    // T128: la memoria de PostgreSQL y de Chromium para P-29 (RNF-21).
+    { provide: MEMORY_PROBE, useValue: windowsMemory },
     // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
     { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).

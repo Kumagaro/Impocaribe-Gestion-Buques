@@ -371,3 +371,263 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* T128 · P-29 Estado del servidor (maqueta T124, solo escritorio). */
+.srv-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.srv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.srv-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+  min-width: 0;
+}
+.srv-tile__label {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.srv-tile__value {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--t-lg);
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.srv-tile__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+}
+.srv-tile[data-tone='warn'] .srv-tile__dot {
+  background: var(--warn);
+}
+.srv-tile[data-tone='bad'] .srv-tile__dot {
+  background: var(--bad);
+}
+.srv-tile .num {
+  font-variant-numeric: tabular-nums;
+}
+.srv-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+.srv-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.srv-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  min-width: 0;
+}
+.srv-panel__head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.srv-panel__head h2 {
+  margin: 0;
+  font-size: var(--t-md);
+  color: var(--ink);
+}
+.srv-panel__count,
+.srv-panel__note,
+.srv-panel__empty {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.srv-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.srv-req {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.srv-req__code {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.srv-req__who {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.srv-req__who b {
+  color: var(--ink);
+}
+.srv-req__actions {
+  display: flex;
+  gap: 8px;
+}
+.srv-table-wrap {
+  overflow-x: auto;
+}
+.srv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+.srv-table th {
+  text-align: left;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-3);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.srv-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line-2);
+  color: var(--ink);
+}
+.srv-table .num {
+  font-variant-numeric: tabular-nums;
+}
+.srv-qr--sm {
+  align-self: stretch;
+}
+.srv-qr--sm svg {
+  width: 150px;
+  height: 150px;
+}
+.srv-qr figcaption {
+  text-align: center;
+  font-family: var(--font-ui);
+}
+.srv-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.srv-actions__note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.srv-actions__note svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.srv-mnt-form,
+.srv-mnt-run {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.srv-mnt-form p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.srv-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .srv-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .srv-req {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* AL-22: la solicitud de emparejamiento sobre cualquier pantalla de la PC servidor. */
+.srv-toast {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  width: min(420px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.srv-toast .srv-req {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.srv-toast .srv-req__actions {
+  justify-content: flex-end;
+}
+
+/* P-29 sin sesión. */
+.srv-standalone {
+  min-height: 100vh;
+  background: var(--ground);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.srv-standalone__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.srv-standalone__top .auth-link {
+  margin-left: auto;
+}
+@media (max-width: 760px) {
+  .srv-standalone {
+    padding: 16px;
+  }
+}

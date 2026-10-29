@@ -1,7 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { serverStatusSchema } from '@impocaribe/shared/validation';
+import { sampleOf } from '../../../test/fake-server';
 import { renderScreen, TEST_PAIRING } from '../../../test/screen';
+import { localApi } from '../../api/endpoints/local';
 import { createSimulatedNetwork } from '../../platform/test-discovery';
 import { DiagnosticsScreen } from './Diagnostics.screen';
 import { relativeTime } from './useDiagnostics';
@@ -134,5 +137,35 @@ describe('volver a probar', () => {
     await screen.findByRole('status', { name: 'Todo bien' });
     expect(detail('Identidad')).toBe('IMPOCARIBE-7F3C · Sin emparejar');
     expect(detail('Método')).toBe('Anuncio del servidor en la red');
+  });
+});
+
+// T128 · P-30 en la PC servidor: además, el montaje de red y los dispositivos conectados (ui-spec P-30).
+describe('P-30 en la PC servidor', () => {
+  it('añade el montaje de red y cuántos dispositivos están conectados; en otro dispositivo no', async () => {
+    const status = sampleOf(serverStatusSchema, {
+      serverId: TEST_PAIRING.serverId,
+      startedAt: '2026-10-14T12:00:00.000Z',
+      network: { setup: 'hotspot', address: '192.168.43.20', port: 8443 },
+    });
+    status.devices = [
+      { ...status.devices[0]!, id: 'a', connected: true },
+      { ...status.devices[0]!, id: 'b', connected: true },
+      { ...status.devices[0]!, id: 'c', connected: false },
+    ];
+    const t = await open(createSimulatedNetwork({ servers: [SERVER] }), {
+      pairing: { ...TEST_PAIRING, isServerPc: true },
+      before: (s) => s.respond(localApi.status, status),
+    });
+    await screen.findByRole('status', { name: 'Todo bien' });
+    await waitFor(() => expect(detail('Montaje de red')).toBe('Hotspot de un celular'));
+    expect(detail('Dispositivos conectados')).toBe('2');
+    t.view.unmount();
+
+    await open(createSimulatedNetwork({ servers: [SERVER] }));
+    await screen.findByRole('status', { name: 'Todo bien' });
+    expect(
+      within(screen.getByRole('list', { name: 'Detalle de la conexión' })).queryByText('Montaje de red'),
+    ).toBeNull();
   });
 });

@@ -121,7 +121,12 @@ export class Realtime implements OnApplicationBootstrap, OnApplicationShutdown {
    * cuenta una vez).
    */
   connectedDevices(): number {
-    return new Set([...this.clients].map((c) => c.deviceId)).size;
+    return this.connectedDeviceIds().size;
+  }
+
+  /** T128: los dispositivos conectados ahora (P-29). */
+  connectedDeviceIds(): Set<string> {
+    return new Set([...this.clients].map((c) => c.deviceId));
   }
 
   /** T134: cuando un dispositivo se conecta o se desconecta (AL-21 se reevalúa). */

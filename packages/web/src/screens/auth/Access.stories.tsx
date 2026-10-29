@@ -136,6 +136,7 @@ export const ArranqueCodigos: StoryObj = {
 const login = (extra: Partial<LoginModel> = {}): LoginModel => ({
   phase: 'ready',
   serverName: 'IMPOCARIBE-7F3A',
+  isServerPc: false,
   username: field('username', 'ilen.fernandez'),
   password: field('password', 'contraseña'),
   keepSignedIn: false,
