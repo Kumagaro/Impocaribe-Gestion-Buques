@@ -1133,6 +1133,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-INS, RNF-18
   - *Depende:* T131
   - *Terminado:* todas pasan en ambas versiones de Windows.
+  - *Decisión del responsable (2026-10-29):* no habrá máquinas virtuales: el equipo de desarrollo no tiene recursos para ellas. Las pruebas las hace el responsable a mano, en PC reales con Windows 10 y 11, con la guía `docs/pruebas-manuales.md`. Esa guía cubre también T136, T123, T133, T143 y la parte manual de T141. La actualización con un fallo inyectado queda cubierta por las pruebas automáticas (`steps.test.ts`), porque a mano no se puede provocar.
 
 - [ ] **T136. Pruebas de red reales.** Con router; con hotspot de un celular dedicado con Android 11 o superior (reiniciar el hotspot cambia la subred); PC de escritorio con adaptador wifi USB; 8 dispositivos (AL-21); multidifusión bloqueada; un equipo intruso que responde como servidor.
   - *Cubre:* RF-RED-01 a 07, RNF-17
