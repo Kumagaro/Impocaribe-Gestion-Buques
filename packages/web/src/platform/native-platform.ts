@@ -137,6 +137,11 @@ export function createNativePlatform(bridge: NativeBridge): Platform {
     ...(bridge.info.platform === 'android'
       ? {
           scanQr: () => invoke<string | null>('qr.scan'),
+          // R-01: la exclusión del ahorro de batería, que el servicio de alertas necesita.
+          batteryExclusion: {
+            excluded: () => invoke<boolean>('battery.status'),
+            request: () => invoke<void>('battery.exclude'),
+          },
           // T119: el servicio de alertas (con la app cerrada, RF-ALR-01).
           alertService: {
             start: (labels: Record<string, string>, token?: string) =>

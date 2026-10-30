@@ -26,16 +26,17 @@ export const versionSchema = z
 export const SIGNATURE = /^[A-Za-z0-9+/]{86}==$/;
 
 /** Al publicar: los campos que acompañan al archivo (multipart). */
-export const publishReleaseSchema = z.object({
-  platform: releasePlatformSchema,
-  version: versionSchema,
-  notes: z.string().trim().max(2000, { error: 'Las novedades no pueden pasar de 2000 caracteres.' }).default(''),
-  /**
-   * T117: la firma Ed25519 del instalador de Windows (el .sig que deja el build, en base64). La app no abre una
-   * actualización sin ella; para Android no hace falta (el sistema exige la misma firma del APK).
-   */
-  signature: z.string().trim().default(''),
-})
+export const publishReleaseSchema = z
+  .object({
+    platform: releasePlatformSchema,
+    version: versionSchema,
+    notes: z.string().trim().max(2000, { error: 'Las novedades no pueden pasar de 2000 caracteres.' }).default(''),
+    /**
+     * T117: la firma Ed25519 del instalador de Windows (el .sig que deja el build, en base64). La app no abre una
+     * actualización sin ella; para Android no hace falta (el sistema exige la misma firma del APK).
+     */
+    signature: z.string().trim().default(''),
+  })
   .superRefine((v, ctx) => {
     if (v.platform === 'windows' && !SIGNATURE.test(v.signature))
       ctx.addIssue({

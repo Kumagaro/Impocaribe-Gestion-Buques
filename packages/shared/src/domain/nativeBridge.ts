@@ -35,6 +35,8 @@ export const NATIVE_CHANNELS = [
   'setup.pickFile',
   'setup.pickFolder',
   'server.devices',
+  'battery.status',
+  'battery.exclude',
 ] as const;
 export type NativeChannel = (typeof NATIVE_CHANNELS)[number];
 

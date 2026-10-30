@@ -153,6 +153,9 @@ export function nativeHandlers(s: NativeServices): Record<NativeChannel, Handler
     'setup.pickFile': () => s.pickFile(),
     'setup.pickFolder': () => s.pickFolder(),
     'server.devices': (n) => s.serverPc(n === null ? null : num(n, 'los dispositivos conectados')),
+    // R-01: el ahorro de batería que duerme el servicio de alertas es de Android; en la PC no hay nada que excluir.
+    'battery.status': () => true,
+    'battery.exclude': () => undefined,
   };
 }
 

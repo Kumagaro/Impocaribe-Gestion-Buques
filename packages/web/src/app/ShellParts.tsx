@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { IconButton } from '../ui/controls';
 import { UpdateBand } from '../screens/updates/UpdateParts';
+import { BatteryBand } from './BatteryBand';
 import { OfflineBanner } from '../ui/presentation';
 import type { ThemePreference } from '../ui/tokens';
 
@@ -21,7 +22,7 @@ export interface ShellStatus {
   clockSkewMinutes?: number | null;
 }
 
-/** Banda de conexión y aviso de energía del servidor. */
+/** Banda de conexión, de actualización, de batería del teléfono (R-01) y aviso de energía del servidor. */
 export function ShellBands({ status }: { status: ShellStatus }) {
   const { power } = status;
   const powerText =
@@ -33,6 +34,7 @@ export function ShellBands({ status }: { status: ShellStatus }) {
     <>
       <OfflineBanner online={status.online} asOf={status.asOf} pendingDrafts={status.pendingDrafts} />
       <UpdateBand />
+      <BatteryBand />
       {status.clockSkewMinutes != null && (
         <div role="status" className="ui-band" data-tone="warn">
           La hora de este dispositivo difiere {status.clockSkewMinutes} min de la del servidor. Ajústela: las fechas y

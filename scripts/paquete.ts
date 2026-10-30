@@ -47,8 +47,9 @@ const ship = (from: string, to: string) => {
 const files = function* (dir: string): Generator<string> {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
+    // Los enlaces (pnpm deploy deja uniones de directorio) apuntan a lo que ya se recorre por su sitio real.
     if (e.isDirectory()) yield* files(p);
-    else yield p;
+    else if (e.isFile()) yield p;
   }
 };
 

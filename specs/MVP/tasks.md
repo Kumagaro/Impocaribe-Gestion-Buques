@@ -751,7 +751,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-UPD-02 a 05
   - *Depende:* T113, T097
   - *Estado (2026-10-24):* maqueta `docs/maquetas/T114-versiones.html` (claro y oscuro): P-26 por plataforma con la mínima, publicar con progreso, marcar la mínima con lo que pasará, la banda de AL-15 con «Actualizar ahora» y «Más tarde», la descarga con progreso, EST-07 en pantalla completa y P-27 nativa; aprobada por el responsable el 2026-10-24.
-  - *Estado (2026-10-24):* hecha; pendiente de aprobar la interfaz y sus referencias. `web/src/screens/updates/`: P-26 en `/versiones` (todos ven; la Apoderada publica y marca la mínima) con las versiones por plataforma, la mínima, sus novedades y quién las publicó; publicar en un diálogo (hoja en TEL) con el archivo en multipart (el cliente ya envía `FormData`, firmando el cuerpo vacío); marcar la mínima dice a cuántos dispositivos deja fuera (el servidor anota ahora la versión de la app de cada dispositivo en cada petición, `devicesBelow`). `AppUpdateProvider`: pregunta al iniciar sesión, cada hora y al aviso `app.update` del WebSocket; banda de AL-15 con «Actualizar ahora» (descarga del servidor emparejado con su progreso, por `platform.installUpdate`, que ahora recibe la huella) y «Más tarde» (la oculta un día; la alerta local AL-15 sigue en Alertas); por debajo de la mínima o tras un 426, EST-07 en pantalla completa, que solo deja ir a Borradores (con una banda roja allí). El navegador de pruebas no instala: el botón dice por qué. Diferencia con la maqueta: la subida muestra «Subiendo N MB…» sin porcentaje, porque el transporte (DT-19) no informa del avance de lo que envía. P-27 es nativa y llega con Android (T118). 8 pruebas de componente, 2 del cliente, 1 de integración ampliada y una E2E en la PC contra el servidor real. Referencias visuales de las 8 historias (Pantallas/Versiones) en las tres clases y los dos temas (48).
+  - *Estado (2026-10-24):* hecha; interfaz y referencias aprobadas por el responsable el 2026-10-29. `web/src/screens/updates/`: P-26 en `/versiones` (todos ven; la Apoderada publica y marca la mínima) con las versiones por plataforma, la mínima, sus novedades y quién las publicó; publicar en un diálogo (hoja en TEL) con el archivo en multipart (el cliente ya envía `FormData`, firmando el cuerpo vacío); marcar la mínima dice a cuántos dispositivos deja fuera (el servidor anota ahora la versión de la app de cada dispositivo en cada petición, `devicesBelow`). `AppUpdateProvider`: pregunta al iniciar sesión, cada hora y al aviso `app.update` del WebSocket; banda de AL-15 con «Actualizar ahora» (descarga del servidor emparejado con su progreso, por `platform.installUpdate`, que ahora recibe la huella) y «Más tarde» (la oculta un día; la alerta local AL-15 sigue en Alertas); por debajo de la mínima o tras un 426, EST-07 en pantalla completa, que solo deja ir a Borradores (con una banda roja allí). El navegador de pruebas no instala: el botón dice por qué. Diferencia con la maqueta: la subida muestra «Subiendo N MB…» sin porcentaje, porque el transporte (DT-19) no informa del avance de lo que envía. P-27 es nativa y llega con Android (T118). 8 pruebas de componente, 2 del cliente, 1 de integración ampliada y una E2E en la PC contra el servidor real. Referencias visuales de las 8 historias (Pantallas/Versiones) en las tres clases y los dos temas (48).
 
 - [ ] **T115. Electron: base**, con el transporte nativo (DT-19) y el descubrimiento (DNS-SD, difusión y subred).
   - *Cubre:* DT-02, DT-03, RF-CON-01
@@ -850,7 +850,7 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
     - **Límites:**
       - una alerta creada mientras el teléfono está apagado o sin conexión no se notifica después; se ve en el contador al abrir la app;
       - Android puede tardar varios minutos en avisar del encendido;
-      - R-01 dice que la app avise si no está excluida de la batería; hoy solo se pide una vez. Falta el aviso en la interfaz;
+      - R-01: desde el 2026-10-30, mientras la app no esté excluida del ahorro de batería, una banda en todas las pantallas lo dice con «Permitir» (abre el permiso de Android) y se vuelve a comprobar al regresar a la app (`BatteryBand`, canales `battery.status` y `battery.exclude`; 2 pruebas de componente). Se prueba en el teléfono con la guía manual;
       - en Android 7 no se probó aún (T122).
 
 - [ ] **T120. Android: sistema.**
@@ -1202,7 +1202,6 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Terminado:* firmado por el responsable.
   - *Decisión del responsable (2026-10-29):* pospuesta a una actualización de calidad posterior a la entrega, por el plazo. Antes de la entrega solo se cierran F10 y F11, la accesibilidad (T141) y el extremo a extremo completo (T138).
 
-
-
-
-
+- [ ] **T146. Barra de título propia en escritorio**, como Figma: sin la barra de Windows; la cabecera de la app arrastra la ventana y los botones de minimizar, maximizar y cerrar se dibujan encima (`titleBarStyle: 'hidden'` con `titleBarOverlay`) con los colores del tema claro u oscuro. Las pantallas sin cabecera (inicio de sesión, P-01, EST-07) llevan una franja para arrastrar. Se rehacen las referencias visuales de escritorio.
+  - *Depende:* T115
+  - *Decisión del responsable (2026-10-30):* para la actualización de calidad posterior a la entrega. Antes de la entrega solo se quitó el menú de Electron (File, Edit, View…).

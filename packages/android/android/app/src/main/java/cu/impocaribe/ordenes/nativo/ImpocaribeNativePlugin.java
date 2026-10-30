@@ -298,6 +298,17 @@ public class ImpocaribeNativePlugin extends Plugin {
                 // T119: en Android las notifica el servicio de alertas, también con la app abierta; si la interfaz
                 // también lo hiciera, cada alerta saldría dos veces.
                 return null;
+            case "battery.status": {
+                // R-01: sin la exclusión del ahorro de batería, Android puede dormir el servicio de alertas.
+                PowerManager power = getContext().getSystemService(PowerManager.class);
+                return power.isIgnoringBatteryOptimizations(getContext().getPackageName());
+            }
+            case "battery.exclude":
+                // R-01: el permiso de Android, cada vez que la persona lo pida desde el aviso de la app.
+                getActivity().startActivity(
+                    new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getContext().getPackageName()))
+                );
+                return null;
             case "file.save": {
                 Object data = arg(a, 1);
                 if (!(data instanceof byte[])) throw new IllegalArgumentException("Falta el contenido del archivo.");

@@ -68,6 +68,8 @@ export async function renderScreen(
     attention?: Platform['attention'];
     /** T133: el aviso al apagar la PC servidor. */
     reportServerPc?: Platform['reportServerPc'];
+    /** R-01: la exclusión del ahorro de batería (Android). */
+    batteryExclusion?: Platform['batteryExclusion'];
     /** Prepara las respuestas del servidor antes de montar la pantalla. */
     before?: (server: ReturnType<typeof createFakeServer>) => void;
   } = {},
@@ -85,6 +87,7 @@ export async function renderScreen(
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
     ...(options.attention ? { attention: options.attention } : {}),
     ...(options.reportServerPc ? { reportServerPc: options.reportServerPc } : {}),
+    ...(options.batteryExclusion ? { batteryExclusion: options.batteryExclusion } : {}),
   });
   const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
   await session.load();

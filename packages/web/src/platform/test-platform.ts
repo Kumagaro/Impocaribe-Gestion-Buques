@@ -22,6 +22,8 @@ export async function createTestPlatform(
     attention?: Platform['attention'];
     /** T133: el aviso al apagar la PC servidor. */
     reportServerPc?: Platform['reportServerPc'];
+    /** R-01: la exclusión del ahorro de batería (Android). */
+    batteryExclusion?: Platform['batteryExclusion'];
   } = {},
 ): Promise<TestPlatform> {
   const info: DeviceInfo = options.deviceInfo ?? { platform: 'windows', appVersion: '0.0.0', smallestWidthDp: 768 };
@@ -66,5 +68,6 @@ export async function createTestPlatform(
     ...(options.serverSetup ? { serverSetup: options.serverSetup } : {}),
     ...(options.attention ? { attention: options.attention } : {}),
     ...(options.reportServerPc ? { reportServerPc: options.reportServerPc } : {}),
+    ...(options.batteryExclusion ? { batteryExclusion: options.batteryExclusion } : {}),
   };
 }
