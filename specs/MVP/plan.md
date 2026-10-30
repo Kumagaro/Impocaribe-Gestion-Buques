@@ -1261,5 +1261,5 @@ En cada envío a una rama y antes de integrar en `main`:
 | Android | Linux con SDK | Compilación del APK de depuración |
 | Nocturno | Linux | Mutación completa, extremo a extremo y regresión visual |
 
-Mientras no exista un servicio de CI, `pnpm verify` se ejecuta obligatoriamente en un hook previo al envío.
+`pnpm verify` se ejecuta a mano antes de integrar; el hook previo al envío se quitó el 2026-10-30 por decisión del responsable (tardaba horas e impedía subir) y la CI repite la verificación.
 

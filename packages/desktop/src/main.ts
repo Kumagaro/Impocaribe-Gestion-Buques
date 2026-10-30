@@ -204,6 +204,8 @@ else {
       databases.closeAll();
     });
 
+    // Sin el menú de Electron (File, Edit, View…): la app es la interfaz, no un navegador.
+    Menu.setApplicationMenu(null);
     window = new BrowserWindow({
       width: 1280,
       height: 800,
