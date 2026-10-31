@@ -75,7 +75,7 @@ describe('P-26 Versiones de la app', () => {
         s.respond(updatesApi.minSupported, release(1, { isMinSupported: true }));
       },
     });
-    await userEvent.click(await screen.findByRole('button', { name: 'Marcar la 1.4.0 como mínima' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcar como mínima la 1.4.0' }));
     const dialog = within(
       await screen.findByRole('dialog', { name: 'Marcar la 1.4.0 de Windows (instalador ligero) como mínima' }),
     );

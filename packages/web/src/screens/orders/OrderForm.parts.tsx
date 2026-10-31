@@ -225,6 +225,9 @@ export function BalancePanel({ m }: { m: OrderFormModel }) {
   );
 }
 
+/** WCAG 2.1.1: el papel se desplaza en pantallas estrechas; con el teclado se llega a él para moverlo. */
+export const PAPER_SCROLL = { role: 'region', 'aria-label': 'Vista previa de la orden', tabIndex: 0 } as const;
+
 export interface OrderFormActions {
   /** P-13: «Guardar borrador» (lo comparte). */
   onShare?: () => void;
@@ -294,7 +297,7 @@ export function OrderFormView({
           {step === 3 && (
             <>
               <BalancePanel m={m} />
-              <div className="order-paper-wrap">
+              <div className="order-paper-wrap" {...PAPER_SCROLL}>
                 <DocumentPreview s={previewOf(m)} />
               </div>
             </>
@@ -343,7 +346,7 @@ export function OrderFormView({
             </Button>
           }
         >
-          <div className="order-paper-wrap">
+          <div className="order-paper-wrap" {...PAPER_SCROLL}>
             <DocumentPreview s={previewOf(m)} />
           </div>
         </Modal>

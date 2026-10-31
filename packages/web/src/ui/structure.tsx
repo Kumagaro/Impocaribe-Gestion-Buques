@@ -294,8 +294,6 @@ export interface NavProps {
   onNavigate: (id: string) => void;
 }
 
-const navName = (item: NavItem) => (item.badge ? `${item.label}, ${item.badge} abiertas` : undefined);
-
 function NavButton({
   item,
   current,
@@ -312,7 +310,6 @@ function NavButton({
       type="button"
       className="ui-nav__item"
       aria-current={item.id === current ? 'page' : undefined}
-      aria-label={navName(item)}
       // aria-keyshortcuts no admite secuencias como "G T": esas solo se muestran.
       aria-keyshortcuts={
         showShortcut && item.shortcut && !item.shortcut.includes(' ')
@@ -327,6 +324,8 @@ function NavButton({
         {item.badge ? <span className="ui-nav__badge">{item.badge}</span> : null}
       </span>
       <span className="ui-nav__label">{item.label}</span>
+      {/* WCAG 2.5.3: el nombre empieza por lo que se ve («Alertas»); el número va oculto a la vista, no en aria-label. */}
+      {item.badge ? <span className="ui-visually-hidden">{`, ${item.badge} abiertas`}</span> : null}
       {showShortcut && item.shortcut && <kbd>{item.shortcut}</kbd>}
     </button>
   );

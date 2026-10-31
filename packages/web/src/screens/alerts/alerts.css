@@ -88,6 +88,11 @@
   background: var(--warn-soft);
   transition: none;
 }
+/* RNF-16: sobre los fondos tintados, ink-3 no llega a 4,5 : 1 en tema claro. */
+.al-item[data-selected] :is(.al-item__meta, .al-item__side, .ui-button-reason),
+.al-item[data-changed] :is(.al-item__meta, .al-item__side, .ui-button-reason) {
+  color: var(--ink-2);
+}
 @media (prefers-reduced-motion: reduce) {
   .al-item {
     transition: none;
@@ -204,4 +209,13 @@
 }
 .al-detail dd {
   margin: 0;
+}
+/* RNF-16: en TEL y TAB, cada control que se toca mide al menos 48 dp. */
+:is([data-device-class='phone'], [data-device-class='tablet']) :is(.al-chip, .al-item__open) {
+  min-height: var(--touch);
+}
+:is([data-device-class='phone'], [data-device-class='tablet']) .al-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
 }

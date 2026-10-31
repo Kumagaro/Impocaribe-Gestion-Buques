@@ -93,8 +93,10 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
+/* Inactivo: borde discontinuo y fondo apagado (con opacidad, el texto no llegaba a 4,5 : 1). */
 .catalog-recipient[data-inactive] {
-  opacity: 0.7;
+  border-style: dashed;
+  background: var(--surface-2);
 }
 .catalog-recipient__head {
   display: flex;

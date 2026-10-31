@@ -962,6 +962,10 @@
   border: 1px solid var(--line);
   border-radius: 4px;
 }
+/* RNF-16: sobre el fondo tintado del elemento actual, ink-3 no llega a 4,5 : 1. */
+.ui-sidebar .ui-nav__item[aria-current='page'] kbd {
+  color: var(--ink-2);
+}
 .ui-sidebar__foot {
   margin-top: auto;
   padding: 10px 10px 0;
@@ -1097,4 +1101,8 @@
 .ui-notice[data-tone='info'] {
   background: var(--accent-soft);
   color: var(--accent-ink);
+}
+/* RNF-16: en TEL y TAB, «Ver más» del aviso largo también mide al menos 48 dp. */
+:is([data-device-class='phone'], [data-device-class='tablet']) .ui-legal button {
+  min-height: var(--touch);
 }

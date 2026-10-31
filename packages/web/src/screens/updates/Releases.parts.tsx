@@ -33,7 +33,7 @@ function MinButton({ m, r }: { m: ReleasesModel; r: ReleaseDto }) {
   return (
     <Button
       variant="ghost"
-      aria-label={`Marcar la ${r.version} como mínima`}
+      aria-label={`Marcar como mínima la ${r.version}`}
       onClick={() => m.askMin(r)}
       {...blocked(m.offlineReason)}
     >

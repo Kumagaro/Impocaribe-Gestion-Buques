@@ -47,7 +47,7 @@ export function AppShellDesktop({
             type="button"
             className="app-user"
             onClick={model.goProfile}
-            aria-label={`Perfil de ${model.user.name}`}
+            aria-label={`${model.user.name} · ${model.user.role}, abrir el perfil`}
           >
             {`${model.user.name} · ${model.user.role}`}
           </button>

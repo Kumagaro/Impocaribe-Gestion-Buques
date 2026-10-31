@@ -60,7 +60,7 @@ test('P-26: publicar el WebView, descargarlo y marcar la mínima de Windows', as
     .setInputFiles({ name: 'impocaribe-0.0.0.exe', mimeType: 'application/octet-stream', buffer: EXE });
   await dialog.getByRole('button', { name: 'Publicar' }).click();
   await expect(page.getByText('Se publicó la 0.0.0. Los dispositivos verán el aviso.')).toBeVisible();
-  await page.getByRole('button', { name: 'Marcar la 0.0.0 como mínima' }).click();
+  await page.getByRole('button', { name: 'Marcar como mínima la 0.0.0' }).click();
   const confirm = page.getByRole('dialog', { name: 'Marcar la 0.0.0 de Windows (instalador ligero) como mínima' });
   await expect(confirm.getByText('Ahora no hay ningún dispositivo con una versión anterior.')).toBeVisible();
   await confirm.getByRole('button', { name: 'Marcar como mínima' }).click();

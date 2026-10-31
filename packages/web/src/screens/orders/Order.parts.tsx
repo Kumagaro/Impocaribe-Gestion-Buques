@@ -6,6 +6,7 @@ import { ReasonDialog } from '../../ui/overlays';
 import { Badge, EmptyState, Notice, Skeleton } from '../../ui/presentation';
 import { blocked } from '../catalogs/CatalogLayout';
 import { DocumentPreview } from './DocumentPreview';
+import { PAPER_SCROLL } from './OrderForm.parts';
 import type { OrderModel } from './useOrder';
 
 const when = (iso: string) => {
@@ -75,7 +76,7 @@ export function OrderView({ model: m, device }: { model: OrderModel; device: Dev
     </div>
   );
   const doc = (
-    <div className="order-paper-wrap">
+    <div className="order-paper-wrap" {...PAPER_SCROLL}>
       <DocumentPreview s={o.current.snapshot} marks={voided ? ['ANULADA'] : []} />
     </div>
   );

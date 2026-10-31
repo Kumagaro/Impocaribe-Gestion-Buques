@@ -106,3 +106,11 @@
   display: flex;
   justify-content: center;
 }
+/* RNF-16: en TEL y TAB, cada control que se toca mide al menos 48 dp. */
+:is([data-device-class='phone'], [data-device-class='tablet']) .audit-toggle {
+  width: var(--touch);
+  height: var(--touch);
+}
+:is([data-device-class='phone'], [data-device-class='tablet']) .audit-card__head {
+  min-height: var(--touch);
+}

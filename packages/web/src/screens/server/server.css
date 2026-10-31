@@ -507,7 +507,9 @@
   display: flex;
   gap: 8px;
 }
+/* relative: el texto oculto de la cabecera (posición absoluta) queda dentro del desplazamiento de la tabla. */
 .srv-table-wrap {
+  position: relative;
   overflow-x: auto;
 }
 .srv-table {

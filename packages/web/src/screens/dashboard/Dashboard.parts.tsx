@@ -25,7 +25,13 @@ function VesselFilter({ m }: { m: DashboardModel }) {
 function Stats({ m, className }: { m: DashboardModel; className: string }) {
   const s = m.stats;
   return (
-    <div className={className} aria-label="Indicadores">
+    // WCAG 2.1.1: el carrusel se desplaza; con el teclado se llega a él para moverlo con las flechas.
+    <div
+      className={className}
+      role="region"
+      aria-label="Indicadores"
+      tabIndex={className === 'dash-carousel' ? 0 : undefined}
+    >
       <StatCard
         label="Contratado"
         value={<LiveNumber value={s.contractedTons} format={tons} />}
