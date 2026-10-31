@@ -74,6 +74,7 @@ const profile = (section: ProfileSection | null, extra: Partial<ProfileModel> = 
   setTheme: noop,
   reduceMotion: false,
   setReduceMotion: noop,
+  offlineReason: undefined,
   signOut: noop,
   ...extra,
 });

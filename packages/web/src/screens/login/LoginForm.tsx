@@ -1,7 +1,6 @@
 // T038 · P-03: el contenido de la pantalla, igual en las tres clases; cada presentación lo coloca en su marco.
-import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router';
-import { Button, Checkbox, IconButton, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, TextField } from '../../ui/controls';
 import { Field } from '../../ui/form';
 import { Notice, Skeleton } from '../../ui/presentation';
 import type { LoginModel } from './useLogin';
@@ -24,19 +23,7 @@ export function LoginForm({ model }: { model: LoginModel }) {
         <TextField autoComplete="username" disabled={model.locked} {...model.username.control} />
       </Field>
       <Field label="Contraseña" {...model.password.state}>
-        <div className="auth-password">
-          <TextField
-            type={model.showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            disabled={model.locked}
-            {...model.password.control}
-          />
-          <IconButton
-            label={model.showPassword ? 'Ocultar la contraseña' : 'Mostrar la contraseña'}
-            icon={model.showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-            onClick={model.toggleShowPassword}
-          />
-        </div>
+        <PasswordField autoComplete="current-password" disabled={model.locked} {...model.password.control} />
       </Field>
       <Checkbox
         label="Mantener sesión (30 días)"
@@ -50,6 +37,11 @@ export function LoginForm({ model }: { model: LoginModel }) {
       <Link className="auth-link" to="/recuperar">
         ¿Olvidó la contraseña?
       </Link>
+      {model.isServerPc && (
+        <Link className="auth-link" to="/servidor">
+          Estado del servidor y emparejamientos
+        </Link>
+      )}
       <p className="auth-caption">Conectado a {model.serverName}</p>
     </form>
   );

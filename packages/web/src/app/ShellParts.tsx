@@ -1,8 +1,11 @@
 // T025 · Elementos globales de ui-spec §1.2, compartidos por las tres presentaciones de AppShell.
+import { powerNotice } from '@impocaribe/shared';
 import { CircleUserRound, Monitor, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { AnimatedIcon } from '../motion/AnimatedIcon';
 import { IconButton } from '../ui/controls';
+import { UpdateBand } from '../screens/updates/UpdateParts';
+import { BatteryBand } from './BatteryBand';
 import { OfflineBanner } from '../ui/presentation';
 import type { ThemePreference } from '../ui/tokens';
 
@@ -12,20 +15,32 @@ export interface ShellStatus {
   asOf: string;
   pendingDrafts: number;
   syncing: boolean;
-  /** Energía de la PC servidor (AL-20): null si va con corriente. */
-  power: { battery: number; protected: boolean } | null;
+  /** Energía de la PC servidor (AL-20, T132): null si va con corriente. */
+  power: { percent: number | null; protected: boolean } | null;
   alerts: number;
+  /** RF-CON-10: minutos que la hora del dispositivo difiere de la del servidor, si son más de 5. */
+  clockSkewMinutes?: number | null;
 }
 
-/** Banda de conexión y aviso de energía del servidor. */
+/** Banda de conexión, de actualización, de batería del teléfono (R-01) y aviso de energía del servidor. */
 export function ShellBands({ status }: { status: ShellStatus }) {
   const { power } = status;
-  const powerText = power?.protected
-    ? 'Servidor en modo protegido por batería baja: solo consulta'
-    : power && `El servidor funciona con batería (${power.battery} %)`;
+  const powerText =
+    power &&
+    (power.protected
+      ? 'Servidor en modo protegido por batería baja: solo consulta'
+      : powerNotice({ onBattery: true, percent: power.percent }));
   return (
     <>
       <OfflineBanner online={status.online} asOf={status.asOf} pendingDrafts={status.pendingDrafts} />
+      <UpdateBand />
+      <BatteryBand />
+      {status.clockSkewMinutes != null && (
+        <div role="status" className="ui-band" data-tone="warn">
+          La hora de este dispositivo difiere {status.clockSkewMinutes} min de la del servidor. Ajústela: las fechas y
+          plazos siempre usan la hora del servidor.
+        </div>
+      )}
       {powerText && (
         <div role="status" aria-label={powerText} className="ui-band" data-tone={power?.protected ? 'bad' : 'warn'}>
           {powerText}

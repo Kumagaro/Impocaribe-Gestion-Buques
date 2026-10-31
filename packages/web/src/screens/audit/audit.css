@@ -1,0 +1,108 @@
+/* T104 · P-25 Bitácora, de la maqueta T099 (docs/maquetas/T099-tablero-consultas.html). */
+.audit-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.audit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+.audit-filters .ui-field {
+  min-width: 150px;
+  flex: 1;
+}
+.audit-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.audit-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.audit-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.audit-open td {
+  background: var(--surface-2);
+}
+.audit-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--t-sm);
+}
+.audit-diff p {
+  margin: 0;
+}
+.audit-diff table {
+  border-collapse: collapse;
+}
+.audit-diff th {
+  text-align: left;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: 2px 16px 2px 0;
+}
+.audit-diff td {
+  padding: 2px 16px 2px 0;
+  overflow-wrap: anywhere;
+}
+.audit-diff del {
+  color: var(--bad);
+}
+.audit-diff ins {
+  color: var(--ok);
+  text-decoration: none;
+}
+.audit-reject {
+  margin: 0;
+  color: var(--bad);
+  font-size: var(--t-sm);
+}
+.audit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.audit-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 620;
+  text-align: left;
+  cursor: pointer;
+}
+.audit-more {
+  display: flex;
+  justify-content: center;
+}

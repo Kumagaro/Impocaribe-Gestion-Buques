@@ -127,8 +127,17 @@ describe('POST /users: alta con sus códigos de recuperación (RF-REC-01)', () =
     expect((await login('yanet.ruiz', 'temporal-1')).status).toBe(200);
     const audit = await suite.admin.query("SELECT user_id, entity_id, ok FROM audit_log WHERE action = 'user.create'");
     expect(audit.rows).toEqual([{ user_id: ids.ana, entity_id: json.user.id, ok: true }]);
-    const changes = await suite.admin.query("SELECT entity_id, audience FROM change_log WHERE entity_type = 'user'");
-    expect(changes.rows).toEqual([{ entity_id: json.user.id, audience: 'apoderada' }]);
+    // Plan §4.4: el alta y el inicio de sesión replican el directorio para todos y la ficha para las Apoderadas.
+    const changes = await suite.admin.query(
+      'SELECT entity_type, audience FROM change_log WHERE entity_id = $1 ORDER BY seq',
+      [json.user.id],
+    );
+    expect(changes.rows).toEqual([
+      { entity_type: 'user_directory', audience: 'all' },
+      { entity_type: 'user_admin', audience: 'apoderada' },
+      { entity_type: 'user_directory', audience: 'all' },
+      { entity_type: 'user_admin', audience: 'apoderada' },
+    ]);
   });
 
   it('un carné repetido se rechaza en su campo', async () => {
@@ -161,7 +170,9 @@ describe('PATCH /users/:id', () => {
 
   it('la respuesta y el registro de cambios nunca llevan el hash ni los contadores de seguridad', async () => {
     const res = await edit('ana', ids.mario!, mario({ phone: '59876543' }));
-    const { rows } = await suite.admin.query("SELECT payload FROM change_log WHERE entity_type = 'user'");
+    const { rows } = await suite.admin.query(
+      "SELECT payload FROM change_log WHERE entity_type IN ('user_directory', 'user_admin')",
+    );
     const keys = [Object.keys((await res.json()) as object), ...rows.map((r) => Object.keys(r.payload as object))];
     expect(keys.flat().filter((k) => /password|failed|locked/i.test(k) && k !== 'mustChangePassword')).toEqual([]);
   });

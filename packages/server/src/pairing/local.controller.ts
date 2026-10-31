@@ -7,17 +7,32 @@ import {
   pendingPairingsSchema,
   qrResponseSchema,
   selfPairSchema,
+  localApoderadasSchema,
+  SERVER_MEMORY_BUDGET_BYTES,
+  serverStatusSchema,
 } from '@impocaribe/shared/validation';
-import { and, asc, eq, gt } from 'drizzle-orm';
+import { and, asc, eq, gt, isNull } from 'drizzle-orm';
+import { networkInterfaces } from 'node:os';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { z } from 'zod';
 import { auditedTransaction } from '../audit/audit-log.ts';
-import { pairingQrTokens, pairingRequests } from '../db/schema/devices.ts';
+import { systemSettings } from '../db/schema/company.ts';
+import { devices, pairingQrTokens, pairingRequests } from '../db/schema/devices.ts';
+import { users } from '../db/schema/users.ts';
 import type { ServerInfo } from '../discovery/discovery.controller.ts';
 import { Contract } from '../http/contract.ts';
 import { localOnlyGuard } from '../http/local-only.guard.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
-import { CLOCK, DB, SERVER_INFO } from '../tokens.ts';
+import { config } from '../config.ts';
+import { PdfService } from '../orders/pdf-engine.ts';
+import { Power } from '../power/power.ts';
+import { lanInterface } from '../setup/facts.ts';
+import { Realtime } from '../sync/realtime.ts';
+import { CLOCK, DB, MEMORY_PROBE, SERVER_INFO } from '../tokens.ts';
+import type { MemoryProbe, MemoryReading } from './memory.ts';
+
+/** Medir la memoria lanza un PowerShell: P-29 pide el estado cada 5 s, así que se comparte una medición por 30 s. */
+export const MEMORY_EVERY_MS = 30_000;
 import {
   hashQrToken,
   PAIRING_TTL_MS,
@@ -30,11 +45,79 @@ import {
 @Controller('local')
 @UseGuards(localOnlyGuard('Solo se puede hacer desde la propia PC servidor.'))
 export class LocalController {
+  /** Cuándo arrancó el servidor (P-29: «encendido hace…»). */
+  private readonly startedAt: Date;
+
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(SERVER_INFO) private readonly info: ServerInfo | null,
-  ) {}
+    @Inject(MEMORY_PROBE) private readonly memory: MemoryProbe,
+    private readonly realtime: Realtime,
+    private readonly power: Power,
+    private readonly pdf: PdfService,
+  ) {
+    this.startedAt = clock.now();
+  }
+
+  /**
+   * T128 · P-29 y plan §6.2: servicio, versión, energía, montaje, dirección, dispositivos (con los conectados ahora) y
+   * memoria contra el presupuesto del plan §10.7 (RNF-21).
+   */
+  @Get('status')
+  @Contract({ output: serverStatusSchema, roles: 'public' })
+  async status(): Promise<z.infer<typeof serverStatusSchema>> {
+    const { serverId, version } = requireIdentity(this.info);
+    const [settings] = await this.db.select({ setup: systemSettings.networkSetup }).from(systemSettings);
+    const rows = await this.db.select().from(devices).where(isNull(devices.revokedAt)).orderBy(asc(devices.pairedAt));
+    const connected = this.realtime.connectedDeviceIds();
+    const measured = await this.measureMemory();
+    return {
+      serverId,
+      version,
+      startedAt: this.startedAt.toISOString(),
+      power: this.power.snapshot(),
+      network: {
+        setup: settings?.setup ?? null,
+        address: lanInterface(networkInterfaces())?.address ?? null,
+        port: config().port,
+      },
+      devices: rows.map((d) => ({
+        id: d.id,
+        name: d.name,
+        platform: d.platform,
+        pairedAt: d.pairedAt.toISOString(),
+        pairedMethod: d.pairedMethod,
+        lastSeenAt: d.lastSeenAt ? d.lastSeenAt.toISOString() : null,
+        connected: connected.has(d.id),
+      })),
+      memory: { budgetBytes: SERVER_MEMORY_BUDGET_BYTES, serviceBytes: process.memoryUsage().rss, ...measured },
+    };
+  }
+
+  private memoryCache: { at: number; pdfOpen: boolean; reading: Promise<MemoryReading> } | null = null;
+
+  /** Una sola medición a la vez y reutilizada; se repite si pasaron 30 s o se abrió o cerró el Chromium de los PDF. */
+  private measureMemory(): Promise<MemoryReading> {
+    const pdfOpen = this.pdf.open;
+    const now = this.clock.now().getTime();
+    const cached = this.memoryCache;
+    if (cached && cached.pdfOpen === pdfOpen && now - cached.at < MEMORY_EVERY_MS) return cached.reading;
+    const reading = this.memory(pdfOpen);
+    this.memoryCache = { at: now, pdfOpen, reading };
+    return reading;
+  }
+
+  /** T128 · RF-INS-11: las Apoderadas activas, para elegir a quién se restablece la contraseña (P-29). */
+  @Get('apoderadas')
+  @Contract({ output: localApoderadasSchema, roles: 'public' })
+  async apoderadas(): Promise<z.infer<typeof localApoderadasSchema>> {
+    return this.db
+      .select({ username: users.username, fullName: users.fullName })
+      .from(users)
+      .where(and(eq(users.role, 'apoderada'), eq(users.active, true)))
+      .orderBy(asc(users.fullName));
+  }
 
   /** Solicitudes pendientes y vigentes, con el código que la persona compara con el del dispositivo. */
   @Get('pairing')

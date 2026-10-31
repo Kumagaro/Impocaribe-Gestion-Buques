@@ -22,10 +22,9 @@ import { updateVersioned } from '../db/versioned.ts';
 import { auditedWrite } from '../http/audited-write.ts';
 import { Contract } from '../http/contract.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
-import { recordChanges } from '../sync/change-log.ts';
 import { CLOCK, DB } from '../tokens.ts';
 import { issueRecoveryCodes } from './recovery-codes.ts';
-import { createUser, uniqueViolation, userColumns, type UserDto } from './users.repo.ts';
+import { createUser, recordUserChange, uniqueViolation, userColumns, type UserDto } from './users.repo.ts';
 
 const A = ['apoderada'] as const;
 
@@ -179,9 +178,7 @@ export class UsersController {
   }
 
   private replicate(tx: Tx, user: UserDto) {
-    return recordChanges(tx, this.clock, [
-      { entityType: 'user', entityId: user.id, op: 'upsert', audience: 'apoderada', payload: user },
-    ]);
+    return recordUserChange(tx, this.clock, user);
   }
 
   private entry(req: AuthedRequest, action: string, entityId?: string) {

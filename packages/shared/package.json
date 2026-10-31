@@ -18,6 +18,9 @@
       "source": "./src/validation/index.ts",
       "types": "./dist/validation/index.d.ts",
       "default": "./dist/validation/index.js"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts"
     }
   },
   "scripts": {
@@ -29,10 +32,12 @@
   "devDependencies": {
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/vitest-runner": "10.0.0",
+    "@types/ws": "^8.18.2",
     "fast-check": "^4.10.2"
   },
   "dependencies": {
     "decimal.js": "10.6.0",
+    "ws": "8.22.0",
     "zod": "^4.6.7"
   }
 }

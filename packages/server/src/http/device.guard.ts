@@ -13,16 +13,20 @@ export interface DeviceRecord {
 export interface DeviceRegistry {
   find(deviceId: string): Promise<DeviceRecord | null>;
   /** Anota la última conexión del dispositivo (RF-RED-05). */
-  seen?(deviceId: string): Promise<void>;
+  seen?(deviceId: string, appVersion?: string): Promise<void>;
 }
 
 /** El dispositivo ya verificado de la petición, para la sesión, la bitácora y la idempotencia. */
 export type DeviceRequest = Request & { device?: { id: string } };
 
 // Públicas sin dispositivo: estado, descubrimiento y emparejamiento (DT-24). /local/* tampoco lo pide: solo atiende a
-// 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola.
-const EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local)(\/|$)/;
+// 127.0.0.1 (localOnlyGuard), y es por donde la app de la PC servidor se empareja sola. T113: tampoco la consulta y la
+// descarga de versiones, que P-27 usa antes de que la interfaz arranque.
+const EXEMPT = /^\/api\/v1\/((health|discovery|pairing|local)(\/|$)|updates\/(check|[^/]+\/[^/]+\/download)$)/;
 const WINDOW_MS = 5 * 60_000;
+// RF-CON-10: aquí se mide el desfase, así que es la única ruta que se acepta con la hora fuera de la ventana. La firma
+// y el rechazo de repeticiones se comprueban igual.
+const MEASURES_CLOCK = /^\/api\/v1\/sync\/state(\?|$)/;
 
 const notPaired = () =>
   new AppError(
@@ -61,7 +65,10 @@ export class DeviceGuard implements CanActivate {
     const expected = await signRequest({ method: req.method, path: req.originalUrl, time, body }, device.secret);
     if (signature !== expected) throw new AppError('DEVICE_NOT_PAIRED', 'La firma del dispositivo no es válida.');
     const now = this.clock.now();
-    if (isClockSkewed(new Date(parseInt(time, 10) - device.clockOffsetMs), now)) {
+    if (
+      !MEASURES_CLOCK.test(req.originalUrl) &&
+      isClockSkewed(new Date(parseInt(time, 10) - device.clockOffsetMs), now)
+    ) {
       throw new AppError(
         'DEVICE_NOT_PAIRED',
         'La hora del dispositivo difiere más de 5 minutos de la del servidor. Ajústela y vuelva a intentarlo.',
@@ -73,7 +80,7 @@ export class DeviceGuard implements CanActivate {
     }
     this.seen.set(signature, now.getTime() + 2 * WINDOW_MS);
     (req as DeviceRequest).device = { id: deviceId };
-    await this.registry.seen?.(deviceId);
+    await this.registry.seen?.(deviceId, req.header('x-app-version'));
     return true;
   }
 

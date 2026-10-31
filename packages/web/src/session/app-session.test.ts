@@ -1,8 +1,9 @@
-import { signRequest } from '@impocaribe/shared';
-import { describe, expect, it } from 'vitest';
+import { ALERTS, signRequest } from '@impocaribe/shared';
+import { describe, expect, it, vi } from 'vitest';
 import { FIXED_TIME, sampleOf } from '../../test/fake-server';
+import { createSyncServer } from '../../test/sync-server';
 import { getMe } from '../api/endpoints/auth';
-import { savePairing, type PairingRecord } from '../connection/pairing';
+import { PAIRING_KEY, savePairing, type PairingRecord } from '../connection/pairing';
 import { createTestPlatform } from '../platform/test-platform';
 import { AppSession, DEFAULT_PREFERENCES, PREFERENCES_KEY, SESSION_KEY } from './app-session';
 import { meResponseSchema, userDtoSchema } from '@impocaribe/shared/validation';
@@ -43,6 +44,7 @@ describe('AppSession.load', () => {
       pairing: null,
       session: null,
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 
@@ -61,6 +63,7 @@ describe('AppSession.load', () => {
       pairing: PAIRING,
       session: { token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER },
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 });
@@ -106,6 +109,27 @@ describe('AppSession.api', () => {
       .catch(() => undefined);
     expect([session.getState().status, await platform.secureStorage.get(SESSION_KEY)]).toEqual(['signedOut', null]);
   });
+
+  it('RF-RED-05: si el servidor dice que el dispositivo fue revocado, olvida la sesión y el emparejamiento', async () => {
+    const { platform, session } = await setup([
+      json(403, {
+        code: 'DEVICE_REVOKED',
+        message: 'Este dispositivo fue revocado. Para volver a usarlo, emparéjelo de nuevo.',
+      }),
+    ]);
+    await savePairing(platform.secureStorage, PAIRING);
+    await session.load();
+    await session.signedIn({ token: 'token-1', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
+    await session
+      .api()
+      .request(getMe)
+      .catch(() => undefined);
+    await vi.waitFor(() => expect(session.getState().status).toBe('unpaired'));
+    expect([await platform.secureStorage.get(SESSION_KEY), await platform.secureStorage.get(PAIRING_KEY)]).toEqual([
+      null,
+      null,
+    ]);
+  });
 });
 
 describe('cambios de estado', () => {
@@ -130,6 +154,7 @@ describe('cambios de estado', () => {
       pairing: PAIRING,
       session: null,
       preferences: DEFAULT_PREFERENCES,
+      upgradeRequired: null,
     });
   });
 });
@@ -149,5 +174,127 @@ describe('P-05 y RF-UI-06: preferencias de este dispositivo', () => {
     const again = new AppSession(platform, '1.0.0');
     await again.load();
     expect(again.getState().preferences).toEqual({ theme: 'dark', reduceMotion: true });
+  });
+});
+
+describe('T045 y T049: la sincronización de la sesión y su fin (RF-AUT-08, RF-RED-05)', () => {
+  async function signedIn() {
+    const server = createSyncServer();
+    server.write({
+      entityType: 'user_directory',
+      entityId: USER.id,
+      op: 'upsert',
+      audience: 'all',
+      payload: { id: USER.id, fullName: USER.fullName, role: USER.role, active: true },
+      refDate: null,
+    });
+    const platform = await createTestPlatform({ http: server.transport, ws: server.socket });
+    const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
+    await session.load();
+    await session.paired(PAIRING);
+    await session.signedIn({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
+    const engine = await session.startSync();
+    await vi.waitFor(() => expect(engine.status().stage).toBe('ready'));
+    const store = await session.localStore();
+    return { server, platform, session, engine, store };
+  }
+
+  it('el WebSocket va a la dirección del servidor emparejado, y una sola sincronización por sesión', async () => {
+    const { server, session, engine } = await signedIn();
+    expect(await session.startSync()).toBe(engine);
+    await vi.waitFor(() => expect(server.sockets.map((s) => s.url)).toEqual(['wss://192.168.1.10:8443/api/v1/ws']));
+  });
+
+  it('cerrar sesión detiene la sincronización y borra la copia local y la credencial', async () => {
+    const { server, platform, session, store } = await signedIn();
+    expect(await store.list('user_directory')).toHaveLength(1);
+    await session.signOut();
+    expect([await store.list('user_directory'), await store.meta()]).toEqual([
+      [],
+      { seq: null, epoch: null, schemaVersion: null, syncedAt: null, skewMs: null },
+    ]);
+    expect(await platform.secureStorage.get(SESSION_KEY)).toBeNull();
+    expect(server.sockets).toEqual([]);
+    expect(session.syncEngine()).toBeNull();
+  });
+
+  it('session.revoked: cierra la sesión y borra la copia, pero sigue emparejado', async () => {
+    const { server, session, store } = await signedIn();
+    server.sockets[0]!.receive({ type: 'session.revoked' });
+    await vi.waitFor(() => expect(session.getState().status).toBe('signedOut'));
+    expect(await store.list('user_directory')).toEqual([]);
+  });
+
+  it('device.revoked: además olvida el emparejamiento (hay que volver a emparejarlo)', async () => {
+    const { server, platform, session, store } = await signedIn();
+    server.sockets[0]!.receive({ type: 'device.revoked' });
+    await vi.waitFor(() => expect(session.getState().status).toBe('unpaired'));
+    expect(await platform.secureStorage.get(PAIRING_KEY)).toBeNull();
+    expect(await store.list('user_directory')).toEqual([]);
+  });
+});
+
+describe('T119 · RF-ALR-01 y DT-05: el servicio de alertas de Android', () => {
+  async function android(hasToken: boolean) {
+    const server = createSyncServer();
+    const tokenRequests: string[] = [];
+    const platform = await createTestPlatform({
+      ws: server.socket,
+      http: async (url, init) => {
+        if (!url.endsWith('/auth/device-token')) return server.transport(url, init);
+        tokenRequests.push(init.method ?? 'GET');
+        return json(201, { token: 'token-de-alertas', expiresAt: '2026-10-15T16:40:00.000Z' });
+      },
+    });
+    const started: [Record<string, string>, string | undefined][] = [];
+    let stopped = 0;
+    platform.alertService = {
+      start: async (labels, token) => {
+        started.push([labels, token]);
+        return hasToken || token !== undefined;
+      },
+      stop: async () => {
+        stopped++;
+      },
+    };
+    const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
+    await session.load();
+    await session.paired(PAIRING);
+    await session.signedIn({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
+    await session.startSync();
+    return { session, tokenRequests, started, stopped: () => stopped };
+  }
+
+  it('sin token en el servicio, pide uno y se lo pasa con los nombres de las alertas', async () => {
+    const { tokenRequests, started } = await android(false);
+    await vi.waitFor(() => expect(started).toHaveLength(2));
+    expect(tokenRequests).toEqual(['POST']);
+    expect(started[0]![1]).toBeUndefined();
+    expect(started[1]![1]).toBe('token-de-alertas');
+    expect(started[1]![0]['AL-15']).toBe(ALERTS['AL-15'].label);
+  });
+
+  it('con token, no pide otro; cerrar sesión detiene el servicio', async () => {
+    const { session, tokenRequests, started, stopped } = await android(true);
+    await vi.waitFor(() => expect(started).toHaveLength(1));
+    expect(tokenRequests).toEqual([]);
+    await session.signOut();
+    expect(stopped()).toBe(1);
+  });
+});
+
+describe('una sola copia y un solo motor por sesión', () => {
+  it('llamadas simultáneas reciben la misma copia local y el mismo motor', async () => {
+    const server = createSyncServer();
+    const platform = await createTestPlatform({ http: server.transport, ws: server.socket });
+    const session = new AppSession(platform, '1.0.0', () => new Date(FIXED_TIME));
+    await session.load();
+    await session.paired(PAIRING);
+    await session.signedIn({ token: 't', expiresAt: '2026-10-15T16:40:00.000Z', user: USER });
+    const [a, b] = await Promise.all([session.localStore(), session.localStore()]);
+    expect(a).toBe(b);
+    const [e1, e2] = await Promise.all([session.startSync(), session.startSync()]);
+    expect(e1).toBe(e2);
+    e1.stop();
   });
 });

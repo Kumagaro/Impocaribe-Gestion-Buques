@@ -20,9 +20,8 @@ import type { DeviceRequest } from '../http/device.guard.ts';
 import { Contract } from '../http/contract.ts';
 import { idempotencyRequest, withIdempotency, type WriteResult } from '../http/idempotency.ts';
 import { ZodValidationPipe } from '../http/zod-validation.pipe.ts';
-import { recordChanges } from '../sync/change-log.ts';
 import { CLOCK, DB } from '../tokens.ts';
-import { userColumns } from '../users/users.repo.ts';
+import { recordUserChange, userColumns } from '../users/users.repo.ts';
 import { activeLock, badCredentials, registerFailure } from './lockout.ts';
 import { hashSecret, verifySecret } from './password.ts';
 import type { AuthedRequest } from './session.guard.ts';
@@ -115,6 +114,8 @@ export class AuthController {
       after: { keepSignedIn: input.keepSignedIn, expiresAt: session.expiresAt.toISOString() },
     });
     const [dto] = await tx.select(userColumns).from(users).where(eq(users.id, user.id));
+    // P-21: el último acceso de la ficha cambia con cada inicio de sesión.
+    await recordUserChange(tx, this.clock, dto!);
     return { ok: true, value: { token: session.token, expiresAt: session.expiresAt.toISOString(), user: dto! } };
   }
 
@@ -256,9 +257,7 @@ export class AuthController {
         .where(eq(users.id, userId))
         .returning(userColumns);
       const closed = await revokeUserSessions(tx, this.clock, userId, { sessionId, deviceId });
-      await recordChanges(tx, this.clock, [
-        { entityType: 'user', entityId: userId, op: 'upsert', audience: 'apoderada', payload: dto },
-      ]);
+      await recordUserChange(tx, this.clock, dto!);
       await recordAudit(tx, this.clock, { ...entry, after: { closedSessions: closed.length } });
       return { status: 204, body: null };
     });

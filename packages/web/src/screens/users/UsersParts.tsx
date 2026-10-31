@@ -2,7 +2,7 @@
 // abren (panel al lado de la tabla en ESC; hoja en TEL; diálogo en TAB).
 import type { UserListItem } from '@impocaribe/shared/validation';
 import { Lock } from 'lucide-react';
-import { Button, Checkbox, Select, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, Select, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { maskPhone } from '../../ui/masks';
 import { Dialog } from '../../ui/overlays';
@@ -10,6 +10,9 @@ import { Badge, Notice } from '../../ui/presentation';
 import { LAST_APODERADA_REASON, lastAccessText, ROLE_OPTIONS, roleLabel, type UsersModel } from './useUsers';
 
 type FieldPair = UsersModel['newFields']['role'];
+
+/** Un botón desactivado con su motivo (sin conexión, RF-CON-06; o una regla, RF-USR-04). */
+export const blocked = (reason: string | undefined) => (reason ? { disabledReason: reason } : {});
 
 export function StatusBadge({ user }: { user: UserListItem }) {
   return user.active ? <Badge tone="ok">Activo</Badge> : <Badge tone="mute">Inactivo</Badge>;
@@ -67,16 +70,16 @@ export function NewUserForm({ model }: { model: UsersModel }) {
       <PersonFields fields={f} />
       <RoleField field={f.role} />
       <Field label="Contraseña" help="Mínimo 8 caracteres" {...f.password.state}>
-        <TextField type="password" autoComplete="new-password" {...f.password.control} />
+        <PasswordField autoComplete="new-password" {...f.password.control} />
       </Field>
       <Field label="Confirmar" {...f.confirm.state}>
-        <TextField type="password" autoComplete="new-password" {...f.confirm.control} />
+        <PasswordField autoComplete="new-password" {...f.confirm.control} />
       </Field>
       <div className="users-actions">
         <Button variant="ghost" onClick={model.close}>
           Cancelar
         </Button>
-        <Button type="submit" busy={model.creating} busyLabel="Creando…">
+        <Button type="submit" busy={model.creating} busyLabel="Creando…" {...blocked(model.offlineReason)}>
           Crear usuario
         </Button>
       </div>
@@ -94,10 +97,10 @@ export function EditUserForm({ model, user }: { model: UsersModel; user: UserLis
       <PersonFields fields={f} />
       <RoleField field={f.role} {...(last ? { disabledReason: LAST_APODERADA_REASON } : {})} />
       <div className="users-actions">
-        <Button type="submit" busy={model.saving} busyLabel="Guardando…">
+        <Button type="submit" busy={model.saving} busyLabel="Guardando…" {...blocked(model.offlineReason)}>
           Guardar
         </Button>
-        <Button variant="secondary" onClick={() => model.openReset(user)}>
+        <Button variant="secondary" onClick={() => model.openReset(user)} {...blocked(model.offlineReason)}>
           Restablecer contraseña
         </Button>
       </div>
@@ -106,7 +109,7 @@ export function EditUserForm({ model, user }: { model: UsersModel; user: UserLis
           <Button
             variant="danger"
             onClick={() => model.askDeactivate(user)}
-            {...(last ? { disabledReason: LAST_APODERADA_REASON } : {})}
+            {...blocked(model.offlineReason ?? (last ? LAST_APODERADA_REASON : undefined))}
           >
             Desactivar
           </Button>
@@ -116,6 +119,7 @@ export function EditUserForm({ model, user }: { model: UsersModel; user: UserLis
             onClick={() => model.activate(user)}
             busy={model.busy === `activar-${user.id}`}
             busyLabel="Activando…"
+            {...blocked(model.offlineReason)}
           >
             Activar
           </Button>
@@ -200,10 +204,10 @@ export function UsersDialogs({ model }: { model: UsersModel }) {
         <form className="users-form" onSubmit={model.submitReset} noValidate>
           {model.resetError && <Notice tone="bad">{model.resetError}</Notice>}
           <Field label="Contraseña temporal" help="Mínimo 8 caracteres" {...f.password.state}>
-            <TextField type="password" autoComplete="new-password" {...f.password.control} />
+            <PasswordField autoComplete="new-password" {...f.password.control} />
           </Field>
           <Field label="Confirmar" {...f.confirm.state}>
-            <TextField type="password" autoComplete="new-password" {...f.confirm.control} />
+            <PasswordField autoComplete="new-password" {...f.confirm.control} />
           </Field>
           <div className="users-actions">
             <Button variant="ghost" onClick={model.close}>

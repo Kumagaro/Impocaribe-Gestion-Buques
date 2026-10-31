@@ -4,11 +4,10 @@
 import { createSocket } from 'node:dgram';
 import { networkInterfaces } from 'node:os';
 import makeMdns from 'multicast-dns';
+import { BROADCAST_PORT, BROADCAST_PROBE, SERVICE_TYPE } from '@impocaribe/shared';
 
-export const SERVICE_TYPE = '_impocaribe._tcp.local';
-export const BROADCAST_PORT = 47800;
-/** La sonda que envían las apps por difusión; a cualquier otra cosa no se responde. */
-export const BROADCAST_PROBE = 'IMPOCARIBE-DISCOVER/1';
+// Las constantes las comparte con la búsqueda de las apps (T115).
+export { BROADCAST_PORT, BROADCAST_PROBE, SERVICE_TYPE } from '@impocaribe/shared';
 const TTL = 120;
 
 export interface DiscoveryInfo {

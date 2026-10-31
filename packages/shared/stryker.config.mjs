@@ -8,7 +8,7 @@ export default {
   plugins: [import.meta.resolve('@stryker-mutator/vitest-runner')],
   testRunner: 'vitest',
   vitest: { configFile: 'vitest.config.ts' },
-  mutate: ['src/domain/**/*.ts', '!src/domain/**/*.test.ts'],
+  mutate: ['src/domain/**/*.ts', 'src/validation/warnings.ts', '!src/**/*.test.ts'],
   thresholds: { high: 95, low: 90, break: 90 },
   // Sin archivos de dominio no hay nada que mutar: no es un fallo. Un archivo sin pruebas lo frena la cobertura.
   allowEmpty: true,

@@ -1,0 +1,207 @@
+/* T096 · P-17 Alertas, de la maqueta T095 (docs/maquetas/T095-alertas.html). */
+.al-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.al-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.al-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+.al-filters .ui-field {
+  min-width: 180px;
+  flex: 1;
+}
+.al-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-self: center;
+}
+.al-chip {
+  min-height: 36px;
+  padding: 4px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.al-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.al-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  min-width: 0;
+}
+.ui-panel .al-list {
+  border: 0;
+  border-radius: 0;
+}
+.al-group {
+  padding: 8px 14px;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  font-weight: 650;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.al-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-2);
+  align-items: start;
+  transition: background-color 1.5s ease-out;
+}
+.al-item:last-child {
+  border-bottom: 0;
+}
+.al-item[data-selected] {
+  background: var(--accent-soft);
+}
+/* MOV-02: la que acaba de llegar o cambiar se resalta 1,5 s. */
+.al-item[data-changed] {
+  background: var(--warn-soft);
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .al-item {
+    transition: none;
+  }
+}
+.al-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+.al-ico[data-tone='bad'] {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.al-ico[data-tone='warn'] {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.al-ico[data-tone='info'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.al-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.al-item__main b,
+.al-item__open {
+  font-weight: 620;
+  overflow-wrap: anywhere;
+}
+.al-item__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 620;
+  text-align: left;
+  cursor: pointer;
+}
+.al-item__main p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.al-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: var(--t-xs);
+}
+.al-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.al-link:hover {
+  text-decoration: underline;
+}
+.al-item__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+}
+.al-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 16px;
+  align-items: start;
+}
+.al-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.al-detail h3 {
+  margin: 0;
+  font-size: var(--t-lg);
+}
+.al-detail p {
+  margin: 0;
+}
+.al-detail dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: var(--t-sm);
+}
+.al-detail dt {
+  color: var(--ink-3);
+}
+.al-detail dd {
+  margin: 0;
+}

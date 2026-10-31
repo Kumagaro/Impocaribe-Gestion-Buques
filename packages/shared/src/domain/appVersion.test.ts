@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isBelowMinVersion } from './appVersion.ts';
+import { compareVersions, isBelowMinVersion, isVersion } from './appVersion.ts';
 
 // T011 · DT-11: "por debajo de la mínima responde 426 UPGRADE_REQUIRED". Versiones semver `mayor.menor.parche`.
 describe('isBelowMinVersion', () => {
@@ -25,4 +25,22 @@ describe('isBelowMinVersion', () => {
       expect(isBelowMinVersion(version, '0.0.0')).toBe(true);
     },
   );
+});
+
+// T113 · RF-UPD-02, 03: la versión más nueva de cada plataforma.
+describe('compareVersions', () => {
+  it.each([
+    ['1.2.0', '1.10.0', -1],
+    ['1.10.0', '1.2.0', 1],
+    ['2.0.0', '2.0.0', 0],
+    ['0.0.9', '0.1.0', -1],
+  ])('%s frente a %s → %i', (a, b, sign) => {
+    expect(Math.sign(compareVersions(a, b))).toBe(sign);
+  });
+
+  it('una versión mal formada no se ordena', () => {
+    expect(() => compareVersions('1.2', '1.2.0')).toThrow('Versión mal formada: 1.2');
+    expect(isVersion('1.2.0')).toBe(true);
+    expect(isVersion('1.2.0-beta')).toBe(false);
+  });
 });

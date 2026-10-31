@@ -2,12 +2,15 @@
 // ellas (lista en TEL; secciones a la izquierda en TAB y ESC).
 import { havanaDateTime } from '@impocaribe/shared';
 import { ChevronRight, Lock, LogOut, Monitor, Smartphone } from 'lucide-react';
-import { Button, Checkbox, Switch, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, Switch } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { Dialog } from '../../ui/overlays';
 import { Badge, EmptyState, ErrorState, Notice, Skeleton } from '../../ui/presentation';
 import type { ThemePreference } from '../../ui/tokens';
 import { PROFILE_SECTIONS, type ProfileModel, type ProfileSection } from './useProfile';
+
+/** Un botón desactivado con su motivo (sin conexión, RF-CON-06). */
+const blocked = (reason: string | undefined) => (reason ? { disabledReason: reason } : {});
 
 const THEMES: { id: ThemePreference; label: string }[] = [
   { id: 'system', label: 'Del sistema' },
@@ -125,6 +128,7 @@ function Sessions({ model }: { model: ProfileModel }) {
             onClick={model.closeOthers}
             busy={model.busy === 'cerrar-demas'}
             busyLabel="Cerrando…"
+            {...blocked(model.offlineReason)}
           >
             Cerrar las demás sesiones
           </Button>
@@ -150,6 +154,7 @@ function Sessions({ model }: { model: ProfileModel }) {
                 onClick={() => model.closeSession(s.id)}
                 busy={model.busy === `cerrar-${s.id}`}
                 busyLabel="Cerrando…"
+                {...blocked(model.offlineReason)}
               >
                 Cerrar
               </Button>
@@ -167,16 +172,16 @@ function ChangePassword({ model }: { model: ProfileModel }) {
       {model.passwordError && <Notice tone="bad">{model.passwordError}</Notice>}
       <ErrorSummary errors={model.passwordSummary} />
       <Field label="Contraseña actual" {...model.current.state}>
-        <TextField type="password" autoComplete="current-password" {...model.current.control} />
+        <PasswordField autoComplete="current-password" {...model.current.control} />
       </Field>
       <Field label="Nueva contraseña" help="Mínimo 8 caracteres" {...model.password.state}>
-        <TextField type="password" autoComplete="new-password" {...model.password.control} />
+        <PasswordField autoComplete="new-password" {...model.password.control} />
       </Field>
       <Field label="Confirmar" {...model.confirm.state}>
-        <TextField type="password" autoComplete="new-password" {...model.confirm.control} />
+        <PasswordField autoComplete="new-password" {...model.confirm.control} />
       </Field>
       <div className="profile-actions">
-        <Button type="submit" busy={model.changingPassword} busyLabel="Cambiando…">
+        <Button type="submit" busy={model.changingPassword} busyLabel="Cambiando…" {...blocked(model.offlineReason)}>
           Cambiar contraseña
         </Button>
       </div>
@@ -223,6 +228,7 @@ function RecoveryCodes({ model }: { model: ProfileModel }) {
           onClick={model.askRegenerate}
           busy={model.busy === 'codigos'}
           busyLabel="Generando…"
+          {...blocked(model.offlineReason)}
         >
           Generar códigos nuevos
         </Button>

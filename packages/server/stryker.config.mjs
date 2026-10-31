@@ -15,7 +15,24 @@ export default {
   plugins: [import.meta.resolve('@stryker-mutator/vitest-runner')],
   testRunner: 'vitest',
   vitest: { configFile: 'vitest.config.ts' },
-  mutate: ['src/sync/**/*.ts', 'src/http/idempotency.ts', '!src/**/*.test.ts'],
+  mutate: [
+    'src/sync/**/*.ts',
+    'src/http/idempotency.ts',
+    // T064 y T067: asignación y vencimiento.
+    'src/vessels/allocate.ts',
+    'src/vessels/expiry.ts',
+    // T079 a T082: emitir, corregir y anular.
+    'src/orders/order-context.ts',
+    'src/orders/orders.controller.ts',
+    // T092 a T094: el motor de alertas y las de condición.
+    'src/alerts/alerts.ts',
+    'src/alerts/conditions.ts',
+    // T105 a T110: respaldos, restauración y numeración.
+    'src/backups/**/*.ts',
+    // T113: versiones de las apps y versión mínima.
+    'src/updates/**/*.ts',
+    '!src/**/*.test.ts',
+  ],
   // Las pruebas de integración usan PostgreSQL real: menos procesos a la vez y más margen.
   concurrency: 2,
   timeoutMS: 30_000,

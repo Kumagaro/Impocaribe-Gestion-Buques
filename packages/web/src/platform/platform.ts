@@ -1,5 +1,13 @@
 // T019 · DT-03, plan §7.1 y Const. art. IX.3: lo único que la interfaz pide al sistema operativo. Cada cascarón
 // (Electron, Android) registra su implementación al arrancar; las pruebas usan test-platform.ts.
+import type {
+  MoveFileInfo,
+  PcFacts,
+  SetupMessage,
+  SetupOperation,
+  SetupOutcome,
+  SetupRequest,
+} from '@impocaribe/shared';
 
 export interface DeviceInfo {
   platform: 'windows' | 'android';
@@ -29,7 +37,16 @@ export interface SecureStorage {
 }
 
 /** Petición HTTP con la forma de fetch. En las apps verifica la identidad del servidor (DT-18, DT-19). */
-export type HttpTransport = (url: string, init: RequestInit) => Promise<Response>;
+export type HttpTransport = (url: string, init: RequestInit, server?: ExpectedServer) => Promise<Response>;
+
+/**
+ * T115 · DT-18: el servidor que debe responder: el emparejado, o el anunciado mientras se empareja. El transporte nativo
+ * solo entrega la petición si la cadena del certificado es la de esa identidad; el navegador de pruebas no lo comprueba.
+ */
+export interface ExpectedServer {
+  serverId: string;
+  caFingerprint: string;
+}
 
 /** Conexión WebSocket del transporte nativo (plan §6.4). */
 export interface PlatformSocket {
@@ -63,6 +80,55 @@ export interface PlatformDiscovery {
   probe(address: string, port: number, timeoutMs: number): Promise<ServerAnnouncement | null>;
   /** Las direcciones de la red local (/24) del dispositivo, para buscar una a una. */
   subnetAddresses(): Promise<string[]>;
+  /**
+   * RF-RED-06: el estado de la red del dispositivo, para explicar por qué no se encuentra el servidor. Lo implementan
+   * los cascarones (T115, T118); sin él, o con null (no se sabe), el diagnóstico no distingue un servidor apagado de una
+   * red que aísla equipos.
+   */
+  lan?(): Promise<LanStatus | null>;
+}
+
+/** Clave de sessionStorage con el estado de red que simula una prueba de extremo a extremo (browser-platform). */
+export const SIMULATED_LAN_KEY = 'impocaribe.e2e.lan';
+
+export interface LanStatus {
+  /** Nombre de la red wifi, si el sistema lo da. */
+  wifi: string | null;
+  /** El router (puerta de enlace) responde: hay red. */
+  gatewayReachable: boolean;
+  /** Se ven otros equipos de la red: si no, el router aísla a los clientes (AP isolation). */
+  peersVisible: boolean;
+}
+
+/** T114: el instalador publicado en el servidor (T113). */
+export interface UpdatePackage {
+  /** Dirección completa de la descarga en el servidor emparejado. */
+  url: string;
+  version: string;
+  sha256: string;
+  /** DT-18: se descarga del servidor emparejado, con la identidad verificada. */
+  server: ExpectedServer;
+}
+
+/**
+ * T127 · P-28 y DT-17: el ayudante de instalación de la PC servidor. Comprueba la PC y el código sin elevar; crear,
+ * reparar, deshacer y restablecer piden el permiso de administrador de Windows.
+ */
+export interface ServerSetup {
+  /** T129: la versión del servidor que trae el instalador completo de esta app (P-29 ofrece actualizar a ella). */
+  bundleVersion: string | null;
+  facts(): Promise<PcFacts>;
+  checkCode(code: string): Promise<boolean>;
+  /** El resultado al terminar; el progreso llega a `listen`. Sin el permiso de Windows, falla. */
+  run(operation: SetupOperation, request: SetupRequest): Promise<SetupOutcome>;
+  /** Lo que va haciendo (o hizo) el ayudante: P-28 lo retoma si la ventana se cerró o se recargó. */
+  state(): Promise<{ running: boolean; operation: SetupOperation | null; messages: SetupMessage[] }>;
+  listen(listener: (message: SetupMessage) => void): void;
+  /** T130: de qué servidor es un archivo de traslado y si la contraseña lo abre (sin elevar). */
+  readMove(file: string, password: string): Promise<MoveFileInfo>;
+  /** T130: elegir el archivo de traslado, o la carpeta donde guardarlo; null si se cancela. */
+  pickFile(): Promise<string | null>;
+  pickFolder(): Promise<string | null>;
 }
 
 export interface Platform {
@@ -70,7 +136,7 @@ export interface Platform {
   serverScheme?: 'http' | 'https';
   /** Todas las peticiones al servidor pasan por aquí, nunca por el fetch del WebView (DT-19). */
   http: HttpTransport;
-  ws(url: string): PlatformSocket;
+  ws(url: string, server?: ExpectedServer): PlatformSocket;
   discovery: PlatformDiscovery;
   deviceInfo(): DeviceInfo;
   /** Keystore en Android, safeStorage en Electron (plan §9). */
@@ -83,7 +149,33 @@ export interface Platform {
   secureScreen(enabled: boolean): Promise<void>;
   /** Lee un QR con la cámara (TEL y TAB, P-01); null si se cancela. Sin cámara, no existe. */
   scanQr?(): Promise<string | null>;
-  installUpdate(downloadUrl: string): Promise<void>;
+  /**
+   * RF-UPD-05: descarga la versión del servidor local (por el transporte nativo, DT-19), comprueba su huella y pide al
+   * sistema instalarla, con la confirmación del usuario. El navegador de pruebas no la tiene.
+   */
+  installUpdate?(update: UpdatePackage, onProgress?: (received: number, total: number) => void): Promise<void>;
+  /**
+   * RF-ALR-01 y DT-05: el servicio de Android que recibe las alertas con la app cerrada. `start` responde false
+   * si no tiene token: entonces se le pasa uno nuevo. Solo existe en Android (en la PC, la bandeja).
+   */
+  alertService?: {
+    start(labels: Record<string, string>, token?: string): Promise<boolean>;
+    stop(): Promise<void>;
+  };
+  /**
+   * T133 · P-31: en la PC servidor, cuántos dispositivos hay conectados (el aviso al apagar Windows); null si esta PC no
+   * es la servidor. Solo en la PC.
+   */
+  reportServerPc?(devices: number | null): Promise<void>;
+  /** T128 · AL-22: trae la ventana al frente con aviso (solo en la PC; en el navegador de pruebas no existe). */
+  attention?(): Promise<void>;
+  /**
+   * R-01: si Android puede dormir el servicio de alertas (la app no está excluida del ahorro de batería), y pedir la
+   * exclusión. Solo en Android.
+   */
+  batteryExclusion?: { excluded(): Promise<boolean>; request(): Promise<void> };
+  /** T127: solo en la PC con el instalador completo (el que trae el servidor). */
+  serverSetup?: ServerSetup;
 }
 
 let current: Platform | null = null;

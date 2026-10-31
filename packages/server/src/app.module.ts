@@ -4,12 +4,23 @@ import { systemClock, type Clock } from '@impocaribe/shared';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { config } from './config.ts';
 import { createAppPool } from './db/db.ts';
+import { AlertsController } from './alerts/alerts.controller.ts';
+import { ArchiveController } from './archive/archive.controller.ts';
+import { AuditController } from './audit/audit.controller.ts';
+import { BackupPasswordController } from './backups/backup-password.controller.ts';
+import { BackupsController } from './backups/backups.controller.ts';
+import { RestoresController } from './backups/restores.controller.ts';
+import { LostOrdersController } from './backups/lost-orders.controller.ts';
+import { BackupScheduler } from './backups/scheduler.ts';
+import { Maintenance } from './backups/maintenance.ts';
+import { AppVersions } from './updates/app-versions.ts';
+import { UpdatesController } from './updates/updates.controller.ts';
+import { AlertConditions } from './alerts/conditions.ts';
 import { AuthController } from './auth/auth.controller.ts';
 import { RecoveryController } from './auth/recovery.controller.ts';
 import { SessionGuard } from './auth/session.guard.ts';
 import { DiscoveryController } from './discovery/discovery.controller.ts';
 import { readServerInfo } from './discovery/server-info.ts';
-import { ServerEvents } from './events/server-events.ts';
 import { HealthController } from './health.controller.ts';
 import { DeviceGuard } from './http/device.guard.ts';
 import { DbDeviceRegistry } from './pairing/device-registry.ts';
@@ -18,7 +29,38 @@ import { LocalController } from './pairing/local.controller.ts';
 import { PairingController } from './pairing/pairing.controller.ts';
 import { SetupController } from './users/setup.controller.ts';
 import { UsersController } from './users/users.controller.ts';
-import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERVER_INFO } from './tokens.ts';
+import { CompanyController } from './company/company.controller.ts';
+import { SettingsController } from './company/settings.controller.ts';
+import { CATALOG_CONTROLLERS } from './catalogs/catalogs.controller.ts';
+import { AllocationsController, DeclarationsController } from './vessels/declarations.controller.ts';
+import { DeclarationExpiry } from './vessels/expiry.ts';
+import { VesselsController } from './vessels/vessels.controller.ts';
+import { DraftsController } from './orders/drafts.controller.ts';
+import { OrdersController } from './orders/orders.controller.ts';
+import { PdfService } from './orders/pdf-engine.ts';
+import { Realtime } from './sync/realtime.ts';
+import { Power } from './power/power.ts';
+import { windowsPower } from './power/provider.ts';
+import { stopServer } from './power/shutdown.ts';
+import { windowsMemory } from './pairing/memory.ts';
+import { ChangeLogPurge, SyncController } from './sync/sync.controller.ts';
+import {
+  ALERT_CONDITIONS_ENABLED,
+  BACKUPS_ENABLED,
+  MAINTENANCE_DB_URL,
+  PG_BIN,
+  CLOCK,
+  DATA_DIR,
+  DB,
+  DEVICE_GUARD_ENABLED,
+  DEVICE_REGISTRY,
+  MEMORY_PROBE,
+  MIN_APP_VERSION,
+  POWER_ENABLED,
+  POWER_PROVIDER,
+  POWER_SHUTDOWN,
+  SERVER_INFO,
+} from './tokens.ts';
 
 @Module({
   controllers: [
@@ -31,13 +73,50 @@ import { CLOCK, DB, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY, MIN_APP_VERSION, SERV
     AuthController,
     RecoveryController,
     UsersController,
+    SyncController,
+    CompanyController,
+    SettingsController,
+    ...CATALOG_CONTROLLERS,
+    VesselsController,
+    DeclarationsController,
+    AllocationsController,
+    OrdersController,
+    DraftsController,
+    AlertsController,
+    AuditController,
+    ArchiveController,
+    BackupPasswordController,
+    BackupsController,
+    RestoresController,
+    LostOrdersController,
+    UpdatesController,
   ],
   providers: [
     { provide: CLOCK, useValue: systemClock },
     { provide: SERVER_INFO, useFactory: () => readServerInfo(config().identityDir) },
     { provide: MIN_APP_VERSION, useFactory: () => config().minAppVersion },
+    { provide: DATA_DIR, useFactory: () => config().dataDir },
     { provide: DB, useFactory: () => drizzle(createAppPool(config().databaseUrl)) },
-    ServerEvents,
+    Realtime,
+    ChangeLogPurge,
+    DeclarationExpiry,
+    { provide: ALERT_CONDITIONS_ENABLED, useValue: true },
+    AlertConditions,
+    { provide: MAINTENANCE_DB_URL, useFactory: () => config().databaseUrl },
+    { provide: PG_BIN, useFactory: () => process.env.IMPOCARIBE_PG_BIN ?? '' },
+    { provide: BACKUPS_ENABLED, useValue: true },
+    BackupScheduler,
+    Maintenance,
+    AppVersions,
+    // T132: la energía de la PC servidor (RF-ENE).
+    { provide: POWER_PROVIDER, useValue: windowsPower },
+    { provide: POWER_ENABLED, useValue: true },
+    { provide: POWER_SHUTDOWN, useValue: stopServer },
+    Power,
+    // T128: la memoria de PostgreSQL y de Chromium para P-29 (RNF-21).
+    { provide: MEMORY_PROBE, useValue: windowsMemory },
+    // T078: una sola instancia de Chromium para todo el servidor, cerrada al apagarlo.
+    { provide: PdfService, useFactory: () => new PdfService() },
     // DT-24 y RF-RED-04: todo, salvo descubrir y emparejarse, exige un dispositivo emparejado (T035).
     { provide: DEVICE_GUARD_ENABLED, useValue: true },
     {

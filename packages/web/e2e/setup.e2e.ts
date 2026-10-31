@@ -26,6 +26,8 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   page,
   sql,
 }) => {
+  // Prepara 15 usuarios por la API, cada uno con 9 comprobaciones argon2id de 64 MB (contraseña y 8 códigos).
+  test.setTimeout(8 * 60_000);
   await openApp('/');
   await pairApp(page, 'desktop');
 
@@ -41,7 +43,8 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   await page.getByRole('button', { name: 'Crear Apoderada' }).click();
 
   const codes = page.getByRole('list', { name: 'Códigos de recuperación' }).getByRole('listitem');
-  await expect(codes).toHaveCount(8);
+  // Crear la Apoderada hace 9 argon2id de 64 MB (contraseña y 8 códigos): en un equipo modesto y ocupado pasa de 20 s.
+  await expect(codes).toHaveCount(8, { timeout: 90_000 });
   await expect(page.getByRole('button', { name: 'Terminar y entrar' })).toBeDisabled();
   await page.getByLabel('Los copié a mano').check();
   await page.getByRole('button', { name: 'Terminar y entrar' }).click();
@@ -61,11 +64,13 @@ test('P-02: en la PC servidor crea la primera Apoderada, muestra sus códigos y 
   expect(await sql("SELECT ok FROM audit_log WHERE action = 'setup.first_apoderada'")).toEqual([{ ok: true }]);
   expect(await sql('SELECT paired_method FROM devices WHERE revoked_at IS NULL')).toEqual([{ paired_method: 'local' }]);
 
-  // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen.
+  // Un usuario por propósito y clase, para que las pruebas que corren a la vez no se pisen. La de Android solo usa la
+  // Apoderada: en el equipo con el emulador, los 135 argon2id de 64 MB de esos usuarios tardan más que la prueba.
   const api = await signedInDevice(APODERADA.username, APODERADA.password);
   const users = { acceso: {}, perfil: {}, rol: {}, operador: {}, lectura: {} } as E2EState['users'];
   let n = 0;
-  for (const [purpose, role] of Object.entries(PURPOSES) as [keyof typeof PURPOSES, Role][]) {
+  const purposes = process.env.E2E_SOLO_APODERADA ? [] : Object.entries(PURPOSES);
+  for (const [purpose, role] of purposes as [keyof typeof PURPOSES, Role][]) {
     for (const device of DEVICES) {
       const password = `clave-${device}-1`;
       const username = `${purpose}.${device}`;

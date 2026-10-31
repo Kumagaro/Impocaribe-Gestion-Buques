@@ -48,6 +48,10 @@ const connection = (phase: ConnectionPhase, extra: Partial<ConnectionModel> = {}
   cancel: noop,
   scan: noop,
   goLogin: noop,
+  canCreateServer: false,
+  createServer: noop,
+  createServerFromMove: noop,
+  openDiagnostics: noop,
   ...extra,
 });
 const CONNECTION = { phone: ConnectionPhone, tablet: ConnectionTablet, desktop: ConnectionDesktop };
@@ -133,12 +137,11 @@ export const ArranqueCodigos: StoryObj = {
 const login = (extra: Partial<LoginModel> = {}): LoginModel => ({
   phase: 'ready',
   serverName: 'IMPOCARIBE-7F3A',
+  isServerPc: false,
   username: field('username', 'ilen.fernandez'),
   password: field('password', 'contraseña'),
   keepSignedIn: false,
   setKeepSignedIn: noop,
-  showPassword: false,
-  toggleShowPassword: noop,
   notice: null,
   locked: false,
   busy: false,

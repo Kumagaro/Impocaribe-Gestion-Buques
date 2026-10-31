@@ -150,6 +150,7 @@ export function DataTable<R extends { id: string }>({
   onRowClick,
   empty = 'Sin datos.',
   viewportHeight = 480,
+  changed,
 }: {
   caption: string;
   columns: Column<R>[];
@@ -158,6 +159,8 @@ export function DataTable<R extends { id: string }>({
   empty?: ReactNode;
   /** Alto visible de la tabla virtualizada, en px. */
   viewportHeight?: number;
+  /** MOV-02: filas que acaba de cambiar otro usuario; se resaltan 1,5 s. */
+  changed?: ReadonlySet<string>;
 }) {
   const reduced = useReducedMotionPreference();
   const touch = useTouch();
@@ -200,6 +203,7 @@ export function DataTable<R extends { id: string }>({
         data-virtual={virtual}
         aria-rowcount={rows.length + 1}
         data-touch={touch || undefined}
+        data-reduced={reduced || undefined}
       >
         <caption className="ui-visually-hidden">{caption}</caption>
         <thead>
@@ -229,6 +233,7 @@ export function DataTable<R extends { id: string }>({
               'aria-rowindex': start + i + 2,
               tabIndex: onRowClick ? 0 : undefined,
               className: onRowClick ? 'ui-table__row--action' : undefined,
+              'data-changed': changed?.has(row.id) || undefined,
               onClick: onRowClick ? () => onRowClick(row) : undefined,
               onKeyDown: onRowClick
                 ? (e: KeyboardEvent) => {

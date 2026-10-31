@@ -1,6 +1,8 @@
 // T038 · Aceptación de P-01, P-03 y P-04 (ui-spec) contra el servidor real, en las tres clases, con el efecto
 // comprobado en la base y en la bitácora. Cada clase usa su propio usuario (setup.e2e.ts); las pruebas van en orden
 // porque la recuperación y el bloqueo cambian su estado.
+// T138 · HU-05: entrar y ver el tablero; el bloqueo tras 5 fallos. La sesión de 24 horas la cubren las pruebas de
+// integración del servidor (con el reloj simulado).
 import { fillLogin, pairApp, readState } from './support/access';
 import { expect, test, type Sql } from './support/fixtures';
 
@@ -50,6 +52,8 @@ test('P-04: con un código válido cambia la contraseña y entra con la nueva', 
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
+  // El login también tiene un campo Usuario: se escribe cuando ya está la pantalla de recuperar.
+  await expect(page.getByRole('heading', { name: 'Recuperar la contraseña' })).toBeVisible();
   await page.getByLabel('Usuario').fill(user.username);
   await page.getByLabel('Carné').fill(user.nationalId);
   await page.getByLabel('Teléfono').fill(user.phone);
@@ -77,6 +81,8 @@ test('P-04: un código ya usado no sirve, y el error no dice qué dato falló', 
   await openApp('/');
   await pairApp(page, device);
   await page.getByRole('link', { name: '¿Olvidó la contraseña?' }).click();
+  // El login también tiene un campo Usuario: se escribe cuando ya está la pantalla de recuperar.
+  await expect(page.getByRole('heading', { name: 'Recuperar la contraseña' })).toBeVisible();
   await page.getByLabel('Usuario').fill(user.username);
   await page.getByLabel('Carné').fill(user.nationalId);
   await page.getByLabel('Teléfono').fill(user.phone);

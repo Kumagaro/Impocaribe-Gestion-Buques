@@ -39,7 +39,8 @@ export default defineConfig({
       name: `e2e-${device}`,
       use,
       metadata: { device },
-      testIgnore: /setup\.e2e\.ts$/,
+      // La de Android corre aparte, con su emulador (playwright.android.config.ts).
+      testIgnore: /(setup|android)\.e2e\.ts$/,
       dependencies: ['primer-arranque'],
     })),
   ],
@@ -48,7 +49,8 @@ export default defineConfig({
       name: 'servidor',
       // Base propia recreada y migrada; shared y el servidor compilados como en producción.
       command:
-        'pnpm --filter @impocaribe/server db:reset && pnpm --filter @impocaribe/shared build && ' +
+        // shared primero: db:reset lo usa (código de instalación de desarrollo, T052) desde su dist.
+        'pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/server db:reset && ' +
         'pnpm --filter @impocaribe/server build && node packages/server/dist/main.js',
       cwd: repoRoot,
       url: `http://127.0.0.1:${SERVER_PORT}/api/v1/health`,
@@ -59,7 +61,8 @@ export default defineConfig({
         IMPOCARIBE_IDENTITY_DIR: E2E_IDENTITY_DIR,
         IMPOCARIBE_TLS: 'off',
       },
-      timeout: 180_000,
+      // Reiniciar la base, compilar shared y el servidor y arrancarlo pasa de 3 min en el equipo de desarrollo.
+      timeout: 360_000,
       reuseExistingServer: false,
     },
     {

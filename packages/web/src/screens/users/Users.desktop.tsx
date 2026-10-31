@@ -12,6 +12,7 @@ import {
   StatusBadge,
   UsersDialogs,
   UsersNotice,
+  blocked,
 } from './UsersParts';
 import type { UsersModel } from './useUsers';
 
@@ -36,7 +37,7 @@ export function UsersDesktop({ model }: { model: UsersModel }) {
   return (
     <div className="users">
       <div className="users-toolbar">
-        <Button icon={<Plus size={18} aria-hidden="true" />} onClick={model.openNew}>
+        <Button icon={<Plus size={18} aria-hidden="true" />} onClick={model.openNew} {...blocked(model.offlineReason)}>
           Nuevo usuario
         </Button>
       </div>
@@ -46,7 +47,13 @@ export function UsersDesktop({ model }: { model: UsersModel }) {
           {list.status === 'loading' && <Skeleton lines={6} />}
           {list.status === 'error' && <ErrorState message={list.message} onRetry={model.reload} />}
           {list.status === 'ready' && (
-            <DataTable caption="Usuarios" columns={columns} rows={list.users} onRowClick={model.openEdit} />
+            <DataTable
+              caption="Usuarios"
+              columns={columns}
+              rows={list.users}
+              onRowClick={model.openEdit}
+              changed={model.changed}
+            />
           )}
         </div>
         {title && (

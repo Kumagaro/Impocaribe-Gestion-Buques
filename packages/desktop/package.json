@@ -8,9 +8,24 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "electron .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && playwright test",
+    "instalador": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs ligero",
+    "server-bundle": "node scripts/server-bundle.mjs",
+    "instalador:completo": "pnpm --filter @impocaribe/shared build && pnpm --filter @impocaribe/web build && pnpm build && node scripts/instalador.mjs completo"
   },
   "devDependencies": {
-    "electron": "^44.7.0"
+    "@playwright/test": "^1.64.0",
+    "@types/multicast-dns": "7.2.4",
+    "@types/ws": "^8.18.2",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.18.0",
+    "ws": "8.22.0"
+  },
+  "dependencies": {
+    "@impocaribe/shared": "workspace:*",
+    "better-sqlite3-multiple-ciphers": "13.0.3",
+    "koffi": "3.3.3",
+    "multicast-dns": "7.2.5"
   }
 }

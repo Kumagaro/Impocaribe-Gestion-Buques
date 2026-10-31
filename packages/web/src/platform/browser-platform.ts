@@ -3,7 +3,17 @@
 // usa cuando no hay ninguna. No verifica la identidad del servidor (lo hace el transporte nativo, DT-19) y guarda los
 // secretos en sessionStorage, que muere con la pestaña: sirve para probar, nunca para trabajar.
 import { SERVER_PORT } from '../connection/discovery';
-import type { DeviceInfo, Platform, PlatformDiscovery, ServerAnnouncement } from './platform';
+import {
+  SIMULATED_LAN_KEY,
+  type DeviceInfo,
+  type LanStatus,
+  type Platform,
+  type PlatformDiscovery,
+  type ServerAnnouncement,
+  type PlatformSocket,
+} from './platform';
+import { openSqlJsDatabase } from './sqljs';
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 async function probe(address: string, port: number, timeoutMs: number): Promise<ServerAnnouncement | null> {
   const controller = new AbortController();
@@ -40,6 +50,26 @@ export function browserDiscovery(origin: { address: string; port: number }): Pla
         ? probe(origin.address, origin.port, timeoutMs)
         : probe(address, port, timeoutMs),
     subnetAddresses: async () => [],
+    // shortcut: el navegador no ve la red local; solo devuelve el estado que una prueba simula (e2e de P-30). La
+    // detección real la hacen los cascarones nativos (T115, T118).
+    lan: async () => {
+      const simulated = sessionStorage.getItem(SIMULATED_LAN_KEY);
+      return simulated ? (JSON.parse(simulated) as LanStatus) : null;
+    },
+  };
+}
+
+/** platform.ws con el WebSocket del navegador (por el proxy de vite, en el mismo origen). */
+export function browserSocket(url: string): PlatformSocket {
+  const ws = new WebSocket(url);
+  return {
+    send: (data) => ws.send(data),
+    close: () => ws.close(),
+    on(event, listener) {
+      if (event === 'message') ws.addEventListener('message', (e) => listener(String(e.data)));
+      else if (event === 'close') ws.addEventListener('close', (e) => listener(String(e.code)));
+      else ws.addEventListener(event, () => listener());
+    },
   };
 }
 
@@ -58,9 +88,7 @@ export function createBrowserPlatform(
   return {
     serverScheme: 'http',
     http: (url, init) => fetch(url, init),
-    ws: () => {
-      throw new Error('El WebSocket llega con la sincronización (T043).');
-    },
+    ws: browserSocket,
     discovery: browserDiscovery({ address: location.hostname, port: Number(location.port || 80) }),
     deviceInfo: () => info,
     secureStorage: {
@@ -68,10 +96,16 @@ export function createBrowserPlatform(
       set: async (key, value) => storage.setItem(`impocaribe-prueba:${key}`, value),
       remove: async (key) => storage.removeItem(`impocaribe-prueba:${key}`),
     },
-    openDatabase: () => Promise.reject(new Error('La copia local llega con la sincronización (T044).')),
-    saveFile: async () => undefined,
+    // La copia local del navegador vive en memoria y muere con la pestaña: sirve para probar, nunca para trabajar.
+    openDatabase: () => openSqlJsDatabase(() => sqlWasmUrl),
+    // El navegador de pruebas descarga de verdad: las E2E comprueban el archivo recibido.
+    saveFile: async (name, data) => {
+      const url = URL.createObjectURL(new Blob([data as BlobPart], { type: 'application/pdf' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: name });
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    },
     notify: async () => undefined,
     secureScreen: async () => undefined,
-    installUpdate: async () => undefined,
   };
 }

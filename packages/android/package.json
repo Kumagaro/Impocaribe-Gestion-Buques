@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "sync": "cap sync android",
-    "apk": "cap sync android && node scripts/apk.ts"
+    "apk": "cap sync android && node scripts/apk.ts",
+    "apk:e2e": "cap sync android && node scripts/apk.ts -PimpocaribeTlsOff=true"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

@@ -1,23 +1,53 @@
 apply plugin: 'com.android.application'
 
 android {
+    // T118: las pruebas de la identidad del servidor usan los mismos certificados de prueba que shared (T021).
+    sourceSets {
+        test.resources.srcDirs += ['../../../shared/test-certs']
+    }
     namespace = "cu.impocaribe.ordenes"
+    buildFeatures {
+        buildConfig = true
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "cu.impocaribe.ordenes"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // T121: la versión es la de packages/android/package.json (x.y.z), y el código crece con ella: Android no
+        // instala una actualización con un código menor o igual al instalado.
+        def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
+        def (major, minor, patch) = appVersion.tokenize('.').collect { it.toInteger() }
+        versionCode 1 + major * 1000000 + minor * 1000 + patch
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // T118: solo para probar contra un servidor sin TLS (las E2E, IMPOCARIBE_TLS=off): -PimpocaribeTlsOff=true.
+        // La app que se distribuye habla con el servidor solo por HTTPS.
+        buildConfigField "boolean", "TLS_OFF", (project.findProperty("impocaribeTlsOff") ?: "false").toString()
+        // Android bloquea http:// por defecto; solo esa compilación de prueba lo permite.
+        manifestPlaceholders = [cleartext: (project.findProperty("impocaribeTlsOff") ?: "false").toString()]
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // T125: la clave del APK que se distribuye vive fuera del repositorio; el paquete de distribución pasa su ruta y sus
+    // contraseñas por el entorno. Con otra clave, Android no deja actualizar la app instalada (RF-UPD-05).
+    signingConfigs {
+        release {
+            def keystore = System.getenv('IMPOCARIBE_APK_KEYSTORE')
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword System.getenv('IMPOCARIBE_APK_KEYSTORE_PASS')
+                keyAlias System.getenv('IMPOCARIBE_APK_KEY_ALIAS')
+                keyPassword System.getenv('IMPOCARIBE_APK_KEY_PASS')
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -36,7 +66,19 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // T118 · DT-19: HTTP y WebSocket con la identidad del servidor verificada.
+    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    // T118 · DT-03: la copia local en SQLCipher.
+    implementation "net.zetetic:sqlcipher-android:$sqlcipherVersion@aar"
+    implementation "androidx.sqlite:sqlite:$androidxSqliteVersion"
+    // T118: el QR de emparejamiento, con el modelo dentro del APK (sin Play Store, R-10).
+    implementation "com.google.mlkit:barcode-scanning:$mlkitBarcodeVersion"
+    implementation "androidx.camera:camera-camera2:$cameraxVersion"
+    implementation "androidx.camera:camera-lifecycle:$cameraxVersion"
+    implementation "androidx.camera:camera-view:$cameraxVersion"
     testImplementation "junit:junit:$junitVersion"
+    // El org.json de Android es un esqueleto en las pruebas de la JVM: el de verdad para DiscoveryMath.
+    testImplementation "org.json:json:20240303"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')

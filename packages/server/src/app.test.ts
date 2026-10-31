@@ -7,7 +7,7 @@ import { Contract } from './http/contract.ts';
 import { listenForTests } from '../test/listen.ts';
 import { AppModule } from './app.module.ts';
 import { configureApp } from './app.ts';
-import { CLOCK, DEVICE_GUARD_ENABLED, MIN_APP_VERSION } from './tokens.ts';
+import { ALERT_CONDITIONS_ENABLED, BACKUPS_ENABLED, CLOCK, DEVICE_GUARD_ENABLED, MIN_APP_VERSION } from './tokens.ts';
 import { ZodValidationPipe } from './http/zod-validation.pipe.ts';
 
 // T011 · plan §6 (convenciones, §6.1 formato de error), DT-11 (426), §9 (helmet y CSP estricta) y CORS de §6.
@@ -57,6 +57,11 @@ beforeAll(async () => {
     .useValue(new ManualClock('2026-10-14T12:00:00.000Z'))
     .overrideProvider(MIN_APP_VERSION)
     .useValue('1.2.0')
+    // T094: sin la pasada de alertas en segundo plano (escribiría en la base mientras la prueba cierra la app).
+    .overrideProvider(ALERT_CONDITIONS_ENABLED)
+    .useValue(false)
+    .overrideProvider(BACKUPS_ENABLED)
+    .useValue(false)
     .compile();
   app = configureApp(moduleRef.createNestApplication({ logger: false }));
   base = `${await listenForTests(app)}/api/v1`;

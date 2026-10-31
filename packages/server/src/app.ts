@@ -2,18 +2,24 @@ import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppError, isBelowMinVersion } from '@impocaribe/shared';
-import type { NextFunction, Request, Response } from 'express';
+import { json, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.ts';
+import { Maintenance } from './backups/maintenance.ts';
 import { HttpErrorFilter } from './http/http-error.filter.ts';
-import { MIN_APP_VERSION } from './tokens.ts';
+import { Power } from './power/power.ts';
+import { AppVersions } from './updates/app-versions.ts';
 
 // Orígenes de las apps: Electron (app://), y el WebView de Capacitor (plan §6).
 const APP_ORIGINS = ['app://impocaribe', 'https://localhost', 'capacitor://localhost'];
 // Rutas que una app desactualizada debe poder usar: estado, descubrimiento y descarga de la actualización (DT-11).
 const VERSION_EXEMPT = /^\/api\/v1\/(health|discovery|updates)(\/|$)/;
 const API = /^\/api\/v1(\/|$)/;
+// T132: en modo protegido se puede seguir entrando, saliendo y emparejando; lo demás que escribe se rechaza.
+const POWER_EXEMPT = /^\/api\/v1\/(health|discovery|pairing|local|auth\/(login|logout))(\/|$)/;
 const WRITES = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
+// La firma y el cuño viajan en base64 (F-05: hasta 2 MB, unos 2,7 MB en el JSON); el resto, con el límite por defecto.
+const IMAGE_ROUTES = ['/api/v1/company/signature', '/api/v1/company/stamp'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function configureApp(app: INestApplication): INestApplication {
@@ -24,10 +30,28 @@ export function configureApp(app: INestApplication): INestApplication {
     }),
   );
   app.enableCors({ origin: APP_ORIGINS });
-  const minVersion = app.get<string>(MIN_APP_VERSION);
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  // Antes que el lector de JSON de Nest, que ya no vuelve a leer el cuerpo; guarda el cuerpo tal cual, como él (rawBody).
+  // Va envuelto en una función con otro nombre: Nest no registra su propio lector si ya ve uno llamado jsonParser.
+  const imageJson = json({
+    limit: '3mb',
+    verify: (req, _res, buf) => {
+      (req as Request & { rawBody?: Buffer }).rawBody = buf;
+    },
+  });
+  app.use(IMAGE_ROUTES, function imageBodyParser(req: Request, res: Response, next: NextFunction) {
+    imageJson(req, res, next);
+  });
+  // T113: la mínima es la de la plataforma de la app (X-App-Platform), que una Apoderada puede subir (RF-UPD-01).
+  const versions = app.get(AppVersions);
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'OPTIONS' || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();
     const version = req.header('x-app-version') ?? '';
+    let minVersion: string;
+    try {
+      minVersion = await versions.minFor(req.header('x-app-platform'));
+    } catch (err) {
+      return next(err);
+    }
     if (!isBelowMinVersion(version, minVersion)) return next();
     const message = version
       ? `Esta versión de la app (${version}) ya no es compatible. Actualícela a la ${minVersion} o superior.`
@@ -43,6 +67,34 @@ export function configureApp(app: INestApplication): INestApplication {
       'Falta la cabecera Idempotency-Key: cada intento del usuario debe llevar un UUID propio.',
     );
     res.status(error.status).json(error.toBody());
+  });
+  // T107: durante una restauración solo responden el estado y el descubrimiento.
+  const maintenance = app.get(Maintenance);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!maintenance.active || !API.test(req.path) || VERSION_EXEMPT.test(req.path)) return next();
+    const error = new AppError(
+      'RESTORE_IN_PROGRESS',
+      'El servidor se está restaurando desde un respaldo. Espere unos minutos.',
+    );
+    res.status(error.status).json(error.toBody());
+  });
+  // T132 · RF-ENE-03: en modo protegido no se aceptan escrituras nuevas; las que están en curso se cuentan, para dejarlas
+  // terminar antes de asegurar los datos.
+  const power = app.get(Power);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!WRITES.has(req.method) || !API.test(req.path) || POWER_EXEMPT.test(req.path)) return next();
+    if (power.protected) {
+      const error = new AppError(
+        'SERVER_PROTECTED_MODE',
+        'Servidor en modo protegido por batería baja: solo consulta. Podrá guardar cuando vuelva la corriente.',
+      );
+      res.status(error.status).json(error.toBody());
+      return;
+    }
+    const done = power.beginWrite();
+    res.on('finish', done);
+    res.on('close', done);
+    next();
   });
   app.useGlobalFilters(new HttpErrorFilter());
   return app;

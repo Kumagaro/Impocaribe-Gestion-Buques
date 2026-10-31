@@ -12,6 +12,7 @@ import {
   StatusBadge,
   UsersDialogs,
   UsersNotice,
+  blocked,
 } from './UsersParts';
 import type { UsersModel } from './useUsers';
 
@@ -22,7 +23,7 @@ export function UsersCards({ model, overlay }: { model: UsersModel; overlay: 'sh
   return (
     <div className="users">
       <div className="users-toolbar">
-        <Button icon={<Plus size={18} aria-hidden="true" />} onClick={model.openNew}>
+        <Button icon={<Plus size={18} aria-hidden="true" />} onClick={model.openNew} {...blocked(model.offlineReason)}>
           Nuevo usuario
         </Button>
       </div>
@@ -33,7 +34,12 @@ export function UsersCards({ model, overlay }: { model: UsersModel; overlay: 'sh
         <ul className="users-cards" aria-label="Usuarios">
           {list.users.map((u) => (
             <li key={u.id}>
-              <ListCard title={u.fullName} aside={<StatusBadge user={u} />} onOpen={() => model.openEdit(u)}>
+              <ListCard
+                title={u.fullName}
+                aside={<StatusBadge user={u} />}
+                changed={model.changed.has(u.id)}
+                onOpen={() => model.openEdit(u)}
+              >
                 <span>
                   {roleLabel(u.role)} · {u.username}
                 </span>

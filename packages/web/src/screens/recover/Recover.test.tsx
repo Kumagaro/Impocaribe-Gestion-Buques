@@ -5,6 +5,7 @@ import { renderScreen } from '../../../test/screen';
 import { postRecover } from '../../api/endpoints/auth';
 import { RecoverScreen } from './Recover.screen';
 
+// HU-11: cualquier usuario recupera su contraseña sin internet, con sus códigos.
 // T038 · P-04 Recuperar contraseña (ui-spec), F-04, RF-REC-02 a 04: el hook real y las tres presentaciones.
 // Seis campos escritos tecla a tecla superan los 5 s por defecto en una máquina cargada.
 vi.setConfig({ testTimeout: 20_000 });

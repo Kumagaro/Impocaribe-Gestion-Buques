@@ -160,7 +160,7 @@ La configuración sale de las variables de entorno y del `.env` de la raíz (cop
 
 **Bloqueo de `main`.** En GitHub, *Settings → Branches → Branch protection rules* para `main`: exigir solicitud de integración y los tres trabajos (`Verificación`, `Escritorio`, `APK de depuración`) en verde antes de integrar.
 
-**Hook previo al envío.** `pnpm install` configura Git para usar `.githooks/` (script `prepare`), y `.githooks/pre-push` ejecuta `pnpm verify`: si falla, el envío se cancela. Es obligatorio mientras no haya un servicio de CI, y se mantiene después como primera barrera.
+**Sin hook previo al envío.** `pnpm install` configura Git para usar `.githooks/` (script `prepare`), que solo tiene `commit-msg`. El `pre-push` que ejecutaba `pnpm verify` se quitó el 2026-10-30 por decisión del responsable: en el equipo de desarrollo tardaba horas e impedía subir. `pnpm verify` se ejecuta a mano antes de integrar, y la CI repite la verificación en GitHub.
 
 ## 5. Barreras de calidad (plan §11.3, Const. art. XIII)
 

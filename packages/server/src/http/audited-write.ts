@@ -10,6 +10,8 @@ export interface AuditedWrite extends WriteResult {
   entityId?: string;
   before?: unknown;
   after?: unknown;
+  /** RF-BIT-01: el motivo de la corrección, la anulación o la excepción, en su columna. */
+  reason?: string | null | undefined;
 }
 
 export async function auditedWrite(
@@ -21,12 +23,13 @@ export async function auditedWrite(
 ): Promise<WriteResult> {
   try {
     return await withIdempotency(db, clock, idempotencyRequest(req), async (tx) => {
-      const { entityId, before, after, ...result } = await fn(tx);
+      const { entityId, before, after, reason, ...result } = await fn(tx);
       await recordAudit(tx, clock, {
         ...entry,
         ...(entityId !== undefined ? { entityId } : {}),
         ...(before !== undefined ? { before } : {}),
         ...(after !== undefined ? { after } : {}),
+        ...(reason ? { reason } : {}),
       });
       return result;
     });

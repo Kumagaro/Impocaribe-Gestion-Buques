@@ -239,3 +239,12 @@ describe('RF-AUT-08: cerrar sesión', () => {
     await waitFor(() => expect(t.session.getState().status).toBe('signedOut'));
   });
 });
+
+describe('EST-03 y RF-CON-06: sin conexión', () => {
+  it('lo que escribe en el servidor se desactiva con el motivo; cerrar sesión sigue permitido', async () => {
+    await open('/perfil/contrasena', { online: false, local: [] });
+    const change = await screen.findByRole('button', { name: 'Cambiar contraseña' });
+    await waitFor(() => expect(change.hasAttribute('disabled')).toBe(true));
+    expect(change.getAttribute('title')).toBe('Requiere conexión con el servidor');
+  });
+});

@@ -1,6 +1,6 @@
 // T038 · P-02: los pasos del asistente, iguales en las tres clases; cada presentación los coloca en su marco.
 import { Lock } from 'lucide-react';
-import { Button, Checkbox, TextField } from '../../ui/controls';
+import { Button, Checkbox, PasswordField, TextField } from '../../ui/controls';
 import { ErrorSummary, Field } from '../../ui/form';
 import { maskPhone } from '../../ui/masks';
 import { Notice, Skeleton } from '../../ui/presentation';
@@ -56,10 +56,10 @@ export function SetupStep({ model }: { model: SetupModel }) {
         <>
           <h1 className="auth-title">Contraseña</h1>
           <Field label="Contraseña" help="Mínimo 8 caracteres" {...model.password.state}>
-            <TextField type="password" autoComplete="new-password" {...model.password.control} />
+            <PasswordField autoComplete="new-password" {...model.password.control} />
           </Field>
           <Field label="Confirmar" {...model.confirm.state}>
-            <TextField type="password" autoComplete="new-password" {...model.confirm.control} />
+            <PasswordField autoComplete="new-password" {...model.confirm.control} />
           </Field>
           <div className="auth-actions">
             <Button variant="secondary" onClick={model.back} disabled={model.busy}>

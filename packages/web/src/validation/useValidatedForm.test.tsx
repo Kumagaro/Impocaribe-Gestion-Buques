@@ -9,6 +9,7 @@ import { TextField } from '../ui/controls';
 import { ErrorSummary, Field, LegalNotice, UnsavedChangesGuard } from '../ui/form';
 import { useValidatedForm } from './useValidatedForm';
 
+// HU-18: cada campo dice qué está mal y qué revisar mientras se llena.
 // T024 · RF-VAL-01 a 03, 09 a 11, plan §7.7 y ui-spec §2.1: momento de la validación, resumen, errores del servidor y
 // cambios sin guardar. El esquema imita a los del catálogo (shared/validation/forms), con mensajes concretos.
 

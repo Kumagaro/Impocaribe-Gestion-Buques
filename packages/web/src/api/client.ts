@@ -50,6 +50,8 @@ export function defineEndpoint<In extends ZodType = ZodType, Out extends ZodType
 export interface ApiClientOptions {
   baseUrl: string;
   appVersion: string;
+  /** T113: la mínima compatible depende de la plataforma (X-App-Platform); sin ella vale la del servidor. */
+  appPlatform?: 'windows' | 'android';
   getToken(): Promise<string | null>;
   /** El dispositivo emparejado y su secreto (DT-24); null mientras no está emparejado. */
   getDevice?(): Promise<{ id: string; secret: string } | null>;
@@ -58,6 +60,8 @@ export interface ApiClientOptions {
   onSessionExpired?(): void;
   onUpgradeRequired?(details: Record<string, unknown> | undefined): void;
   onResyncRequired?(): void;
+  /** RF-RED-05: el servidor revocó este dispositivo. */
+  onDeviceRevoked?(): void;
 }
 
 export interface RequestOptions<In> {
@@ -98,6 +102,7 @@ export function createApiClient(options: ApiClientOptions) {
     const time = String(nextTime());
     const h: Record<string, string> = {
       'X-App-Version': options.appVersion,
+      ...(options.appPlatform ? { 'X-App-Platform': options.appPlatform } : {}),
       'X-Device-Time': time,
     };
     const device = await options.getDevice?.();
@@ -111,7 +116,7 @@ export function createApiClient(options: ApiClientOptions) {
     }
     const token = await options.getToken();
     if (token) h.Authorization = `Bearer ${token}`;
-    if (req.body !== undefined) h['Content-Type'] = 'application/json';
+    if (req.body !== undefined && !(req.body instanceof FormData)) h['Content-Type'] = 'application/json';
     if (WRITES.has(endpoint.method)) h['Idempotency-Key'] = req.idempotencyKey ?? crypto.randomUUID();
     return h;
   }
@@ -126,21 +131,24 @@ export function createApiClient(options: ApiClientOptions) {
     if (body.code === 'SESSION_EXPIRED') options.onSessionExpired?.();
     if (body.code === 'UPGRADE_REQUIRED') options.onUpgradeRequired?.(body.details);
     if (body.code === 'RESYNC_REQUIRED') options.onResyncRequired?.();
+    if (body.code === 'DEVICE_REVOKED') options.onDeviceRevoked?.();
     throw new ApiError(res.status, body.code, body.message, body.details);
   }
 
   return {
     async request<E extends Endpoint>(endpoint: E, req: RequestOptions<Input<E>> = {}): Promise<Output<E>> {
       let res: Response;
-      // El cuerpo se serializa una sola vez: la firma (DT-24) cubre exactamente lo que se envía.
+      // El cuerpo se serializa una sola vez: la firma (DT-24) cubre exactamente lo que se envía. T114: un archivo va en
+      // multipart (FormData); la firma cubre el cuerpo vacío y el servidor comprueba la huella del archivo.
       const target = url(endpoint, req);
-      const body = req.body !== undefined ? JSON.stringify(req.body) : '';
+      const form = req.body instanceof FormData ? req.body : null;
+      const body = form || req.body === undefined ? '' : JSON.stringify(req.body);
       const sent = await headers(endpoint, req, target, body);
       try {
         res = await options.transport(target, {
           method: endpoint.method,
           headers: sent,
-          ...(req.body !== undefined ? { body } : {}),
+          ...(form ? { body: form } : req.body !== undefined ? { body } : {}),
         });
       } catch {
         throw new ApiError(0, 'OFFLINE', OFFLINE_MESSAGE);

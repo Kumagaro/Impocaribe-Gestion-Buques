@@ -1,0 +1,236 @@
+/* T086 a T089 · P-13 a P-16 Órdenes, de la maqueta T085 (docs/maquetas/T085-ordenes.html). */
+.order-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.order-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.order-auto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: var(--t-xs);
+}
+.order-auto b {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.order-auto__tag {
+  color: var(--accent-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.order-panel {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.order-panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: var(--t-sm);
+}
+.order-panel dt {
+  color: var(--ink-3);
+}
+.order-panel dd {
+  margin: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.order-panel dd[data-bad] {
+  color: var(--bad);
+}
+.order-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-sm);
+}
+.order-checks li {
+  display: flex;
+  gap: 8px;
+}
+.order-checks li::before {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.order-checks li[data-tone='warn']::before {
+  background: var(--warn);
+}
+.order-checks li[data-tone='bad']::before {
+  background: var(--bad);
+}
+.order-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px;
+  text-align: center;
+}
+.order-success__number {
+  font-family: var(--mono);
+  font-size: 22px;
+}
+.order-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+.order-paper-wrap {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.order-paper {
+  position: relative;
+  width: 620px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.order-paper h3 {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 13px;
+}
+.order-paper p {
+  margin: 6px 0;
+}
+.order-paper hr {
+  border: 0;
+  border-top: 1px solid #000;
+  margin: 7px 0;
+}
+.order-paper__row,
+.order-paper__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-paper__line {
+  border-bottom: 1px solid #000;
+}
+.order-paper__b {
+  font-size: 11px;
+  font-weight: 700;
+}
+.order-paper__version {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+}
+.order-paper__mark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotate(-11deg);
+  padding: 2px 12px;
+  border: 3px solid #ae241c;
+  color: #ae241c;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 20px;
+}
+.order-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-sm);
+}
+.order-timeline li {
+  padding: 2px 0 2px 12px;
+  border-left: 2px solid var(--line);
+}
+.order-timeline li[aria-current] {
+  border-left-color: var(--accent);
+}
+.order-changed {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--warn-soft);
+}
+@media (max-width: 1100px) {
+  .order-grid,
+  .order-view {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-panel {
+    position: static;
+  }
+}
+
+/* T102 · P-32 Órdenes (maqueta T099). */
+.order-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.order-totals b {
+  font-size: var(--t-xl);
+  font-variant-numeric: tabular-nums;
+}
+.order-totals span {
+  color: var(--ink-3);
+  font-size: var(--t-sm);
+}
+.order-list-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 16px;
+  align-items: start;
+}
+.order-day {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}

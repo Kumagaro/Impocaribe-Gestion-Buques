@@ -6,6 +6,7 @@ import {
   pairingRequestSchema,
   pairingStatusSchema,
   qrPairSchema,
+  qrResponseSchema,
   selfPairSchema,
 } from '@impocaribe/shared/validation';
 import { defineEndpoint } from '../client';
@@ -39,6 +40,14 @@ export const postPairingQr = defineEndpoint({
   input: qrPairSchema,
   output: pairedDeviceSchema,
   errors: ['PAIRING_EXPIRED'],
+  roles: 'public',
+});
+
+// El QR de un solo uso de la pantalla del servidor (P-28 al terminar, P-29): solo desde la propia PC servidor.
+export const postLocalQr = defineEndpoint({
+  method: 'POST',
+  path: '/local/qr',
+  output: qrResponseSchema,
   roles: 'public',
 });
 

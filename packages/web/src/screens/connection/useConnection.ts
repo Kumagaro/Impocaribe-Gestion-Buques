@@ -80,7 +80,9 @@ export function useConnection() {
       if (!current()) return;
       if (local) {
         try {
-          const ids = await session.apiFor(local.address, local.port).request(postPairSelf, { body: description });
+          const ids = await session
+            .apiFor(local.address, local.port, local)
+            .request(postPairSelf, { body: description });
           if (!current()) return;
           await paired({ ...local, method: 'last' }, ids, true);
           return;
@@ -117,7 +119,7 @@ export function useConnection() {
   const pairWithCode = async () => {
     if (phase.kind !== 'found') return;
     const { server } = phase;
-    const api = session.apiFor(server.address, server.port);
+    const api = session.apiFor(server.address, server.port, server);
     setNotice(null);
     setBusy(true);
     try {
@@ -155,7 +157,7 @@ export function useConnection() {
     setBusy(true);
     try {
       // Se comprueba que quien responde en la dirección del QR es el servidor que el QR dice ser.
-      const api = session.apiFor(qr.address, qr.port);
+      const api = session.apiFor(qr.address, qr.port, qr);
       const info = await api.request(getDiscovery);
       if (info.serverId !== qr.serverId) throw new ApiError(0, 'NOT_FOUND', NOT_OUR_QR);
       const server: FoundServer = { ...qr, version: info.version, method: 'qr' };
@@ -197,6 +199,13 @@ export function useConnection() {
     cancel,
     scan: () => void scan(),
     goLogin: () => void navigate('/login', { replace: true }),
+    /** RF-RED-06: si no lo encuentra, el diagnóstico explica por qué. */
+    openDiagnostics: () => void navigate('/diagnostico'),
+    /** T127 · RF-INS-03: solo en escritorio con el instalador completo (el que trae el ayudante de instalación). */
+    canCreateServer: platform.serverSetup !== undefined && device === 'desktop',
+    createServer: () => void navigate('/servidor/crear'),
+    /** T130 · RF-INS-07: con el archivo de «Preparar traslado» de la PC anterior. */
+    createServerFromMove: () => void navigate('/servidor/crear?traslado'),
   };
 }
 

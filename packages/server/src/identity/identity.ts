@@ -166,3 +166,39 @@ export async function loadIdentity(dir: string, protector: SecretProtector): Pro
     keyPem: (await protector.unprotect(await readFile(join(dir, FILES.key)))).toString('utf8'),
   };
 }
+
+/** T130 · RF-INS-07: la identidad entera, con sus claves en claro, para el archivo de traslado (que va cifrado). */
+export interface ExportedIdentity {
+  meta: string;
+  caCertPem: string;
+  certPem: string;
+  caKeyPem: string;
+  keyPem: string;
+}
+
+export async function exportIdentity(dir: string, protector: SecretProtector): Promise<ExportedIdentity> {
+  return {
+    meta: await readFile(join(dir, FILES.meta), 'utf8'),
+    caCertPem: await readFile(join(dir, FILES.ca), 'utf8'),
+    certPem: await readFile(join(dir, FILES.cert), 'utf8'),
+    caKeyPem: (await protector.unprotect(await readFile(join(dir, FILES.caKey)))).toString('utf8'),
+    keyPem: (await protector.unprotect(await readFile(join(dir, FILES.key)))).toString('utf8'),
+  };
+}
+
+/**
+ * La identidad de un traslado en la PC nueva, con las claves protegidas por esta máquina (DPAPI no se puede abrir en
+ * otra). Nunca sobre una identidad que ya existe: los dispositivos emparejados con ella quedarían huérfanos.
+ */
+export async function importIdentity(dir: string, e: ExportedIdentity, protector: SecretProtector): Promise<void> {
+  if (await exists(join(dir, FILES.meta))) {
+    const current = JSON.parse(await readFile(join(dir, FILES.meta), 'utf8')) as { name: string };
+    throw new IdentityExistsError(`Esta PC ya tiene la identidad del servidor ${current.name}: no se reemplaza.`);
+  }
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, FILES.meta), e.meta);
+  await writeFile(join(dir, FILES.ca), e.caCertPem);
+  await writeFile(join(dir, FILES.cert), e.certPem);
+  await writeFile(join(dir, FILES.caKey), await protector.protect(Buffer.from(e.caKeyPem)));
+  await writeFile(join(dir, FILES.key), await protector.protect(Buffer.from(e.keyPem)));
+}

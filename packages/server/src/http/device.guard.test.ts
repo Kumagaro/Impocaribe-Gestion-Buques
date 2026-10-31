@@ -6,7 +6,7 @@ import { Contract } from './contract.ts';
 import { listenForTests } from '../../test/listen.ts';
 import { AppModule } from '../app.module.ts';
 import { configureApp } from '../app.ts';
-import { CLOCK, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY } from '../tokens.ts';
+import { ALERT_CONDITIONS_ENABLED, BACKUPS_ENABLED, CLOCK, DEVICE_GUARD_ENABLED, DEVICE_REGISTRY } from '../tokens.ts';
 import type { DeviceRegistry } from './device.guard.ts';
 
 // T015 · DT-24: salvo /health, /discovery y /pairing/*, toda petición exige X-Device-Id, X-Device-Time y la firma
@@ -51,6 +51,11 @@ async function start(enabled: boolean) {
     .useValue(enabled)
     .overrideProvider(DEVICE_REGISTRY)
     .useValue(registry)
+    // T094: sin la pasada de alertas en segundo plano (escribiría en la base mientras la prueba cierra la app).
+    .overrideProvider(ALERT_CONDITIONS_ENABLED)
+    .useValue(false)
+    .overrideProvider(BACKUPS_ENABLED)
+    .useValue(false)
     .compile();
   app = configureApp(moduleRef.createNestApplication({ logger: false, rawBody: true }));
   base = await listenForTests(app);

@@ -1,0 +1,106 @@
+/* T048 · P-30 Diagnóstico de red, de la maqueta aprobada en T037 (docs/maquetas/T037-acceso.html). */
+.diag {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.diag-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.diag-top .diag-light {
+  flex: 1;
+}
+.diag-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .diag-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.diag-light {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.diag-light b {
+  display: block;
+  font-size: 17px;
+}
+.diag-light span {
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.diag-light__dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--ink-3);
+}
+.diag-light[data-tone='ok'] .diag-light__dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 5px var(--ok-soft);
+}
+.diag-light[data-tone='warn'] .diag-light__dot {
+  background: var(--warn);
+  box-shadow: 0 0 0 5px var(--warn-soft);
+}
+.diag-light[data-tone='bad'] .diag-light__dot {
+  background: var(--bad);
+  box-shadow: 0 0 0 5px var(--bad-soft);
+}
+.diag-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.diag-card h2 {
+  margin: 0;
+  font-size: var(--t-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.diag-card ol {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.diag-details {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.diag-details li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--t-sm);
+}
+.diag-details span {
+  color: var(--ink-3);
+}
+.diag-details b {
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}

@@ -25,7 +25,6 @@ export function useLogin() {
   const [notice, setNotice] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const check = useCallback(async () => {
     setPhase('checking');
@@ -77,12 +76,12 @@ export function useLogin() {
   return {
     phase,
     serverName: pairing.serverName,
+    /** T128 · P-29: en la PC servidor, su estado y los emparejamientos también sin sesión. */
+    isServerPc: pairing.isServerPc,
     username,
     password: { ...password, state: passwordState },
     keepSignedIn: form.form.watch('keepSignedIn') as boolean,
     setKeepSignedIn: (v: boolean) => form.form.setValue('keepSignedIn', v),
-    showPassword,
-    toggleShowPassword: () => setShowPassword((v) => !v),
     notice,
     locked,
     busy: form.form.formState.isSubmitting,

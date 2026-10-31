@@ -5,3 +5,7 @@ packages:
 allowBuilds:
   electron: true
   esbuild: true
+  # Squirrel.Windows (dependencia de electron-builder): los instaladores son NSIS (T117), no hace falta su script
+  electron-winstaller: false
+  # koffi (T133, aviso de apagado): trae sus binarios compilados; su script solo los recompilaría
+  koffi: false

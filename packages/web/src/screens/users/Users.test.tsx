@@ -1,20 +1,16 @@
 import type { UserListItem } from '@impocaribe/shared/validation';
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { renderScreen } from '../../../test/screen';
-import {
-  activateUser,
-  deactivateUser,
-  getUsers,
-  patchUser,
-  postUser,
-  resetUserPassword,
-} from '../../api/endpoints/users';
+import { FIXED_TIME } from '../../../test/fake-server';
+import { renderScreen, TEST_EPOCH as EPOCH } from '../../../test/screen';
+import { getSyncChanges, getSyncState } from '../../api/endpoints/sync';
+import { activateUser, deactivateUser, patchUser, postUser, resetUserPassword } from '../../api/endpoints/users';
 import type { StoredSession } from '../../session/app-session';
 import { UsersScreen } from './Users.screen';
 import { lastAccessText } from './useUsers';
 
+// HU-11: la Apoderada crea y desactiva usuarios (la recuperación sin internet, en Recover.test.tsx).
 // T040 · P-21 Usuarios (ui-spec), RF-USR-01 a 05, RF-REC-01, RF-REC-06, RF-AUT-04, F-02: el hook real y las tres
 // presentaciones. FIXED_TIME es el 14/10/2026 16:40 UTC (12:40 en La Habana).
 vi.setConfig({ testTimeout: 20_000 });
@@ -59,11 +55,9 @@ const open = (options: Parameters<typeof renderScreen>[1] = {}) =>
   renderScreen(<UsersScreen />, {
     path: '/usuarios',
     session: SIGNED_IN,
+    // T046: la lista sale de la copia local, que trae la sincronización.
+    local: USERS.map((u) => ({ entityType: 'user_admin' as const, entityId: u.id, payload: u })),
     ...options,
-    before: (s) => {
-      s.respond(getUsers, USERS);
-      options.before?.(s);
-    },
   });
 
 const openUser = async (device: 'phone' | 'tablet' | 'desktop', name: string) => {
@@ -110,12 +104,42 @@ describe('P-21 en las tres clases', () => {
     expect(cards[2]!.textContent).toContain('Inactivo');
   });
 
-  it('si la lista no carga, lo dice y deja reintentar', async () => {
-    await open({
-      before: (s) => s.respond(getUsers, { code: 'INTERNAL_ERROR', message: 'Error interno del servidor.' }),
+  it.each(['phone', 'desktop'] as const)(
+    'EST-03 en %s: sin conexión muestra la copia local y desactiva las escrituras con el motivo',
+    async (device) => {
+      await open({ device, online: false });
+      expect(await screen.findByText('Mario Delgado Pérez')).not.toBeNull();
+      const add = await screen.findByRole('button', { name: 'Nuevo usuario' });
+      await waitFor(() => expect(add.hasAttribute('disabled')).toBe(true));
+      expect(add.getAttribute('title')).toBe('Requiere conexión con el servidor');
+      await openUser(device, 'Mario Delgado Pérez');
+      for (const name of ['Guardar', 'Restablecer contraseña', 'Desactivar'])
+        expect(screen.getByRole('button', { name }).hasAttribute('disabled')).toBe(true);
+    },
+  );
+
+  it('MOV-02: la fila que cambió otro usuario llega sola y se resalta 1,5 s', async () => {
+    const t = await open();
+    await screen.findByRole('cell', { name: 'Mario Delgado Pérez' });
+    t.server.respond(getSyncState, { epoch: EPOCH, lastSeq: 2, schemaVersion: 1, serverTime: FIXED_TIME });
+    t.server.respond(getSyncChanges, {
+      changes: [
+        {
+          seq: 2,
+          entityType: 'user_admin',
+          entityId: MARIO.id,
+          op: 'upsert',
+          payload: { ...MARIO, phone: '59876543', fullName: 'Mario Delgado Pérez Jr' },
+          refDate: null,
+        },
+      ],
+      nextSince: 2,
+      hasMore: false,
     });
-    expect(await screen.findByText('Error interno del servidor.')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Reintentar' })).not.toBeNull();
+    await act(() => t.session.syncEngine()!.syncNow());
+    const row = (await screen.findByRole('cell', { name: 'Mario Delgado Pérez Jr' })).closest('tr')!;
+    expect(row.hasAttribute('data-changed')).toBe(true);
+    await waitFor(() => expect(row.hasAttribute('data-changed')).toBe(false), { timeout: 3000 });
   });
 });
 
@@ -161,7 +185,8 @@ describe('RF-USR-01 y RF-REC-01: alta', () => {
       await userEvent.click(within(dialog).getByRole('button', { name: 'Listo' }));
       expect(screen.queryByRole('dialog')).toBeNull();
       await waitFor(() => expect(t.platform.calls).toContainEqual({ method: 'secureScreen', args: [false] }));
-      expect(t.server.calls.filter((c) => c.method === 'GET' && c.path === '/users')).toHaveLength(2);
+      // Plan §5.9: tras escribir, la lista no se edita a mano; se sincroniza para traer el cambio del servidor.
+      expect(t.server.calls.filter((c) => c.path === '/sync/state').length).toBeGreaterThanOrEqual(2);
     },
   );
 

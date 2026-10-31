@@ -1,0 +1,168 @@
+/* T114 · AL-15, EST-07 y P-26 Versiones, de la maqueta T114 (docs/maquetas/T114-versiones.html). */
+.update-band {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 400;
+}
+.update-band b {
+  font-weight: 650;
+}
+.update-band__text {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.update-band__error {
+  color: var(--bad);
+}
+.update-band__actions {
+  display: flex;
+  gap: 8px;
+}
+.update-progress {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--t-sm);
+}
+.update-required {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 24px 16px;
+  background: var(--ground);
+}
+.update-required__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 440px;
+  padding: 24px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  text-align: center;
+}
+.update-required__box h1 {
+  margin: 0;
+  font-size: var(--t-lg);
+  text-wrap: balance;
+}
+.update-required__box p {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+.update-required__box .ui-button--primary {
+  background: var(--surface);
+  color: var(--accent-ink);
+  border-color: var(--surface);
+}
+.update-required__box .update-progress {
+  align-self: stretch;
+}
+.update-required__error {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--bad);
+}
+.update-required__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--on-accent);
+  font: inherit;
+  font-size: var(--t-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* P-26 Versiones de la app */
+.releases-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.releases-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.releases-version {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.releases-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.releases-r {
+  text-align: right;
+}
+.releases-notes {
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+.releases-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.releases-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.releases-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.releases-file__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.releases-file__name {
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  overflow-wrap: anywhere;
+}
+.releases-consequence {
+  padding: 12px 14px;
+  background: var(--bad-soft);
+  border-radius: var(--r-sm);
+}
+.releases-consequence ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.releases-table td.releases-notes {
+  min-width: 24ch;
+  white-space: normal;
+}

@@ -14,6 +14,9 @@ export class HttpErrorFilter implements ExceptionFilter {
 
   private toAppError(exception: unknown): AppError {
     if (exception instanceof AppError) return exception;
+    // El lector de JSON (body-parser) rechaza los cuerpos que pasan del límite: 100 kB, salvo firma y cuño (app.ts).
+    if ((exception as { type?: string } | null)?.type === 'entity.too.large')
+      return new AppError('VALIDATION_ERROR', 'La petición es demasiado grande para el servidor.');
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       if (status === 404) return new AppError('NOT_FOUND', 'La ruta solicitada no existe.');

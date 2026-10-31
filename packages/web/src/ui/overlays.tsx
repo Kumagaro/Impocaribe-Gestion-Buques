@@ -5,7 +5,7 @@ import { m } from 'motion/react';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useReducedMotionPreference } from '../motion/MotionProvider';
-import { dialog as dialogPreset, sheet as sheetPreset } from '../motion/presets';
+import { dialog as dialogPreset, panel as panelPreset, sheet as sheetPreset } from '../motion/presets';
 import { Button, TextField } from './controls';
 import { useDeviceClass } from './device';
 
@@ -67,7 +67,7 @@ function OverlayFrame({
   dragOffset,
   header,
 }: OverlayProps & {
-  kind: 'dialog' | 'sheet';
+  kind: 'dialog' | 'sheet' | 'panel';
   dragOffset?: number;
   header?: (node: ReactNode) => ReactNode;
 }) {
@@ -75,8 +75,9 @@ function OverlayFrame({
   const trap = useFocusTrap(onClose);
   const titleId = useId();
   const descId = useId();
-  const preset = kind === 'sheet' ? sheetPreset(reduced) : dialogPreset(reduced);
-  const motion = reduced ? 'fade' : kind === 'sheet' ? 'slide' : 'scale';
+  const preset =
+    kind === 'sheet' ? sheetPreset(reduced) : kind === 'panel' ? panelPreset(reduced) : dialogPreset(reduced);
+  const motion = reduced ? 'fade' : kind === 'dialog' ? 'scale' : 'slide';
   const heading = (
     <h2 id={titleId} className="ui-overlay__title">
       {title}
@@ -120,6 +121,11 @@ function OverlayFrame({
 
 export function Dialog(props: OverlayProps) {
   return <OverlayFrame kind="dialog" {...props} />;
+}
+
+/** Panel lateral de escritorio, a la derecha y a toda la altura (P-17: las alertas desde la campana). */
+export function Panel(props: OverlayProps) {
+  return <OverlayFrame kind="panel" {...props} />;
 }
 
 /** Hoja inferior de teléfono: se cierra al arrastrarla hacia abajo más de {@link SHEET_CLOSE_PX}; si no, vuelve. */

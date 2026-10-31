@@ -1,0 +1,4272 @@
+<meta charset="utf-8" />
+<title>Maquetas del servidor</title>
+<style>
+  /* Layout: hoja de revisión en una columna; cada sección muestra la pieza tal como se verá, con su nota de diseño al lado. */
+  :root {
+    /* Paleta del prototipo aprobado (RF-UI-03), renovada en contraste y estados */
+    --ink: #14202b;
+    --ink-2: #4a5c6b;
+    --ink-3: #5e7081;
+    --ground: #eff3f6;
+    --surface: #ffffff;
+    --surface-2: #f7f9fb;
+    --line: #d3dde5;
+    --line-2: #e6ecf1;
+    --accent: #1a3e96;
+    --accent-soft: #e4eaf7;
+    --accent-ink: #15327a;
+    --on-accent: #ffffff;
+    --ok: #1b7a4b;
+    --ok-soft: #e2f2e9;
+    --warn: #8a5102;
+    --warn-soft: #fbefd9;
+    --bad: #ae241c;
+    --bad-soft: #fbe6e4;
+    --shadow: 0 1px 2px rgba(20, 32, 43, 0.08), 0 4px 12px rgba(20, 32, 43, 0.05);
+    --sheet-shadow: 0 -6px 24px rgba(20, 32, 43, 0.18);
+    /* Tipografía del prototipo: Segoe UI en Windows, Roboto en Android; mono para cifras y números de orden */
+    --ui: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono: Consolas, 'SF Mono', Menlo, 'DejaVu Sans Mono', monospace;
+    --doc: 'Times New Roman', Times, serif;
+    /* Escala tipográfica (px) y espaciado en múltiplos de 4 */
+    --t-xs: 11px;
+    --t-sm: 12.5px;
+    --t-md: 14px;
+    --t-lg: 16px;
+    --t-xl: 23px;
+    --r-sm: 6px;
+    --r-md: 9px;
+    --r-lg: 14px;
+    --touch: 48px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ink: #e3ebf2;
+      --ink-2: #a6b8c7;
+      --ink-3: #8397a8;
+      --ground: #0d141c;
+      --surface: #151f2a;
+      --surface-2: #1b2733;
+      --line: #2b3a48;
+      --line-2: #233140;
+      --accent: #7b9de8;
+      --accent-soft: #16203a;
+      --accent-ink: #a8c1f2;
+      --on-accent: #0d141c;
+      --ok: #4fbb84;
+      --ok-soft: #122a20;
+      --warn: #d89b3c;
+      --warn-soft: #2e2312;
+      --bad: #e4746a;
+      --bad-soft: #331716;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+      --sheet-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ink: #e3ebf2;
+    --ink-2: #a6b8c7;
+    --ink-3: #8397a8;
+    --ground: #0d141c;
+    --surface: #151f2a;
+    --surface-2: #1b2733;
+    --line: #2b3a48;
+    --line-2: #233140;
+    --accent: #7b9de8;
+    --accent-soft: #16203a;
+    --accent-ink: #a8c1f2;
+    --on-accent: #0d141c;
+    --ok: #4fbb84;
+    --ok-soft: #122a20;
+    --warn: #d89b3c;
+    --warn-soft: #2e2312;
+    --bad: #e4746a;
+    --bad-soft: #331716;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --sheet-shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: var(--t-md);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button,
+  input,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ---------- cabecera de la hoja ---------- */
+  .sheet-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px 24px;
+    align-items: start;
+  }
+  .sheet-head h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .sheet-head p {
+    margin: 6px 0 0;
+    color: var(--ink-2);
+    max-width: 68ch;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .seg button {
+    border: 0;
+    background: none;
+    padding: 7px 12px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .approve {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    grid-column: 1 / -1;
+  }
+  .approve h2 {
+    margin: 0 0 6px;
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+  .approve ul {
+    margin: 0;
+    padding-left: 18px;
+    columns: 2 280px;
+    column-gap: 32px;
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+  }
+
+  /* ---------- secciones ---------- */
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+  .sec-h {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+  .sec-h h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .sec-h .ref {
+    font-family: var(--mono);
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .note {
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    max-width: 70ch;
+    margin: 0;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 16px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card h3 {
+    margin: 0;
+    font-size: var(--t-md);
+    font-weight: 650;
+  }
+  .card .cap {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .label {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+    font-weight: 650;
+  }
+
+  /* ---------- tokens ---------- */
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .sw {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .sw i {
+    display: block;
+    height: 44px;
+  }
+  .sw div {
+    padding: 6px 9px;
+    font-size: var(--t-xs);
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .sw code {
+    font-family: var(--mono);
+    color: var(--ink-3);
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .type-row:last-child {
+    border-bottom: 0;
+  }
+  .type-row .label {
+    font-size: 10.5px;
+  }
+
+  /* ---------- componentes base ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform 120ms ease-out,
+      opacity 120ms;
+  }
+  .btn.touch {
+    min-height: var(--touch);
+    padding-inline: 18px;
+    font-size: 14.5px;
+  }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink-2);
+    border-color: var(--line);
+  }
+  .btn.danger {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: var(--on-accent);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn .spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 11px;
+    font-size: var(--t-xs);
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  .pill.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .pill.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .pill.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .pill.info {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .pill.mute {
+    background: var(--surface-2);
+    color: var(--ink-3);
+    border: 1px solid var(--line-2);
+  }
+  .stat {
+    background: var(--surface);
+    padding: 12px 14px;
+    min-width: 0;
+  }
+  .stat .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+  }
+  .stat .v {
+    font-size: var(--t-xl);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .n {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .bar {
+    position: relative;
+    height: 7px;
+    border-radius: 4px;
+    background: var(--line-2);
+    overflow: hidden;
+    min-width: 80px;
+    flex: 1;
+  }
+  .bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--accent);
+    border-radius: 4px;
+    transform-origin: left;
+  }
+  .bar i.ok {
+    background: var(--ok);
+  }
+  .bar i.warn {
+    background: var(--warn);
+  }
+  .num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+
+  /* ---------- marcos de dispositivo ---------- */
+  .devices {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .device {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .device-h {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .device-h b {
+    font-size: var(--t-md);
+  }
+  .device-h span {
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+  }
+  .frame-scroll {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .frame {
+    border: 8px solid #1d2733;
+    border-radius: 26px;
+    background: var(--ground);
+    overflow: hidden;
+    position: relative;
+    flex: none;
+  }
+  .frame.phone {
+    width: 376px;
+    height: 720px;
+  }
+  .frame.tablet {
+    width: 1040px;
+    height: 680px;
+    border-radius: 22px;
+  }
+  .frame.desktop {
+    width: 1200px;
+    height: 720px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--line);
+  }
+  .frame-wrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  /* teléfono */
+  .ph {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .ph-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ph-top h4 {
+    margin: 0;
+    font-size: var(--t-lg);
+    font-weight: 650;
+    flex: 1;
+  }
+  .icon-btn {
+    width: var(--touch);
+    height: var(--touch);
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    flex: none;
+  }
+  .icon-btn svg,
+  .ic {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .conn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--t-xs);
+    color: var(--ok);
+    font-weight: 600;
+  }
+  .conn::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .ph-body {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .carousel {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+  }
+  .carousel .tile {
+    scroll-snap-align: start;
+    flex: 0 0 148px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px;
+  }
+  .tile .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+  }
+  .tile .v {
+    font-size: 20px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  .dm-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: var(--touch);
+  }
+  .dm-card .t {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+  }
+  .dm-card b {
+    font-family: var(--mono);
+    font-size: 13.5px;
+  }
+  .dm-card .who {
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .dm-card .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .navbar {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    padding: 4px 4px 10px;
+  }
+  .navbar button {
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-height: var(--touch);
+    font-size: 10.5px;
+    color: var(--ink-3);
+    cursor: pointer;
+    position: relative;
+  }
+  .navbar button[aria-current='page'] {
+    color: var(--accent);
+    font-weight: 650;
+  }
+  .navbar .fab {
+    width: 54px;
+    height: 54px;
+    margin: -22px auto 0;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+  }
+  .badge {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 4px);
+    background: var(--bad);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 9px;
+    padding: 0 5px;
+    line-height: 16px;
+  }
+  .sheet-veil {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 20, 28, 0.38);
+  }
+  .sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface);
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--sheet-shadow);
+    padding: 8px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .grabber {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+    margin: 4px auto 10px;
+  }
+  .sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--touch);
+    padding: 0 6px;
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font-size: 14.5px;
+  }
+  .sheet-item:hover {
+    background: var(--surface-2);
+  }
+  .sheet-group {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    padding: 8px 6px 2px;
+  }
+
+  /* tablet */
+  .tb {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    height: 100%;
+  }
+  .rail {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 0;
+    overflow: hidden;
+  }
+  .rail .logo {
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .rail button {
+    width: 72px;
+    min-height: 56px;
+    border: 0;
+    background: none;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 10.5px;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+  .rail button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .rail .new {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .tb-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tb-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tb-top h4 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 650;
+    flex: 1;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    border-radius: 22px;
+    padding: 0 12px;
+    height: 40px;
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+    min-width: 200px;
+  }
+  .search .ic {
+    width: 16px;
+    height: 16px;
+  }
+  .split {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+  .split .list {
+    border-right: 1px solid var(--line);
+    overflow: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .split .detail {
+    overflow: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dm-card.sel {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1px;
+    background: var(--line-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+  .kv div {
+    background: var(--surface-2);
+    padding: 10px 12px;
+  }
+  .kv .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+  .kv .v {
+    font-size: 16px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  .stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .stages span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stages i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+  }
+  .stages .done {
+    color: var(--ink-2);
+  }
+  .stages .done i {
+    background: var(--ok);
+    border-color: var(--ok);
+  }
+  .stages .now {
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .stages .now i {
+    border-color: var(--accent);
+  }
+
+  /* escritorio */
+  .dk {
+    display: grid;
+    grid-template-columns: 228px 1fr;
+    height: 100%;
+  }
+  .side {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+  .side .brand {
+    padding: 2px 8px 12px;
+    border-bottom: 1px solid var(--line-2);
+    margin-bottom: 6px;
+  }
+  .side .brand b {
+    display: block;
+    font-size: 15px;
+  }
+  .side .brand span {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+  .side .grp {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--ink-3);
+    padding: 10px 10px 3px;
+    font-weight: 650;
+  }
+  .side button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    background: none;
+    text-align: left;
+    border-radius: var(--r-sm);
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .side button:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .side button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .side button .ic {
+    width: 16px;
+    height: 16px;
+  }
+  .side kbd {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+  .side .foot {
+    margin-top: auto;
+    border-top: 1px solid var(--line-2);
+    padding: 10px 10px 0;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dk-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .dk-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .dk-top h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+  }
+  .dk-top .sub {
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .dk-top .right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .bell {
+    position: relative;
+  }
+  .bell .badge {
+    left: auto;
+    right: 2px;
+    top: 4px;
+  }
+  .dk-body {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 18px;
+    padding: 18px 22px;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line-2);
+    white-space: nowrap;
+  }
+  td.r,
+  th.r {
+    text-align: right;
+  }
+  tbody tr:hover {
+    background: var(--surface-2);
+  }
+  tr.hl td {
+    background: var(--accent-soft);
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .panel-h {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-h h5 {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 650;
+  }
+  .alert-row {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .alert-row:last-child {
+    border-bottom: 0;
+  }
+  .alert-row .sev {
+    width: 4px;
+    border-radius: 2px;
+    flex: none;
+  }
+  .alert-row small {
+    display: block;
+    color: var(--ink-3);
+    font-size: var(--t-xs);
+  }
+
+  /* bandas globales */
+  .band {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    font-size: var(--t-sm);
+    font-weight: 600;
+  }
+  .band.off {
+    background: var(--surface-2);
+    color: var(--ink-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .band.batt {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .band.prot {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .toast {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-size: var(--t-sm);
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .ph .toast {
+    left: 14px;
+    right: 14px;
+    bottom: 84px;
+  }
+
+  /* ---------- estados EST ---------- */
+  .est {
+    min-height: 220px;
+  }
+  .est-box {
+    flex: 1;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    background: var(--surface-2);
+  }
+  .skel {
+    background: var(--line-2);
+    border-radius: 6px;
+    height: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.4s infinite;
+  }
+  .empty {
+    text-align: center;
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .empty .ic {
+    width: 34px;
+    height: 34px;
+    color: var(--ink-3);
+    stroke-width: 1.4;
+  }
+  .lock {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .update {
+    text-align: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--r-sm);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .update .btn {
+    background: var(--surface);
+    color: var(--accent-ink);
+    border-color: var(--surface);
+  }
+
+  /* ---------- campos ---------- */
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .field label {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+  }
+  .control {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .control input {
+    width: 100%;
+    height: 40px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: 0 36px 0 11px;
+    font-size: 14px;
+    transition: border-color 150ms;
+  }
+  .control input:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .control .end {
+    position: absolute;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  .field.error input {
+    border-color: var(--bad);
+  }
+  .field.warn input {
+    border-color: var(--warn);
+  }
+  .field.locked input {
+    color: var(--ink-2);
+    background: var(--surface);
+    border-style: dashed;
+  }
+  .field.auto input {
+    background: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .msgline {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    font-size: 12px;
+    min-height: 18px;
+    color: var(--ink-3);
+  }
+  .msgline .ic {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    margin-top: 1px;
+  }
+  .field.error .msgline {
+    color: var(--bad);
+  }
+  .field.warn .msgline {
+    color: var(--warn);
+  }
+  .legal {
+    background: var(--warn-soft);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    color: var(--warn);
+    border-radius: var(--r-sm);
+    padding: 9px 11px;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .legal a {
+    color: inherit;
+    font-weight: 650;
+  }
+  .check-ok {
+    color: var(--ok);
+  }
+  .check-ok path {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 0;
+  }
+  .summary {
+    background: var(--bad-soft);
+    border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+    color: var(--bad);
+    border-radius: var(--r-sm);
+    padding: 11px 14px;
+    font-size: var(--t-sm);
+  }
+  .summary b {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .summary ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .summary a {
+    color: inherit;
+  }
+
+  /* ---------- movimiento ---------- */
+  .mov-table {
+    overflow-x: auto;
+  }
+  .mov-table table {
+    font-size: var(--t-sm);
+  }
+  .mov-table td {
+    white-space: normal;
+    vertical-align: top;
+  }
+  .mov-table td:first-child {
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .demo-stage {
+    height: 120px;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  /* animaciones (solo posición, escala y opacidad) */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-4px);
+    }
+    40%,
+    80% {
+      transform: translateX(4px);
+    }
+  }
+  @keyframes ring {
+    0%,
+    100% {
+      transform: rotate(0);
+    }
+    25% {
+      transform: rotate(14deg);
+    }
+    50% {
+      transform: rotate(-12deg);
+    }
+    75% {
+      transform: rotate(6deg);
+    }
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @keyframes rowIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheetUp {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  .shake {
+    animation: shake 200ms ease-in-out;
+  }
+  .ringing {
+    animation: ring 600ms ease-in-out;
+    transform-origin: 50% 10%;
+  }
+  .pulsing {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+  .row-in {
+    animation: rowIn 250ms ease-out;
+  }
+  .slide-in {
+    animation: slideIn 250ms ease-out;
+  }
+  .sheet-up {
+    animation: sheetUp 220ms ease-out;
+  }
+  .pop-in {
+    animation: pop 200ms ease-out;
+  }
+  .drop-in {
+    animation: drop 220ms ease-out;
+  }
+  .draw path {
+    animation: draw 200ms ease-out;
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 24;
+    }
+  }
+
+  /* "Reducir animaciones": de la preferencia del sistema o del interruptor de esta hoja (RF-UI-06) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+    }
+  }
+  :root.reduce *,
+  :root.reduce *::before,
+  :root.reduce *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  :root.reduce .btn:active {
+    transform: none;
+    filter: brightness(0.92);
+  }
+
+  @media (max-width: 640px) {
+    .sheet-head {
+      grid-template-columns: 1fr;
+    }
+    .toolbar {
+      justify-content: flex-start;
+    }
+    .type-row {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+</style>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24">
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+    </symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24">
+      <path d="M14 3H6v18h12V7z" />
+      <path d="M14 3v4h4" />
+      <path d="M9 13h6M9 17h6" />
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" />
+    </symbol>
+    <symbol id="i-more" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </symbol>
+    <symbol id="i-ship" viewBox="0 0 24 24">
+      <path d="M2 20c2 1 4 1 6 0s4-1 6 0 4 1 6 0" />
+      <path d="M4 16l-1-5h18l-1 5" />
+      <path d="M12 11V3l5 4" />
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24">
+      <path d="M1 4h14v12H1z" />
+      <path d="M15 9h4l3 3v4h-7" />
+      <circle cx="6" cy="18" r="2" />
+      <circle cx="18" cy="18" r="2" />
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <circle cx="9" cy="8" r="4" />
+      <path d="M2 21a7 7 0 0 1 14 0" />
+      <path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6" />
+    </symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24">
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M21 3v5h-5M3 21v-5h5" />
+    </symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24">
+      <path d="M17.5 19H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 11a4 4 0 0 1-1.5 8z" />
+      <path d="M2 2l20 20" />
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v6M12 16.5h.01" />
+    </symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24">
+      <path d="M12 3l10 18H2z" />
+      <path d="M12 10v5M12 18h.01" />
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5h.01" />
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24">
+      <path d="M3 13l3-8h12l3 8v6H3z" />
+      <path d="M3 13h5l1 3h6l1-3h5" />
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24">
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+      />
+    </symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24">
+      <path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
+      <path d="M12 19.5h.01" />
+    </symbol>
+  </defs>
+</svg>
+
+<style>
+  /* T037: piezas propias de las pantallas de acceso, sobre el sistema de T017 */
+  .auth {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--ground);
+  }
+  .auth-body {
+    flex: 1;
+    overflow: auto;
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .auth-center {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: var(--ground);
+  }
+  .auth-card {
+    width: min(440px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo .mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .logo b {
+    display: block;
+    font-size: 17px;
+  }
+  .logo span {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .ph .logo-top {
+    padding: 34px 18px 8px;
+    display: flex;
+    justify-content: center;
+  }
+  .h3 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .muted {
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+    margin: 0;
+  }
+  .btn.block {
+    width: 100%;
+  }
+  .btn.secondary {
+    background: var(--surface);
+    color: var(--accent-ink);
+    border-color: var(--line);
+  }
+  .linkish {
+    background: none;
+    border: 0;
+    color: var(--accent);
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    font-size: var(--t-sm);
+    text-align: left;
+  }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    font-size: var(--t-sm);
+  }
+  .check-row i {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--accent);
+    flex: none;
+    display: grid;
+    place-items: center;
+  }
+  .check-row i.on {
+    background: var(--accent);
+  }
+  .check-row i.on::after {
+    content: '';
+    width: 8px;
+    height: 4px;
+    border: 2px solid var(--on-accent);
+    border-top: 0;
+    border-right: 0;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .pw {
+    position: relative;
+  }
+  .pw .eye {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--t-xs);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .code-big {
+    font-family: var(--mono);
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-align: center;
+    color: var(--ink);
+    padding: 10px 0 4px;
+  }
+  .countdown {
+    text-align: center;
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .search-ring {
+    width: 84px;
+    height: 84px;
+    margin: 10px auto 2px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-soft);
+    border-top-color: var(--accent);
+    display: grid;
+    place-items: center;
+    animation: spin 1.1s linear infinite;
+  }
+  .search-ring svg {
+    width: 30px;
+    height: 30px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 1.8;
+    animation: spin 1.1s linear infinite reverse;
+  }
+  .methods {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--t-sm);
+  }
+  .methods div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-3);
+  }
+  .methods .done {
+    color: var(--ink-2);
+  }
+  .methods .now {
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .methods i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    flex: none;
+  }
+  .methods .done i {
+    background: var(--ink-3);
+    border-color: var(--ink-3);
+  }
+  .methods .now i {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .server-id {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .server-id .ic {
+    width: 28px;
+    height: 28px;
+    color: var(--ok);
+  }
+  .server-id b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .server-id span {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    font-family: var(--mono);
+  }
+  .secure-note {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+  }
+  .secure-note .ic {
+    width: 15px;
+    height: 15px;
+  }
+  .codes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .codes span {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    padding: 9px 4px;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    letter-spacing: 0.06em;
+  }
+  .wizard {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    height: 100%;
+  }
+  .wizard nav {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    padding: 22px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wstep {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    font-size: var(--t-sm);
+    color: var(--ink-3);
+  }
+  .wstep b {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    flex: none;
+  }
+  .wstep.done {
+    color: var(--ink-2);
+  }
+  .wstep.done b {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: #fff;
+  }
+  .wstep.now {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .wstep.now b {
+    border-color: var(--accent);
+  }
+  .wizard main {
+    padding: 26px 30px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .stepbar {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px 0;
+  }
+  .stepbar i {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line-2);
+  }
+  .stepbar i.on {
+    background: var(--accent);
+  }
+  .sticky-foot {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .notice {
+    display: flex;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: var(--r-sm);
+    font-size: var(--t-sm);
+    align-items: flex-start;
+  }
+  .notice .ic {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin-top: 1px;
+  }
+  .notice.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+    border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+  }
+  .notice.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  }
+  .notice.info {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+    height: 100%;
+  }
+  .profile nav {
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .profile nav button {
+    border: 0;
+    background: none;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .profile nav button[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .profile .content {
+    padding: 20px 24px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .session-row:last-child {
+    border-bottom: 0;
+  }
+  .session-row .ic {
+    width: 22px;
+    height: 22px;
+    color: var(--ink-3);
+  }
+  .session-row b {
+    display: block;
+    font-size: 13.5px;
+  }
+  .session-row small {
+    color: var(--ink-3);
+    font-size: var(--t-xs);
+  }
+  .session-row .grow {
+    flex: 1;
+  }
+  .toggle {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--line);
+    position: relative;
+    flex: none;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .toggle.on {
+    background: var(--accent);
+  }
+  .toggle.on::after {
+    left: 21px;
+  }
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--touch);
+    padding: 0 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-2);
+    font-size: 14.5px;
+  }
+  .list-item .chev {
+    margin-left: auto;
+    color: var(--ink-3);
+  }
+  .sema {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border-radius: var(--r-md);
+  }
+  .sema .dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex: none;
+    display: grid;
+    place-items: center;
+    color: #fff;
+  }
+  .sema .dot .ic {
+    width: 24px;
+    height: 24px;
+    stroke: #fff;
+  }
+  .sema.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .sema.ok .dot {
+    background: var(--ok);
+  }
+  .sema.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .sema.bad .dot {
+    background: var(--bad);
+  }
+  .sema b {
+    font-size: 17px;
+    display: block;
+  }
+  .sema span {
+    font-size: var(--t-sm);
+  }
+  .steps-ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .role-pill {
+    font-size: var(--t-xs);
+    font-weight: 650;
+  }
+  .caption {
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    text-align: center;
+    padding-top: 6px;
+  }
+</style>
+<style>
+  /* T057 · P-18 a P-20: piezas propias de estas pantallas, sobre el sistema de diseño de T017. */
+  .stack > * {
+    flex-shrink: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tabs button {
+    border: 0;
+    background: transparent;
+    padding: 10px 14px;
+    font: inherit;
+    color: var(--ink-2);
+    border-bottom: 2px solid transparent;
+  }
+  .tabs button[aria-selected='true'] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12.5px;
+    background: var(--surface-2);
+  }
+  .chip.on {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .total {
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  .rec {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-2);
+    font-size: 13px;
+  }
+  .rec:last-child {
+    border-bottom: 0;
+  }
+  .rec .muted {
+    grid-column: 1;
+  }
+  .rec.off b,
+  .rec.off span {
+    color: var(--ink-3);
+    text-decoration: line-through;
+  }
+  .filterbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+</style>
+<style>
+  /* T085 · P-13 a P-16: piezas propias de las órdenes, sobre el sistema de diseño de T017. */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    height: 100%;
+  }
+  .main {
+    padding: 18px 22px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .aside {
+    border-left: 1px solid var(--line);
+    background: var(--surface);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: auto;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .auto {
+    font-size: 12px;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border-radius: var(--r-sm);
+  }
+  .auto b {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+  .auto .tag {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-ink);
+  }
+  .checks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+  }
+  .checks li {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .checks .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex: none;
+  }
+  .ok-dot {
+    background: var(--ok);
+  }
+  .warn-dot {
+    background: var(--warn);
+  }
+  .bad-dot {
+    background: var(--bad);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 14px;
+    font-size: 13px;
+  }
+  .kv dt {
+    color: var(--ink-3);
+  }
+  .kv dd {
+    margin: 0;
+    text-align: right;
+    font-family: var(--mono);
+  }
+  .veil {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 35%, transparent);
+    display: grid;
+    place-items: center;
+    padding: 20px;
+  }
+  .dlg {
+    background: var(--surface);
+    border-radius: var(--r-md);
+    padding: 18px;
+    width: min(480px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 18px 50px rgb(0 0 0 / 0.25);
+  }
+  .dlg h4 {
+    margin: 0;
+    font-size: 15px;
+  }
+  .rel {
+    position: relative;
+  }
+  .paper {
+    background: #fff;
+    color: #000;
+    width: 560px;
+    padding: 22px 26px;
+    border: 1px solid #000;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.5;
+    position: relative;
+  }
+  .paper h5 {
+    text-align: center;
+    font-size: 12px;
+    margin: 0 0 12px;
+  }
+  .paper .ln {
+    border-bottom: 1px solid #000;
+    display: inline-block;
+    min-width: 80px;
+    padding: 0 3px;
+  }
+  .paper .rule {
+    border-top: 1px solid #000;
+    margin: 7px 0;
+  }
+  .paper .b {
+    font-weight: 700;
+    font-size: 10px;
+    margin-top: 6px;
+  }
+  .paper .mark {
+    position: absolute;
+    top: 110px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-11deg);
+    color: #ae241c;
+    border: 3px solid #ae241c;
+    padding: 2px 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    font-size: 18px;
+  }
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .timeline li {
+    border-left: 2px solid var(--line);
+    padding: 2px 0 2px 12px;
+  }
+  .timeline li.now {
+    border-left-color: var(--accent);
+  }
+  .changed {
+    background: var(--warn-soft);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+  .lockline {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--ink-3);
+    font-size: 12.5px;
+  }
+  .lockline .ic {
+    width: 14px;
+    height: 14px;
+  }
+  .strip-fold {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+  }
+</style>
+
+<style>
+  /* ---------- P-17 Alertas ---------- */
+  .al-list {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .al-group {
+    padding: 8px 14px;
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .al-item {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 4px 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-2);
+    align-items: start;
+    min-width: 0;
+  }
+  .al-item:last-child {
+    border-bottom: 0;
+  }
+  .al-item.sel {
+    background: var(--accent-soft);
+  }
+  .al-item.new {
+    animation: al-in 1.5s ease-out;
+  }
+  @keyframes al-in {
+    from {
+      background: var(--warn-soft);
+    }
+  }
+  :root.reduce .al-item.new {
+    animation: none;
+  }
+  .al-ico {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .al-ico .ic {
+    width: 18px;
+    height: 18px;
+  }
+  .al-ico.bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+  }
+  .al-ico.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .al-ico.info {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .al-ico.mute {
+    background: var(--surface-2);
+    color: var(--ink-3);
+  }
+  .al-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .al-main b {
+    font-weight: 620;
+  }
+  .al-main p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--t-sm);
+  }
+  .al-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: center;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    margin-top: 4px;
+  }
+  .al-meta a {
+    color: var(--accent-ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .al-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    font-size: var(--t-xs);
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .btn.sm {
+    min-height: 32px;
+    padding: 4px 12px;
+    font-size: var(--t-sm);
+  }
+  .al-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+  }
+  .al-filters .field {
+    min-width: 160px;
+  }
+  .al-two {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 16px;
+    padding: 16px;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .al-detail {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .al-detail h4 {
+    margin: 0;
+    font-size: var(--t-lg);
+  }
+  .al-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 380px;
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+    box-shadow: -8px 0 24px rgba(20, 32, 43, 0.14);
+    display: flex;
+    flex-direction: column;
+  }
+  .al-drawer-h {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .al-drawer-h h5 {
+    margin: 0;
+    font-size: var(--t-md);
+    flex: 1;
+  }
+  .al-drawer .al-list {
+    border: 0;
+    border-radius: 0;
+    overflow: auto;
+    flex: 1;
+  }
+  .al-drawer-f {
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+  }
+  .al-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 20, 28, 0.25);
+  }
+  .al-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+</style>
+
+<style>
+  /* ---------- F8: tablero, búsqueda, órdenes y bitácora ---------- */
+  .f8-pad {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .f8-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+    align-items: start;
+  }
+  .f8-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+  }
+  .f8-filters .field {
+    min-width: 130px;
+    flex: 1;
+  }
+  .f8-total {
+    display: flex;
+    gap: 18px;
+    align-items: baseline;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .f8-total b {
+    font-size: var(--t-xl);
+    font-variant-numeric: tabular-nums;
+  }
+  .f8-total span {
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+  }
+  .f8-table {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: auto;
+  }
+  .f8-table th .sort {
+    color: var(--accent-ink);
+  }
+  .f8-pbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .f8-search {
+    position: relative;
+    flex: 1;
+    max-width: 520px;
+  }
+  .f8-search input {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: var(--r-md);
+    padding: 0 12px;
+    background: var(--surface);
+  }
+  .f8-results {
+    position: absolute;
+    top: 46px;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .f8-res {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .f8-res small {
+    color: var(--ink-3);
+  }
+  .f8-res.sel {
+    background: var(--accent-soft);
+  }
+  .f8-archive {
+    padding: 10px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface-2);
+    font-size: var(--t-sm);
+  }
+  .f8-diff {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 4px 12px;
+    font-size: var(--t-sm);
+    padding: 10px 14px;
+    background: var(--surface-2);
+  }
+  .f8-diff .h {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+  .f8-diff del {
+    color: var(--bad);
+  }
+  .f8-diff ins {
+    color: var(--ok);
+    text-decoration: none;
+  }
+  .f8-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .f8-card .t {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .f8-card small {
+    color: var(--ink-3);
+  }
+  .f8-day {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    font-weight: 650;
+    margin-top: 6px;
+  }
+  .f8-side {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .f8-side h4 {
+    margin: 0;
+  }
+  .f8-grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .f8-two {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .f8-delta {
+    color: var(--ok);
+    font-size: var(--t-xs);
+    font-weight: 650;
+  }
+  .f8-offline {
+    padding: 24px;
+    text-align: center;
+    color: var(--ink-2);
+  }
+</style>
+
+<style>
+  /* ---------- P-24 Respaldos y restauración ---------- */
+  .bk-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .bk-tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bk-tile .k {
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+  .bk-tile b {
+    font-size: 15px;
+  }
+  .bk-tile small {
+    color: var(--ink-3);
+  }
+  .bk-ok {
+    color: var(--ok);
+  }
+  .bk-warn {
+    color: var(--warn);
+  }
+  .bk-bad {
+    color: var(--bad);
+  }
+  .bk-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bk-card h4 {
+    margin: 0;
+    font-size: 14px;
+  }
+  .bk-lost {
+    border-left: 4px solid var(--warn);
+  }
+  .bk-lost-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line-2);
+    align-items: center;
+  }
+  .bk-lost-row small {
+    color: var(--ink-3);
+  }
+  .bk-error {
+    color: var(--bad);
+    font-size: var(--t-sm);
+  }
+  .bk-steps {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--t-sm);
+  }
+  .bk-steps li {
+    flex: 1;
+    text-align: center;
+    padding: 6px;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--ink-3);
+  }
+  .bk-steps li.done {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .bk-steps li.now {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 650;
+  }
+  .bk-wizard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .bk-consequence {
+    background: var(--bad-soft);
+    color: var(--bad);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    font-size: var(--t-sm);
+  }
+  .bk-consequence ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+  .bk-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--t-sm);
+  }
+  .bk-progress span::before {
+    content: '✓ ';
+    color: var(--ok);
+  }
+  .bk-progress span.now::before {
+    content: '… ';
+    color: var(--accent);
+  }
+  .bk-progress span.next {
+    color: var(--ink-3);
+  }
+  .bk-progress span.next::before {
+    content: '○ ';
+  }
+  .bk-num {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    gap: 8px 12px;
+    align-items: center;
+  }
+</style>
+
+<style>
+  /* ---------- T114: versiones, aviso de versión nueva, actualización obligatoria y WebView ---------- */
+  .up-plat {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .up-plat button {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: var(--t-sm);
+  }
+  .up-plat button[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .up-notes {
+    color: var(--ink-2);
+    font-size: 12.5px;
+    max-width: 340px;
+  }
+  .up-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow);
+  }
+  .up-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px dashed var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    font-size: 12.5px;
+  }
+  .up-file b {
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+  .up-bar {
+    height: 7px;
+    border-radius: 999px;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+  .up-bar i {
+    display: block;
+    height: 100%;
+    width: 62%;
+    background: var(--accent);
+    border-radius: inherit;
+  }
+  .up-new {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--t-sm);
+  }
+  .up-new b {
+    font-weight: 650;
+  }
+  .up-new .row {
+    margin-left: auto;
+  }
+  .up-sheet textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+  }
+  .update .up-link {
+    background: none;
+    border: 0;
+    color: var(--on-accent);
+    font: inherit;
+    font-size: 12.5px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .native {
+    font-family: Roboto, 'Segoe UI', system-ui, sans-serif;
+    background: #fafafa;
+    color: #202124;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 22px;
+    height: 100%;
+  }
+  .native h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .native p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #3c4043;
+  }
+  .native dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    margin: 0;
+    font-size: 14px;
+  }
+  .native dt {
+    color: #5f6368;
+  }
+  .native dd {
+    margin: 0;
+    font-family: var(--mono);
+  }
+  .native .nbtn {
+    margin-top: auto;
+    min-height: 44px;
+    border: 0;
+    border-radius: 4px;
+    background: #1a73e8;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .native small {
+    color: #5f6368;
+    font-size: 12.5px;
+  }
+</style>
+
+<style>
+  /* T124 · P-28 y P-29: piezas nuevas, sobre los tokens y componentes aprobados en T017. */
+  .srv-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .srv-checks li {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: var(--t-sm);
+  }
+  .srv-checks li:last-child {
+    border-bottom: 0;
+  }
+  .srv-checks b {
+    display: block;
+    font-size: var(--t-md);
+    color: var(--ink);
+  }
+  .srv-checks span.d {
+    color: var(--ink-2);
+  }
+  .srv-checks small {
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: var(--t-xs);
+    white-space: nowrap;
+  }
+  .srv-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .srv-mark.ok {
+    background: var(--ok);
+  }
+  .srv-mark.warn {
+    background: var(--warn);
+  }
+  .srv-mark.bad {
+    background: var(--bad);
+  }
+  .srv-mark.now {
+    background: transparent;
+    border: 2.5px solid var(--accent);
+    border-right-color: transparent;
+    animation: srv-spin 1s linear infinite;
+  }
+  .srv-mark.next {
+    background: transparent;
+    border: 2px solid var(--line);
+  }
+  @keyframes srv-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .reduce .srv-mark.now {
+    animation: none;
+    border-right-color: var(--accent);
+  }
+  .srv-foot {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .srv-foot .left {
+    margin-right: auto;
+    color: var(--ink-3);
+    font-size: var(--t-sm);
+  }
+  .srv-opts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .srv-opt {
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .srv-opt[aria-checked='true'] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .srv-opt h4 {
+    margin: 0;
+    font-size: var(--t-lg);
+    color: var(--ink);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .srv-opt svg.ill {
+    width: 100%;
+    height: 96px;
+    color: var(--ink-2);
+  }
+  .srv-opt ul {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .srv-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .srv-progress .row {
+    justify-content: space-between;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .srv-log {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    font-size: var(--t-sm);
+  }
+  .srv-log summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--ink-2);
+  }
+  .srv-log pre {
+    margin: 0;
+    padding: 8px 12px 12px;
+    font-family: var(--mono);
+    font-size: var(--t-xs);
+    color: var(--ink-2);
+    white-space: pre-wrap;
+  }
+  .srv-done {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 24px;
+    align-items: start;
+  }
+  .srv-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: #fff;
+    color: #000;
+    font-size: var(--t-xs);
+  }
+  .srv-qr svg {
+    width: 168px;
+    height: 168px;
+  }
+  .srv-qr.sm svg {
+    width: 120px;
+    height: 120px;
+  }
+  .srv-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .srv-tile {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+    min-width: 0;
+  }
+  .srv-tile .label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .srv-tile .v {
+    font-size: var(--t-lg);
+    font-weight: 650;
+    color: var(--ink);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .srv-tile .v .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+  .srv-tile.warn .v .dot {
+    background: var(--warn);
+  }
+  .srv-tile.bad .v .dot {
+    background: var(--bad);
+  }
+  .srv-mem {
+    display: flex;
+    height: 7px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--line-2);
+    margin-top: 4px;
+  }
+  .srv-mem i {
+    display: block;
+  }
+  .srv-cols {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 14px;
+    min-height: 0;
+  }
+  .srv-req {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 6px 16px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .srv-req .code-big {
+    font-size: 30px;
+    padding: 0;
+  }
+  .srv-req .who {
+    font-size: var(--t-sm);
+    color: var(--ink-2);
+  }
+  .srv-req .who b {
+    display: block;
+    color: var(--ink);
+    font-size: var(--t-md);
+  }
+  .srv-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .srv-actions .btn {
+    justify-content: flex-start;
+  }
+  .srv-wiz {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 14px;
+  }
+  .srv-toast {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--sheet-shadow);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: var(--t-sm);
+  }
+</style>
+
+<div class="page">
+  <header class="sheet-head">
+    <div>
+      <h1>Maquetas del servidor · Órdenes de Carga</h1>
+      <p>
+        Tarea T124. P-28 Crear servidor (asistente de la app de escritorio instalada con el instalador completo) y P-29
+        Estado del servidor (en la PC servidor). Solo existen en escritorio, porque el servidor solo puede ser una PC
+        con Windows (ui-spec, nota de clases). Sobre el sistema de diseño aprobado en T017. Datos ficticios.
+      </p>
+    </div>
+    <div class="toolbar" role="group" aria-label="Opciones de vista">
+      <div class="seg" role="group" aria-label="Tema">
+        <button aria-pressed="true" data-theme-set="">Sistema</button>
+        <button aria-pressed="false" data-theme-set="light">Claro</button>
+        <button aria-pressed="false" data-theme-set="dark">Oscuro</button>
+      </div>
+      <div class="seg" role="group" aria-label="Movimiento">
+        <button aria-pressed="true" data-motion="on">Con animaciones</button>
+        <button aria-pressed="false" data-motion="off">Reducir animaciones</button>
+      </div>
+    </div>
+    <div class="approve">
+      <h2>Qué se aprueba en esta hoja</h2>
+      <ul>
+        <li>
+          P-28, cinco pasos a la izquierda: Comprobación (con el bloqueo si ya hay un servidor en la red y la marca ámbar
+          con 4 GB), Permisos (permiso de Windows y código de instalación), Montaje de red (router u hotspot, con su
+          ilustración y requisitos), Creación (los pasos con su estado, la barra general, el tiempo y el detalle técnico)
+          y Listo (nombre, QR, guía del montaje y «Crear la primera Apoderada»)
+        </li>
+        <li>El fallo de un paso, en lenguaje claro, con Reintentar y Deshacer, y el progreso de Deshacer</li>
+        <li>La variante «Crear servidor desde un respaldo de traslado», que pide el archivo y su contraseña</li>
+        <li>
+          P-29: estado del servicio, energía, montaje y dirección, memoria, QR, solicitudes de emparejamiento con
+          Confirmar y Rechazar, dispositivos emparejados y conectados, y las acciones de mantenimiento
+        </li>
+        <li>
+          P-29 con batería, en modo protegido y con 8 dispositivos en hotspot (AL-20, AL-21); la ventana al frente con
+          una solicitud nueva (AL-22)
+        </li>
+        <li>
+          Los asistentes de mantenimiento: Actualizar (con la vuelta atrás si falla), Preparar traslado, Desinstalar
+          (escribir DESINSTALAR) y Restablecimiento de emergencia
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ================= P-28 · 1 Comprobación ================= -->
+  <section aria-labelledby="p28a">
+    <div class="sec-h">
+      <h2 id="p28a">P-28 · Paso 1. Comprobación</h2>
+      <span class="ref">Asistente · Administrador de instalación · RF-INS-03, RNF-19</span>
+    </div>
+    <p class="note">
+      Se abre desde P-01 («Crear servidor en este equipo», solo con el instalador completo). Primero busca durante 15 s
+      un servidor en la red (por los mismos métodos que P-01) y después comprueba la PC. Verde: cumple. Ámbar: funciona
+      con un aviso. Rojo: no deja continuar y dice qué hacer.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 600px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep now"><b>1</b>Comprobación</div>
+            <div class="wstep"><b>2</b>Permisos</div>
+            <div class="wstep"><b>3</b>Montaje de red</div>
+            <div class="wstep"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <div>
+              <h3 class="h3">Comprobación de esta PC</h3>
+              <p class="muted" style="margin: 4px 0 0">
+                Esta PC guardará los datos de la empresa y atenderá a todos los dispositivos.
+              </p>
+            </div>
+            <ul class="srv-checks">
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div><b>No hay otro servidor en la red</b><span class="d">Se buscó durante 15 s por todos los métodos.</span></div>
+                <small>15 s</small>
+              </li>
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div><b>Windows 11 de 64 bits</b><span class="d">Windows 10 u 11 de 64 bits.</span></div>
+                <small></small>
+              </li>
+              <li>
+                <span class="srv-mark warn">!</span>
+                <div>
+                  <b>Memoria: 4 GB</b><span class="d">Funcionará, aunque más lento; se recomiendan 8 GB.</span>
+                </div>
+                <small>4 GB</small>
+              </li>
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div><b>Disco: 86 GB libres en C:</b><span class="d">Hacen falta 20 GB.</span></div>
+                <small>86 GB</small>
+              </li>
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div>
+                  <b>Red: conectada por wifi</b><span class="d">«Almacén Impocaribe» · dirección 192.168.1.10</span>
+                </div>
+                <small></small>
+              </li>
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div><b>Puertos del servidor libres</b><span class="d">Nada más en esta PC usa los puertos que necesita.</span></div>
+                <small></small>
+              </li>
+              <li>
+                <span class="srv-mark ok">✓</span>
+                <div>
+                  <b>Laptop con batería</b><span class="d">En un apagón el servidor sigue y se protege solo.</span>
+                </div>
+                <small></small>
+              </li>
+            </ul>
+            <div class="srv-foot">
+              <span class="left">Una marca ámbar no impide continuar.</span>
+              <button class="btn ghost">Cancelar</button><button class="btn">Continuar</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="p28b">
+    <div class="sec-h">
+      <h2 id="p28b">P-28 · Ya hay un servidor en la red</h2>
+      <span class="ref">RF-INS-03.1 · SERVER_ALREADY_EXISTS</span>
+    </div>
+    <p class="note">
+      Solo puede haber un servidor. Si lo encuentra, se detiene aquí y explica qué hacer; Continuar no existe. Una PC sin
+      memoria o disco suficientes se detiene igual, con la marca roja.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 400px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep now"><b>1</b>Comprobación</div>
+            <div class="wstep"><b>2</b>Permisos</div>
+            <div class="wstep"><b>3</b>Montaje de red</div>
+            <div class="wstep"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <h3 class="h3">Comprobación de esta PC</h3>
+            <ul class="srv-checks">
+              <li>
+                <span class="srv-mark bad">✕</span>
+                <div>
+                  <b>Ya hay un servidor en esta red: IMPOCARIBE-7F3C</b
+                  ><span class="d"
+                    >Está en 192.168.1.10. Solo puede haber uno. Para pasarlo a esta PC, use «Preparar traslado» en
+                    Estado del servidor de esa PC y después «Crear servidor desde un respaldo de traslado» aquí.</span
+                  >
+                </div>
+                <small>3 s</small>
+              </li>
+            </ul>
+            <div class="srv-foot">
+              <button class="btn ghost">Volver</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · 2 Permisos ================= -->
+  <section aria-labelledby="p28c">
+    <div class="sec-h">
+      <h2 id="p28c">P-28 · Paso 2. Permisos</h2>
+      <span class="ref">RF-INS-02 · DT-17 · INSTALL_CODE_INVALID</span>
+    </div>
+    <p class="note">
+      Crear el servidor instala servicios de Windows: Windows pide permiso de administrador (su propio diálogo). El
+      código de instalación viene impreso aparte, nunca dentro del paquete; aquí se muestra el error de un código que no
+      es el de la empresa.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 470px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep done"><b>✓</b>Comprobación</div>
+            <div class="wstep now"><b>2</b>Permisos</div>
+            <div class="wstep"><b>3</b>Montaje de red</div>
+            <div class="wstep"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <div>
+              <h3 class="h3">Permisos</h3>
+              <p class="muted" style="margin: 4px 0 0">
+                Al continuar, Windows le pedirá permiso de administrador. Si no lo tiene, pida ayuda a quien administra
+                esta PC.
+              </p>
+            </div>
+            <div class="field error" style="max-width: 360px">
+              <label for="ic">Código de instalación</label>
+              <div class="control"><input id="ic" class="code" value="K7QM-3XTP-R2HX" /></div>
+              <div class="msgline">
+                <svg class="ic"><use href="#i-alert" /></svg>El código no es el de esta empresa. Revíselo en la hoja
+                impresa que acompaña al paquete.
+              </div>
+            </div>
+            <div class="notice info" style="max-width: 560px">
+              <svg class="ic"><use href="#i-info" /></svg>
+              <div>
+                Tiene la forma XXXX-XXXX-XXXX y está en la hoja impresa que se entregó con el paquete. No hace falta
+                escribir los guiones.
+              </div>
+            </div>
+            <div class="srv-foot">
+              <button class="btn ghost">Atrás</button>
+              <button class="btn"><svg class="ic"><use href="#i-shield" /></svg>Continuar con permiso de administrador</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · 3 Montaje ================= -->
+  <section aria-labelledby="p28d">
+    <div class="sec-h">
+      <h2 id="p28d">P-28 · Paso 3. Montaje de red</h2>
+      <span class="ref">RF-RED-01 · RF-INS-03.4</span>
+    </div>
+    <p class="note">
+      Se elige uno; se puede cambiar después en Estado del servidor. Con hotspot, a partir de 8 dispositivos conectados
+      aparece AL-21. Lo que el sistema no puede comprobar (celular dedicado, enchufado, sin datos móviles) va como
+      requisito y en la guía.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 560px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep done"><b>✓</b>Comprobación</div>
+            <div class="wstep done"><b>✓</b>Permisos</div>
+            <div class="wstep now"><b>3</b>Montaje de red</div>
+            <div class="wstep"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <h3 class="h3">¿Cómo se conectan los dispositivos a esta PC?</h3>
+            <div class="srv-opts" role="radiogroup" aria-label="Montaje de red">
+              <div class="srv-opt" role="radio" aria-checked="true" tabindex="0">
+                <h4><svg class="ic"><use href="#i-wifi" /></svg>Router wifi <span class="pill info">Recomendado</span></h4>
+                <svg class="ill" viewBox="0 0 320 96" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="134" y="34" width="52" height="26" rx="5" />
+                  <path d="M146 34v-12M174 34v-12" />
+                  <rect x="18" y="58" width="58" height="34" rx="3" /><path d="M10 92h74" />
+                  <rect x="252" y="40" width="24" height="44" rx="4" /><rect x="286" y="48" width="22" height="36" rx="4" />
+                  <path d="M76 70l58-18M186 50l66 6M186 54l100 8" stroke-dasharray="4 4" />
+                  <text x="47" y="80" font-size="9" text-anchor="middle" fill="currentColor" stroke="none">Servidor</text>
+                </svg>
+                <span>La PC servidor y todos los dispositivos se conectan al mismo router wifi. La PC servidor puede ir por cable.</span>
+                <ul>
+                  <li>Un router wifi en el almacén</li>
+                  <li>Sin límite práctico de dispositivos</li>
+                </ul>
+              </div>
+              <div class="srv-opt" role="radio" aria-checked="false" tabindex="-1">
+                <h4><svg class="ic"><use href="#i-wifi" /></svg>Hotspot de un celular</h4>
+                <svg class="ill" viewBox="0 0 320 96" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="148" y="24" width="24" height="44" rx="4" /><path d="M154 18c4-4 8-4 12 0M150 12c7-7 13-7 20 0" />
+                  <rect x="18" y="58" width="58" height="34" rx="3" /><path d="M10 92h74" />
+                  <rect x="252" y="40" width="24" height="44" rx="4" /><rect x="286" y="48" width="22" height="36" rx="4" />
+                  <path d="M76 70l72-22M172 46l80 10M172 50l114 10" stroke-dasharray="4 4" />
+                  <text x="47" y="80" font-size="9" text-anchor="middle" fill="currentColor" stroke="none">Servidor</text>
+                </svg>
+                <span>Un celular comparte su wifi con la PC servidor y los dispositivos.</span>
+                <ul>
+                  <li>Un celular dedicado, junto a la PC, enchufado y sin datos móviles</li>
+                  <li>Una PC de escritorio sin wifi necesita un adaptador wifi USB</li>
+                  <li>Hasta 8 dispositivos conectados; para más, un router</li>
+                </ul>
+              </div>
+            </div>
+            <div class="srv-foot">
+              <button class="btn ghost">Atrás</button><button class="btn">Crear el servidor</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · 4 Creación ================= -->
+  <section aria-labelledby="p28e">
+    <div class="sec-h">
+      <h2 id="p28e">P-28 · Paso 4. Creación</h2>
+      <span class="ref">Plan §10.3 · RNF-18 · MOV-07 y MOV-03</span>
+    </div>
+    <p class="note">
+      Los pasos del plan §10.3 con nombres de usuario. Cada uno cambia de estado (pendiente, en curso, hecho, fallido)
+      con MOV-07, y la barra general avanza con MOV-03. El detalle técnico está plegado: es para quien dé soporte. Cerrar
+      la ventana no detiene la creación: al volver a abrir la app, sigue aquí.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 640px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep done"><b>✓</b>Comprobación</div>
+            <div class="wstep done"><b>✓</b>Permisos</div>
+            <div class="wstep done"><b>✓</b>Montaje de red</div>
+            <div class="wstep now"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <div>
+              <h3 class="h3">Creando el servidor</h3>
+              <p class="muted" style="margin: 4px 0 0">Suele tardar menos de 20 minutos. Puede seguir usando la PC.</p>
+            </div>
+            <div class="srv-progress">
+              <div class="row"><span>Paso 5 de 10</span><span class="num">4 min 12 s</span></div>
+              <div class="up-bar" role="progressbar" aria-label="Creando el servidor" aria-valuenow="45"><i style="width: 45%"></i></div>
+            </div>
+            <ul class="srv-checks">
+              <li><span class="srv-mark ok">✓</span><div><b>Copiar los componentes del servidor</b></div><small>0:41</small></li>
+              <li><span class="srv-mark ok">✓</span><div><b>Crear la base de datos</b></div><small>1:12</small></li>
+              <li><span class="srv-mark ok">✓</span><div><b>Registrar la base de datos como servicio</b></div><small>0:09</small></li>
+              <li><span class="srv-mark ok">✓</span><div><b>Preparar la estructura de los datos</b></div><small>1:48</small></li>
+              <li>
+                <span class="srv-mark now"></span>
+                <div><b>Crear la identidad y el certificado del servidor</b><span class="d">Lo que reconocen los dispositivos al conectarse.</span></div>
+                <small>0:22</small>
+              </li>
+              <li><span class="srv-mark next"></span><div><b>Registrar el servidor como servicio de Windows</b></div><small></small></li>
+              <li><span class="srv-mark next"></span><div><b>Permitir la red local en el firewall</b></div><small></small></li>
+              <li><span class="srv-mark next"></span><div><b>Ajustar la energía para que la PC no se suspenda</b></div><small></small></li>
+              <li><span class="srv-mark next"></span><div><b>Guardar el montaje de red</b></div><small></small></li>
+              <li><span class="srv-mark next"></span><div><b>Arrancar y comprobar (servidor, base de datos y PDF)</b></div><small></small></li>
+            </ul>
+            <details class="srv-log">
+              <summary>Detalle técnico</summary>
+              <pre>
+19:04:11 paso 4 · migraciones aplicadas: 16 (0000 a 0016)
+19:04:12 paso 5 · generando la CA de la instalación (Ed25519)
+19:04:12 paso 5 · certificado del servidor: DNS:7f3c2a10….impocaribe</pre
+              >
+            </details>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · Error ================= -->
+  <section aria-labelledby="p28f">
+    <div class="sec-h">
+      <h2 id="p28f">P-28 · Si un paso falla</h2>
+      <span class="ref">RF-INS-03.6 · DT-17 (diario y deshacer por paso)</span>
+    </div>
+    <p class="note">
+      Lo que falló, en lenguaje claro, con lo que puede hacer. Reintentar repite desde el paso que falló; Deshacer quita
+      todo lo hecho, en orden inverso, y deja la PC como estaba. Nunca queda un servidor a medias. A la derecha, el
+      progreso de Deshacer.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame-wrap" style="flex-direction: row">
+        <div class="frame desktop" style="width: 820px; height: 600px">
+          <div class="wizard">
+            <nav aria-label="Pasos">
+              <div class="logo" style="margin-bottom: 14px">
+                <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+                <div><b>Crear servidor</b><span>Esta PC</span></div>
+              </div>
+              <div class="wstep done"><b>✓</b>Comprobación</div>
+              <div class="wstep done"><b>✓</b>Permisos</div>
+              <div class="wstep done"><b>✓</b>Montaje de red</div>
+              <div class="wstep now"><b>4</b>Creación</div>
+              <div class="wstep"><b>5</b>Listo</div>
+            </nav>
+            <main>
+              <h3 class="h3">No se pudo terminar</h3>
+              <div class="notice bad">
+                <svg class="ic"><use href="#i-alert" /></svg>
+                <div>
+                  <b>No se pudo permitir la red local en el firewall de Windows.</b><br />Otro programa de seguridad
+                  puede estar bloqueándolo. Permita a «Órdenes de Carga» en ese programa y pulse Reintentar.
+                </div>
+              </div>
+              <ul class="srv-checks">
+                <li><span class="srv-mark ok">✓</span><div><b>Pasos 1 a 6 hechos</b></div><small>6:31</small></li>
+                <li>
+                  <span class="srv-mark bad">✕</span>
+                  <div><b>Permitir la red local en el firewall</b><span class="d">Windows respondió: acceso denegado.</span></div>
+                  <small>0:04</small>
+                </li>
+                <li><span class="srv-mark next"></span><div><b>Pasos 8 a 10</b><span class="d">Sin empezar.</span></div><small></small></li>
+              </ul>
+              <div class="srv-foot">
+                <span class="left">Deshacer quita los pasos 1 a 6 y deja la PC como estaba.</span>
+                <button class="btn ghost">Deshacer</button><button class="btn">Reintentar</button>
+              </div>
+            </main>
+          </div>
+        </div>
+        <div class="frame desktop" style="width: 360px; height: 600px">
+          <div style="padding: 22px; display: flex; flex-direction: column; gap: 14px; height: 100%">
+            <h3 class="h3">Deshaciendo…</h3>
+            <div class="bk-progress">
+              <span>Firewall: nada que quitar</span>
+              <span>Servicio del servidor quitado</span>
+              <span>Identidad y certificado borrados</span>
+              <span class="now">Deteniendo y quitando la base de datos…</span>
+              <span class="next">Estructura de los datos</span>
+              <span class="next">Componentes del servidor</span>
+            </div>
+            <p class="muted" style="margin: 0">
+              Solo se borra lo creado ahora. Cuando termine, la PC queda como antes de empezar.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · Desde traslado ================= -->
+  <section aria-labelledby="p28g">
+    <div class="sec-h">
+      <h2 id="p28g">P-28 · Desde un respaldo de traslado</h2>
+      <span class="ref">RF-INS-07 · plan §10.5 · D14</span>
+    </div>
+    <p class="note">
+      Variante del asistente: antes de la Creación pide el archivo de traslado (.icmove) y la contraseña de respaldo. La
+      base y la identidad se restauran del archivo en lugar de crearse, así que los dispositivos se reconectan solos,
+      sin volver a emparejarse. Se elige en P-01 con «Crear servidor desde un respaldo de traslado».
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 470px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Trasladar el servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep done"><b>✓</b>Comprobación</div>
+            <div class="wstep done"><b>✓</b>Permisos</div>
+            <div class="wstep now"><b>3</b>Archivo de traslado</div>
+            <div class="wstep"><b>4</b>Creación</div>
+            <div class="wstep"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <h3 class="h3">Archivo de traslado</h3>
+            <div class="up-file">
+              <svg class="ic"><use href="#i-doc" /></svg>
+              <div><b>IMPOCARIBE-7F3C-2026-10-27.icmove</b><span>E:\ (USB) · 214,6 MB · creado el 27/10/2026 18:40</span></div>
+              <button class="btn sm ghost">Cambiar</button>
+            </div>
+            <div class="field" style="max-width: 360px">
+              <label for="mv-p">Contraseña de respaldo</label>
+              <div class="control"><input id="mv-p" type="password" value="xxxxxxxxxxxxxx" /></div>
+              <div class="msgline">La misma con la que se cifran los respaldos de la empresa.</div>
+            </div>
+            <div class="server-id">
+              <svg class="ic"><use href="#i-shield" /></svg>
+              <div>
+                <b>Servidor IMPOCARIBE-7F3C</b><br /><span class="muted"
+                  >Misma identidad: los 9 dispositivos emparejados se reconectarán solos. El montaje de red se conserva.</span
+                >
+              </div>
+            </div>
+            <div class="srv-foot">
+              <button class="btn ghost">Atrás</button><button class="btn">Trasladar a esta PC</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-28 · 5 Listo ================= -->
+  <section aria-labelledby="p28h">
+    <div class="sec-h">
+      <h2 id="p28h">P-28 · Paso 5. Listo</h2>
+      <span class="ref">RF-INS-03.7 · sigue en P-02</span>
+    </div>
+    <p class="note">
+      El nombre y el QR del servidor (los dispositivos lo escanean en P-01), la guía del montaje elegido y el paso a la
+      primera Apoderada. El QR también está siempre en Estado del servidor.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 560px">
+        <div class="wizard">
+          <nav aria-label="Pasos">
+            <div class="logo" style="margin-bottom: 14px">
+              <span class="mark"><svg class="ic"><use href="#i-ship" /></svg></span>
+              <div><b>Crear servidor</b><span>Esta PC</span></div>
+            </div>
+            <div class="wstep done"><b>✓</b>Comprobación</div>
+            <div class="wstep done"><b>✓</b>Permisos</div>
+            <div class="wstep done"><b>✓</b>Montaje de red</div>
+            <div class="wstep done"><b>✓</b>Creación</div>
+            <div class="wstep now"><b>5</b>Listo</div>
+          </nav>
+          <main>
+            <div class="srv-done">
+              <div style="display: flex; flex-direction: column; gap: 14px">
+                <div>
+                  <h3 class="h3">El servidor está listo</h3>
+                  <p class="muted" style="margin: 4px 0 0">Creado en 11 min 40 s. Arranca solo cada vez que se enciende esta PC.</p>
+                </div>
+                <div class="server-id">
+                  <svg class="ic"><use href="#i-shield" /></svg>
+                  <div><b>IMPOCARIBE-7F3C</b><br /><span class="muted num">192.168.1.10 · puerto 8443 · router wifi</span></div>
+                </div>
+                <div>
+                  <b>Para conectar los dispositivos (router wifi)</b>
+                  <ol class="steps-ol" style="margin-top: 6px">
+                    <li>Conecte cada teléfono, tablet o PC al wifi del almacén.</li>
+                    <li>Instale Órdenes de Carga y ábrala: encontrará este servidor sola.</li>
+                    <li>Empareje cada uno con el código o con este QR; los códigos se confirman en Estado del servidor.</li>
+                    <li>Deje esta PC encendida y con la app abierta: así avisa antes de apagarla.</li>
+                  </ol>
+                </div>
+              </div>
+              <div class="srv-qr">
+                <svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-label="QR del servidor (ficticio)">
+                  <path fill="#000" d="M0 0h7v7H0zM18 0h7v7h-7zM0 18h7v7H0z" />
+                  <path fill="#fff" d="M1 1h5v5H1zM19 1h5v5h-5zM1 19h5v5H1z" />
+                  <path fill="#000" d="M2 2h3v3H2zM20 2h3v3h-3zM2 20h3v3H2zM9 1h1v2H9zM11 0h2v1h-2zM14 2h2v1h-2zM9 5h3v1H9zM13 4h1v3h-1zM8 8h2v1H8zM11 8h1v2h-1zM14 8h3v1h-3zM18 9h2v1h-2zM21 8h2v2h-2zM0 9h2v1H0zM3 10h3v1H3zM8 11h1v3H8zM10 12h3v1h-3zM15 11h1v2h-1zM17 12h3v1h-3zM22 11h3v1h-3zM1 13h2v2H1zM4 14h2v1H4zM9 15h2v1H9zM12 14h2v2h-2zM16 15h2v1h-2zM20 14h1v3h-1zM23 15h2v1h-2zM8 17h1v2H8zM10 18h3v1h-3zM14 17h1v3h-1zM16 18h2v2h-2zM19 19h2v1h-2zM22 18h1v3h-1zM9 21h2v1H9zM12 22h2v2h-2zM15 21h3v1h-3zM19 22h3v1h-3zM23 23h2v2h-2zM9 24h2v1H9zM17 24h3v1h-3z" />
+                </svg>
+                <span>IMPOCARIBE-7F3C</span>
+              </div>
+            </div>
+            <div class="srv-foot"><button class="btn">Crear la primera Apoderada</button></div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-29 ================= -->
+  <section aria-labelledby="p29a">
+    <div class="sec-h">
+      <h2 id="p29a">P-29. Estado del servidor</h2>
+      <span class="ref">/servidor · solo en la PC servidor · RF-INS-04 a 11, RF-RED-04, 05, RF-ENE</span>
+    </div>
+    <p class="note">
+      Cualquiera ante la PC servidor la ve y puede confirmar emparejamientos (la persona que empareja está delante). Revocar
+      un dispositivo pide una Apoderada con sesión. Las acciones de mantenimiento piden permiso de administrador de Windows
+      y el código de instalación. La memoria compara con el presupuesto del plan §10.7 (1,2 GB en operación).
+    </p>
+    <div class="frame-scroll">
+      <div class="frame desktop" style="height: 790px">
+        <div class="dk">
+          <nav class="side" aria-label="Menú principal">
+            <div class="brand"><b>IMPOCARIBE</b><span>Órdenes de Carga</span></div>
+            <div class="grp">Operación</div>
+            <button><svg class="ic"><use href="#i-home" /></svg>Tablero</button>
+            <button><svg class="ic"><use href="#i-plus" /></svg>Nueva orden</button>
+            <button><svg class="ic"><use href="#i-list" /></svg>Órdenes</button>
+            <button><svg class="ic"><use href="#i-doc" /></svg>DM</button>
+            <div class="grp">Sistema</div>
+            <button><svg class="ic"><use href="#i-wifi" /></svg>Diagnóstico de red</button>
+            <button aria-current="page"><svg class="ic"><use href="#i-shield" /></svg>Estado del servidor</button>
+            <div class="foot">
+              <span class="conn">Sincronizado · 19:42</span><span>Servidor IMPOCARIBE-7F3C</span>
+            </div>
+          </nav>
+          <div class="dk-main">
+            <div class="dk-top">
+              <h4>Estado del servidor</h4>
+              <span class="sub">IMPOCARIBE-7F3C · esta PC</span>
+            </div>
+            <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto">
+              <div class="srv-grid">
+                <div class="srv-tile">
+                  <span class="label">Servicio</span>
+                  <span class="v"><i class="dot"></i>En marcha</span>
+                  <span class="num">Versión 1.4.0 · encendido hace 3 d 4 h</span>
+                </div>
+                <div class="srv-tile">
+                  <span class="label">Energía</span>
+                  <span class="v"><i class="dot"></i>Con corriente</span>
+                  <span class="num">Batería al 100 %</span>
+                </div>
+                <div class="srv-tile">
+                  <span class="label">Red</span>
+                  <span class="v"><i class="dot"></i>Router wifi</span>
+                  <span class="num">192.168.1.10 · puerto 8443</span>
+                </div>
+                <div class="srv-tile">
+                  <span class="label">Memoria</span>
+                  <span class="v num">512 MB <small class="muted" style="font-weight: 400">de 1,2 GB</small></span>
+                  <div class="srv-mem" aria-hidden="true">
+                    <i style="width: 22%; background: var(--accent)"></i><i style="width: 15%; background: var(--ok)"></i>
+                  </div>
+                  <span>Base de datos 268 MB · servicio 184 MB · PDF cerrado</span>
+                </div>
+              </div>
+              <div class="srv-cols">
+                <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+                  <div class="panel">
+                    <div class="panel-h"><h5>Solicitudes de emparejamiento</h5><span class="pill info">1 pendiente</span></div>
+                    <div style="padding: 12px">
+                      <div class="srv-req">
+                        <span class="code-big">781 975</span>
+                        <span class="who"><b>Teléfono de patio</b>Android · caduca en 4:12</span>
+                        <span class="row" style="gap: 8px"
+                          ><button class="btn ghost">Rechazar</button><button class="btn">Confirmar</button></span
+                        >
+                      </div>
+                      <p class="muted" style="margin: 8px 0 0">
+                        Confirme solo si el dispositivo muestra el mismo código. Si no coincide, rechácelo.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <div class="panel-h">
+                      <h5>Dispositivos</h5>
+                      <span class="cap" style="font-size: 11px; color: var(--ink-3)">6 conectados ahora · 9 emparejados</span>
+                    </div>
+                    <table>
+                      <thead>
+                        <tr><th>Dispositivo</th><th>Plataforma</th><th>Estado</th><th>Emparejado</th><th></th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Esta PC (servidor)</td><td>Windows</td><td><span class="pill ok">Conectado</span></td><td class="num">14/10/2026</td><td></td></tr>
+                        <tr><td>Oficina · Ilén</td><td>Windows</td><td><span class="pill ok">Conectado</span></td><td class="num">14/10/2026</td><td><button class="btn sm ghost">Revocar</button></td></tr>
+                        <tr><td>Teléfono de báscula</td><td>Android</td><td><span class="pill ok">Conectado</span></td><td class="num">15/10/2026</td><td><button class="btn sm ghost">Revocar</button></td></tr>
+                        <tr><td>Tablet del portón</td><td>Android</td><td><span class="pill ok">Conectado</span></td><td class="num">15/10/2026</td><td><button class="btn sm ghost">Revocar</button></td></tr>
+                        <tr><td>Teléfono de Yoel</td><td>Android</td><td><span class="pill mute">Hace 2 h</span></td><td class="num">20/10/2026</td><td><button class="btn sm ghost">Revocar</button></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 14px">
+                  <div class="srv-qr sm">
+                    <svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-label="QR para emparejar (ficticio)">
+                      <path fill="#000" d="M0 0h7v7H0zM18 0h7v7h-7zM0 18h7v7H0z" />
+                      <path fill="#fff" d="M1 1h5v5H1zM19 1h5v5h-5zM1 19h5v5H1z" />
+                      <path fill="#000" d="M2 2h3v3H2zM20 2h3v3h-3zM2 20h3v3H2zM9 1h1v2H9zM11 0h2v1h-2zM14 2h2v1h-2zM9 5h3v1H9zM13 4h1v3h-1zM8 8h2v1H8zM11 8h1v2h-1zM14 8h3v1h-3zM18 9h2v1h-2zM21 8h2v2h-2zM0 9h2v1H0zM3 10h3v1H3zM8 11h1v3H8zM10 12h3v1h-3zM15 11h1v2h-1zM17 12h3v1h-3zM22 11h3v1h-3zM1 13h2v2H1zM4 14h2v1H4zM9 15h2v1H9zM12 14h2v2h-2zM16 15h2v1h-2zM20 14h1v3h-1zM23 15h2v1h-2zM8 17h1v2H8zM10 18h3v1h-3zM14 17h1v3h-1zM16 18h2v2h-2zM19 19h2v1h-2zM22 18h1v3h-1zM9 21h2v1H9zM12 22h2v2h-2zM15 21h3v1h-3zM19 22h3v1h-3zM23 23h2v2h-2zM9 24h2v1H9zM17 24h3v1h-3z" />
+                    </svg>
+                    <span>Escanéelo en «Escanear QR del servidor»</span>
+                  </div>
+                  <div class="panel">
+                    <div class="panel-h"><h5>Mantenimiento</h5></div>
+                    <div style="padding: 12px" class="srv-actions">
+                      <button class="btn secondary">Reparar</button>
+                      <button class="btn secondary">Reiniciar el servicio</button>
+                      <button class="btn secondary">Actualizar el servidor</button>
+                      <button class="btn secondary">Preparar traslado</button>
+                      <button class="btn secondary">Restablecer la contraseña de una Apoderada</button>
+                      <button class="btn ghost danger">Desinstalar el servidor</button>
+                      <span class="muted" style="font-size: var(--t-xs)"
+                        ><svg class="ic" style="width: 12px; height: 12px"><use href="#i-shield" /></svg> Piden permiso
+                        de administrador de Windows y el código de instalación.</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-29 · Variantes ================= -->
+  <section aria-labelledby="p29b">
+    <div class="sec-h">
+      <h2 id="p29b">P-29 · Batería, modo protegido, hotspot y solicitud nueva</h2>
+      <span class="ref">AL-20 · AL-21 · AL-22 · RF-ENE-02 a 05</span>
+    </div>
+    <p class="note">
+      Con batería, la banda ámbar de AL-20 aparece en todas las apps; al 15 % o menos, la roja del modo protegido (solo
+      consulta) y la tarjeta de Energía lo dice. Con hotspot y 8 dispositivos conectados, AL-21 en Dispositivos. Una
+      solicitud nueva trae la ventana al frente con el aviso de AL-22, aunque la app esté minimizada o en la bandeja.
+    </p>
+    <div class="frame-scroll">
+      <div class="frame-wrap" style="flex-direction: row; flex-wrap: wrap">
+        <div class="frame desktop" style="width: 590px; height: 300px">
+          <div class="dk-main" style="height: 100%">
+            <div class="band batt">
+              <svg class="ic" style="width: 16px; height: 16px"><use href="#i-warn" /></svg>El servidor funciona con batería (62 %)
+            </div>
+            <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+              <div class="srv-tile warn">
+                <span class="label">Energía</span>
+                <span class="v"><i class="dot"></i>Con batería · 62 %</span>
+                <span>Sin corriente desde las 19:31. Con el 15 % pasa a modo protegido.</span>
+              </div>
+              <div class="srv-tile">
+                <span class="label">Servicio</span>
+                <span class="v"><i class="dot"></i>En marcha</span>
+                <span class="num">Versión 1.4.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="frame desktop" style="width: 590px; height: 300px">
+          <div class="dk-main" style="height: 100%">
+            <div class="band prot">
+              <svg class="ic" style="width: 16px; height: 16px"><use href="#i-lock" /></svg>Servidor en modo protegido
+              por batería baja: solo consulta
+            </div>
+            <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+              <div class="srv-tile bad">
+                <span class="label">Energía</span>
+                <span class="v"><i class="dot"></i>Modo protegido · 14 %</span>
+                <span>No acepta cambios; los datos están asegurados en disco. Al 5 % se detiene ordenadamente.</span>
+              </div>
+              <div class="srv-tile">
+                <span class="label">Al volver la corriente</span>
+                <span class="v" style="font-size: var(--t-md)">Sale solo del modo protegido</span>
+                <span>Si se detuvo, arranca al encender la PC.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="frame desktop" style="width: 590px; height: 300px">
+          <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+            <div class="notice warn">
+              <svg class="ic"><use href="#i-warn" /></svg>
+              <div>
+                <b>8 dispositivos conectados al hotspot.</b> Es el límite recomendado para un celular: con más, la
+                conexión se vuelve lenta e inestable. Para más dispositivos hace falta un router wifi.
+              </div>
+            </div>
+            <div class="srv-tile warn">
+              <span class="label">Red</span>
+              <span class="v"><i class="dot"></i>Hotspot de un celular</span>
+              <span class="num">192.168.43.20 · puerto 8443 · 8 conectados</span>
+            </div>
+          </div>
+        </div>
+        <div class="frame desktop" style="width: 590px; height: 300px; position: relative">
+          <div style="padding: 16px; color: var(--ink-3); font-size: var(--t-sm)">(la app de escritorio, en cualquier pantalla)</div>
+          <div class="srv-toast" role="alertdialog" aria-label="Solicitud de emparejamiento">
+            <b>Solicitud de emparejamiento</b>
+            <div class="srv-req" style="grid-template-columns: auto 1fr">
+              <span class="code-big">781 975</span>
+              <span class="who"><b>Teléfono de patio</b>Android · caduca en 4:58</span>
+            </div>
+            <div class="row" style="justify-content: flex-end; gap: 8px">
+              <button class="btn ghost sm">Rechazar</button><button class="btn sm">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= P-29 · Asistentes ================= -->
+  <section aria-labelledby="p29c">
+    <div class="sec-h">
+      <h2 id="p29c">P-29 · Asistentes de mantenimiento</h2>
+      <span class="ref">RF-INS-05 a 08, 11 · plan §10.5</span>
+    </div>
+    <p class="note">
+      Se abren como diálogo sobre P-29, con los pasos arriba como en Restaurar (T111). Todos empiezan por el permiso de
+      Windows y el código de instalación (el que tiene el servidor, que una Apoderada puede haber cambiado). Actualizar y
+      Traslado hacen antes un respaldo completo. Reparar no muestra asistente: rehace los pasos del plan §10.3 sin tocar
+      los datos, con la misma lista de P-28.
+    </p>
+    <div class="srv-wiz">
+      <div class="bk-card">
+        <ol class="bk-steps"><li class="done">Permisos</li><li class="done">Instalador</li><li class="now">Actualizar</li><li>Resultado</li></ol>
+        <h4>Actualizar a la versión 1.5.0</h4>
+        <div class="bk-progress">
+          <span>Respaldo completo</span>
+          <span>Servicios detenidos</span>
+          <span>Copia de la versión 1.4.0 guardada</span>
+          <span class="now">Copiando la 1.5.0 y actualizando la base…</span>
+          <span class="next">Arrancar y comprobar</span>
+          <span class="next">Publicar la app ligera y el APK de la 1.5.0</span>
+        </div>
+        <div class="up-bar" role="progressbar" aria-label="Actualizando" aria-valuenow="58"><i style="width: 58%"></i></div>
+        <p class="muted" style="margin: 0">Si algo falla, vuelve sola a la 1.4.0 con sus datos.</p>
+      </div>
+      <div class="bk-card">
+        <ol class="bk-steps"><li class="done">Permisos</li><li class="done">Instalador</li><li class="done">Actualizar</li><li class="now">Resultado</li></ol>
+        <h4>La actualización no se completó</h4>
+        <div class="notice warn">
+          <svg class="ic"><use href="#i-warn" /></svg>
+          <div>
+            Falló al actualizar la base de datos. El servidor volvió a la versión 1.4.0 con sus datos intactos: no se
+            perdió nada y los dispositivos siguen conectados.
+          </div>
+        </div>
+        <details class="srv-log"><summary>Detalle técnico</summary><pre>migración 0017_… falló: relation "…" already exists
+vuelta atrás: versión 1.4.0 restaurada, respaldo pre_update intacto</pre></details>
+        <div class="row" style="justify-content: flex-end"><button class="btn">Cerrar</button></div>
+      </div>
+      <div class="bk-card">
+        <ol class="bk-steps"><li class="done">Permisos</li><li class="now">Confirmar</li><li>Archivo</li></ol>
+        <h4>Preparar traslado</h4>
+        <div class="bk-consequence">
+          <b>Lo que pasará</b>
+          <ul>
+            <li>Se crea el archivo de traslado (.icmove) con los datos y la identidad, cifrado con la contraseña de respaldo.</li>
+            <li>El servidor se detiene: los dispositivos no podrán trabajar hasta crearlo en la PC nueva.</li>
+            <li>Esta PC no podrá volver a ser el servidor.</li>
+          </ul>
+        </div>
+        <div class="field">
+          <label for="tr-d">Guardar en</label>
+          <div class="control"><input id="tr-d" value="E:\ (USB)" /></div>
+        </div>
+        <div class="check-row"><i class="on"></i>Entiendo que esta PC dejará de ser el servidor</div>
+        <div class="row" style="justify-content: flex-end"><button class="btn ghost">Cancelar</button><button class="btn danger">Preparar traslado</button></div>
+      </div>
+      <div class="bk-card">
+        <ol class="bk-steps"><li class="done">Permisos</li><li class="done">Respaldo</li><li class="now">Confirmar</li></ol>
+        <h4>Desinstalar el servidor</h4>
+        <div class="bk-consequence">
+          <b>Lo que pasará</b>
+          <ul>
+            <li>Se quitan los servicios, las reglas del firewall y el programa del servidor.</li>
+            <li>Los dispositivos no podrán conectarse.</li>
+            <li>
+              Los datos se guardan en C:\ProgramData\Impocaribe\desinstalado-2026-10-27, salvo que marque borrarlos.
+            </li>
+          </ul>
+        </div>
+        <div class="check-row"><i></i>Borrar también los datos</div>
+        <div class="field">
+          <label for="un-w">Escriba DESINSTALAR para confirmar</label>
+          <div class="control"><input id="un-w" value="DESINSTALAR" /></div>
+        </div>
+        <div class="row" style="justify-content: flex-end"><button class="btn ghost">Cancelar</button><button class="btn danger">Desinstalar</button></div>
+      </div>
+      <div class="bk-card">
+        <ol class="bk-steps"><li class="done">Permisos</li><li class="now">Contraseña</li><li>Listo</li></ol>
+        <h4>Restablecer la contraseña de una Apoderada</h4>
+        <p class="muted" style="margin: 0">
+          Solo para cuando ninguna Apoderada puede entrar ni recuperar su contraseña con sus códigos.
+        </p>
+        <div class="field">
+          <label for="em-u">Apoderada</label>
+          <div class="control"><select id="em-u"><option>Ilén Fernández Rojas (ilen.fernandez)</option></select></div>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label for="em-p">Contraseña temporal</label>
+            <div class="control"><input id="em-p" type="password" value="xxxxxxxxxx" /></div>
+          </div>
+          <div class="field">
+            <label for="em-c">Confirmar</label>
+            <div class="control"><input id="em-c" type="password" value="xxxxxxxxxx" /></div>
+          </div>
+        </div>
+        <div class="notice info">
+          <svg class="ic"><use href="#i-info" /></svg>
+          <div>
+            Deberá cambiarla al entrar. Se cierran sus sesiones abiertas, queda en la bitácora y las Apoderadas reciben
+            AL-11.
+          </div>
+        </div>
+        <div class="row" style="justify-content: flex-end"><button class="btn ghost">Cancelar</button><button class="btn">Restablecer</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const pressed = (group, btn) =>
+      group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    document.querySelectorAll('[data-theme-set]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const v = b.dataset.themeSet;
+        if (v) root.setAttribute('data-theme', v);
+        else root.removeAttribute('data-theme');
+        pressed(b.parentElement, b);
+      }),
+    );
+    document.querySelectorAll('[data-motion]').forEach((b) =>
+      b.addEventListener('click', () => {
+        root.classList.toggle('reduce', b.dataset.motion === 'off');
+        pressed(b.parentElement, b);
+      }),
+    );
+  })();
+</script>

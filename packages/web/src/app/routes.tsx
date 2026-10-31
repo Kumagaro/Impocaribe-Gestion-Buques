@@ -1,38 +1,112 @@
 // T038 · Las rutas de la app (ui-spec §4): las de acceso, a pantalla completa, y las demás dentro de la estructura
 // (T025). Cada pantalla se añade aquí con su tarea.
-import type { RouteObject } from 'react-router';
+import { havanaDateTime } from '@impocaribe/shared';
+import { useEffect } from 'react';
+import { useLocation, useNavigate, type RouteObject } from 'react-router';
+import { CarriersScreen } from '../screens/catalogs/Carriers.screen';
+import { ClientsScreen } from '../screens/catalogs/Clients.screen';
+import { FleetScreen } from '../screens/catalogs/Fleet.screen';
+import { DeclarationsScreen } from '../screens/declarations/Declarations.screen';
+import { VesselsScreen } from '../screens/vessels/Vessels.screen';
+import { NewOrderScreen } from '../screens/orders/NewOrder.screen';
+import { OrderScreen } from '../screens/orders/Order.screen';
+import { CorrectOrderScreen } from '../screens/orders/CorrectOrder.screen';
+import { DraftsScreen } from '../screens/orders/Drafts.screen';
+import { OrderListScreen } from '../screens/orders/OrderList.screen';
+import { AlertsPanel, AlertsScreen } from '../screens/alerts/Alerts.screen';
+import { useAlertFeed } from '../screens/alerts/useAlertFeed';
+import { AuditScreen } from '../screens/audit/Audit.screen';
+import { BackupPasswordPrompt } from '../screens/backups/BackupPasswordPrompt';
+import { BackupsScreen } from '../screens/backups/Backups.screen';
+import { ReleasesScreen } from '../screens/updates/Releases.screen';
+import { DashboardScreen } from '../screens/dashboard/Dashboard.screen';
+import { SearchScreen } from '../screens/search/Search.screen';
+import { CompanyScreen } from '../screens/company/Company.screen';
 import { ConnectionScreen } from '../screens/connection/Connection.screen';
+import { CreateServerScreen } from '../screens/server/CreateServer.screen';
+import { ServerStatusScreen } from '../screens/server/ServerStatus.screen';
+import { DiagnosticsScreen } from '../screens/diagnostics/Diagnostics.screen';
 import { LoginScreen } from '../screens/login/Login.screen';
 import { ProfileScreen } from '../screens/profile/Profile.screen';
 import { RecoverScreen } from '../screens/recover/Recover.screen';
+import { SettingsScreen } from '../screens/settings/Settings.screen';
 import { SetupScreen } from '../screens/setup/Setup.screen';
+import { AppUpdateProvider, useAppUpdate } from '../screens/updates/AppUpdateProvider';
+import { UpgradeRequired } from '../screens/updates/UpdateParts';
 import { UsersScreen } from '../screens/users/Users.screen';
 import { SessionGate } from '../session/SessionGate';
 import { useAppSession } from '../session/SessionProvider';
+import { SyncGate } from '../sync/SyncGate';
+import { SyncProvider, useOnline, useSyncStatus } from '../sync/SyncProvider';
 import { EmptyState } from '../ui/presentation';
 import { AppShell, type ShellStatus } from './AppShell.screen';
 import { SectionGuard } from './SectionGuard';
 
-// shortcut: la conexión, la copia local y las alertas llegan con la sincronización (T046); hasta entonces, en línea y
-// sin pendientes.
-const STATUS: ShellStatus = { online: true, asOf: '', pendingDrafts: 0, syncing: false, power: null, alerts: 0 };
+/** RF-AUT-09: sin conexión, una sesión vencida deja consultar la copia local 72 horas más. */
+export const OFFLINE_GRACE_MS = 72 * 3_600_000;
+const SKEW_LIMIT_MS = 5 * 60_000;
 
 function SignedIn() {
-  const { session, state } = useAppSession();
-  const user = state.session!.user;
   return (
-    <AppShell
-      user={{ name: user.fullName, role: user.role }}
-      status={STATUS}
-      isServerPc={state.pairing!.isServerPc}
-      theme={state.preferences.theme}
-      onThemeChange={(theme) => void session.setPreferences({ theme })}
-    />
+    <SyncProvider>
+      <AppUpdateProvider>
+        <SignedInShell />
+      </AppUpdateProvider>
+    </SyncProvider>
   );
 }
 
-function Pending({ what }: { what: string }) {
-  return <EmptyState title={what} description="Esta parte de la app aún no está disponible." />;
+function SignedInShell() {
+  const { session, state } = useAppSession();
+  const sync = useSyncStatus();
+  const online = useOnline();
+  const alerts = useAlertFeed();
+  const update = useAppUpdate();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const user = state.session!.user;
+  const expiresAt = Date.parse(state.session!.expiresAt);
+
+  // La hora que cuenta es la del servidor: la del dispositivo corregida por el desfase medido (plan §9).
+  useEffect(() => {
+    const check = () => {
+      const serverNow = session.now().getTime() - (sync.clockSkewMs ?? 0);
+      if (!online && serverNow > expiresAt + OFFLINE_GRACE_MS) void session.signOut();
+    };
+    check();
+    const timer = setInterval(check, 60_000);
+    return () => clearInterval(timer);
+  }, [session, online, sync.clockSkewMs, expiresAt]);
+
+  const status: ShellStatus = {
+    online,
+    asOf: sync.syncedAt ? havanaDateTime(new Date(sync.syncedAt)) : 'sin datos',
+    pendingDrafts: alerts.drafts,
+    syncing: sync.syncing,
+    // T132 · RF-ENE-02, 03: lo que avisa el servidor por WebSocket (server.power).
+    power: sync.power,
+    alerts: alerts.open,
+    clockSkewMinutes:
+      sync.clockSkewMs !== null && Math.abs(sync.clockSkewMs) > SKEW_LIMIT_MS
+        ? Math.round(Math.abs(sync.clockSkewMs) / 60_000)
+        : null,
+  };
+  // EST-07 (RF-UPD-04): por debajo de la mínima solo se ven los borradores locales.
+  if (update?.requiredMin && pathname !== '/borradores')
+    return <UpgradeRequired drafts={alerts.drafts} onDrafts={() => void navigate('/borradores')} />;
+  return (
+    <>
+      <BackupPasswordPrompt />
+      <AppShell
+        user={{ name: user.fullName, role: user.role }}
+        status={status}
+        isServerPc={state.pairing!.isServerPc}
+        theme={state.preferences.theme}
+        onThemeChange={(theme) => void session.setPreferences({ theme })}
+        alertsPanel={(onClose) => <AlertsPanel onClose={onClose} />}
+      />
+    </>
+  );
 }
 
 export const appRoutes: RouteObject[] = [
@@ -40,19 +114,55 @@ export const appRoutes: RouteObject[] = [
     element: <SessionGate />,
     children: [
       { path: '/conexion', element: <ConnectionScreen /> },
+      // T127 · P-28: solo en la PC con el instalador completo (si no, vuelve a /conexion).
+      { path: '/servidor/crear', element: <CreateServerScreen /> },
       { path: '/setup', element: <SetupScreen /> },
       { path: '/login', element: <LoginScreen /> },
       { path: '/recuperar', element: <RecoverScreen /> },
       {
         element: <SignedIn />,
         children: [
+          // P-30: también sin copia local, que es cuando más falta hace saber por qué no llega el servidor.
+          { path: '/diagnostico', handle: { title: 'Diagnóstico de red' }, element: <DiagnosticsScreen /> },
           {
-            // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla.
-            element: <SectionGuard />,
+            // T041: cada sección pide su permiso (navigation.ts); sin él, se explica en vez de mostrarla. T045: hasta
+            // tener copia local, la primera descarga.
+            element: (
+              <SyncGate>
+                <SectionGuard />
+              </SyncGate>
+            ),
             children: [
-              { path: '/', handle: { title: 'Tablero' }, element: <Pending what="Tablero" /> },
+              { path: '/', handle: { title: 'Tablero' }, element: <DashboardScreen /> },
               { path: '/perfil/:seccion?', handle: { title: 'Perfil' }, element: <ProfileScreen /> },
               { path: '/usuarios', handle: { title: 'Usuarios' }, element: <UsersScreen /> },
+              { path: '/empresa', handle: { title: 'Empresa' }, element: <CompanyScreen /> },
+              { path: '/configuracion', handle: { title: 'Configuración' }, element: <SettingsScreen /> },
+              { path: '/borradores', handle: { title: 'Borradores' }, element: <DraftsScreen /> },
+              { path: '/alertas', handle: { title: 'Alertas' }, element: <AlertsScreen /> },
+              { path: '/bitacora', handle: { title: 'Bitácora' }, element: <AuditScreen /> },
+              { path: '/respaldos', handle: { title: 'Respaldos y restauración' }, element: <BackupsScreen /> },
+              { path: '/versiones', handle: { title: 'Versiones de la app' }, element: <ReleasesScreen /> },
+              // T128 · P-29: solo en la PC servidor (la sección lo exige, navigation.ts).
+              { path: '/servidor', handle: { title: 'Estado del servidor' }, element: <ServerStatusScreen /> },
+              { path: '/buscar', handle: { title: 'Buscar' }, element: <SearchScreen /> },
+              { path: '/ordenes', handle: { title: 'Órdenes' }, element: <OrderListScreen /> },
+              { path: '/ordenes/nueva', handle: { title: 'Nueva orden' }, element: <NewOrderScreen /> },
+              { path: '/ordenes/:id', handle: { title: 'Orden' }, element: <OrderScreen /> },
+              {
+                path: '/ordenes/:id/corregir',
+                handle: { title: 'Corregir la orden' },
+                element: <CorrectOrderScreen />,
+              },
+              { path: '/buques/:id?', handle: { title: 'Buques' }, element: <VesselsScreen /> },
+              { path: '/dm/:id?', handle: { title: 'DM' }, element: <DeclarationsScreen /> },
+              { path: '/catalogos/transportistas', handle: { title: 'Transportistas' }, element: <CarriersScreen /> },
+              { path: '/catalogos/clientes', handle: { title: 'Clientes' }, element: <ClientsScreen /> },
+              {
+                path: '/catalogos/choferes-camiones',
+                handle: { title: 'Choferes y camiones' },
+                element: <FleetScreen />,
+              },
               {
                 path: '*',
                 handle: { title: 'Órdenes de Carga' },

@@ -54,6 +54,8 @@ const CODES = ['K7QM-3XTP', 'R2HW-9CND', 'F4ZB-7MRK', 'T8JX-2QPV', 'W3NC-6HDF', 
 const users = (panel: UsersPanel, extra: Partial<UsersModel> = {}): UsersModel => ({
   list: { status: 'ready', users: USERS },
   reload: noop,
+  changed: new Set(),
+  offlineReason: undefined,
   now: new Date('2026-10-14T16:40:00.000Z'),
   notice: null,
   busy: null,

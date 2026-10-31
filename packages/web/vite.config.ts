@@ -11,7 +11,7 @@ export default defineConfig({
   // En el navegador de desarrollo y de las pruebas de extremo a extremo, el servidor se alcanza por el mismo origen: así
   // no hace falta abrir CORS a otros orígenes (las apps hablan con él por su transporte nativo, DT-19).
   server: {
-    proxy: { '/api': { target: process.env.IMPOCARIBE_API_URL ?? 'http://127.0.0.1:8443', secure: false } },
+    proxy: { '/api': { target: process.env.IMPOCARIBE_API_URL ?? 'http://127.0.0.1:8443', secure: false, ws: true } },
   },
   test: { environment: 'jsdom', setupFiles: ['test/setup.ts'] },
 });

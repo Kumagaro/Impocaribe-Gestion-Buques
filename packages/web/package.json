@@ -10,22 +10,27 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:android": "playwright test -c playwright.android.config.ts",
     "visual": "playwright test -c playwright.visual.config.ts",
     "visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots --grep-invert \"un píxel\"",
-    "storybook": "storybook dev --port 6006"
+    "storybook": "storybook dev --port 6006",
+    "brand-icons": "node scripts/brand-icons.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@impocaribe/shared": "workspace:*",
+    "@tanstack/react-query": "^5.104.3",
     "lucide-react": "^1.56.0",
     "motion": "14.2.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.90.0",
     "react-router": "^8.4.0",
+    "uqr": "0.1.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "^1.64.0",
     "@storybook/react-vite": "10.6.2",
     "@testing-library/dom": "^10.4.2",

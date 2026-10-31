@@ -102,7 +102,20 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
           <li>Si usa el hotspot de un celular, revise que esté activo.</li>
         </ul>
         <Button onClick={model.search}>Volver a buscar</Button>
+        <Button variant="secondary" onClick={model.openDiagnostics}>
+          Abrir el Diagnóstico de red
+        </Button>
         <Alternatives model={model} />
+        {model.canCreateServer && (
+          <>
+            <Button variant="secondary" onClick={model.createServer}>
+              Crear servidor en este equipo
+            </Button>
+            <Button variant="ghost" onClick={model.createServerFromMove}>
+              Crear servidor desde un respaldo de traslado
+            </Button>
+          </>
+        )}
       </>
     );
 
@@ -117,6 +130,14 @@ export function ConnectionStep({ model }: { model: ConnectionModel }) {
           Emparejar con código
         </Button>
         <Alternatives model={model} />
+        {model.canCreateServer && (
+          <Button
+            variant="secondary"
+            disabledReason={`Ya hay un servidor en esta red (${serverName(phase.server.serverId)}): solo puede haber uno.`}
+          >
+            Crear servidor en este equipo
+          </Button>
+        )}
       </>
     );
 

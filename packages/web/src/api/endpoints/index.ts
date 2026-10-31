@@ -4,5 +4,15 @@ import './health';
 import './auth';
 import './pairing';
 import './users';
+import './sync';
+import './company';
+import './catalogs';
+import './vessels';
+import './orders';
+import './alerts';
+import './consultas';
+import './backups';
+import './updates';
+import './local';
 
 export { apiRegistry, type Endpoint } from '../client';

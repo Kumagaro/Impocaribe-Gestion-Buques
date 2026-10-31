@@ -7,6 +7,7 @@ import { renderScreen, TEST_PAIRING } from '../../../test/screen';
 import { getSetupStatus, postLogin } from '../../api/endpoints/auth';
 import { LoginScreen } from './Login.screen';
 
+// HU-05: entrar con usuario y contraseña desde la PC, la tablet o el teléfono.
 // T038 · P-03 Iniciar sesión (ui-spec), F-03, RF-AUT-01, 02 y 05, RF-VAL-02: el hook real y las tres presentaciones.
 // Escribir tecla a tecla supera los 5 s por defecto en una máquina cargada, como en P-02 y P-04.
 vi.setConfig({ testTimeout: 20_000 });
@@ -187,6 +188,16 @@ describe('P-02: sistema sin configurar', () => {
       false,
     );
     await waitFor(() => expect(t.router.state.location.pathname).toBe('/setup'));
+  });
+
+  // T128 · P-29: ante la PC servidor, su estado y los emparejamientos también sin sesión.
+  it('en la PC servidor enlaza su estado; en otro dispositivo no', async () => {
+    const t = await open({ pairing: { ...TEST_PAIRING, isServerPc: true }, otherRoutes: ['/servidor'] });
+    await userEvent.click(screen.getByRole('link', { name: 'Estado del servidor y emparejamientos' }));
+    expect(t.router.state.location.pathname).toBe('/servidor');
+    t.view.unmount();
+    await open();
+    expect(screen.queryByRole('link', { name: 'Estado del servidor y emparejamientos' })).toBeNull();
   });
 });
 

@@ -4,10 +4,26 @@ import type { INestApplication, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { signRequest, type Clock } from '@impocaribe/shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { networkInterfaces } from 'node:os';
+import { mkdtempSync } from 'node:fs';
+import { networkInterfaces, tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { AppModule } from '../src/app.module.ts';
 import { configureApp } from '../src/app.ts';
-import { CLOCK, DB, MIN_APP_VERSION, SERVER_INFO } from '../src/tokens.ts';
+import {
+  ALERT_CONDITIONS_ENABLED,
+  BACKUPS_ENABLED,
+  CLOCK,
+  MAINTENANCE_DB_URL,
+  DATA_DIR,
+  DB,
+  MEMORY_PROBE,
+  MIN_APP_VERSION,
+  POWER_ENABLED,
+  POWER_PROVIDER,
+  POWER_SHUTDOWN,
+  SERVER_INFO,
+} from '../src/tokens.ts';
+import { simulatedPower } from '../src/power/provider.ts';
 import { listenForTests } from './listen.ts';
 import type { SuiteDb } from './suite-db.ts';
 
@@ -17,6 +33,8 @@ export interface TestApp {
   base: string;
   /** URL base por una dirección de la red local, como la vería otro equipo (null si el equipo no tiene red). */
   lanBase: string | null;
+  /** Carpeta de datos propia de esta app de prueba (archivos de T050). */
+  dataDir: string;
   /**
    * fetch firmado como un dispositivo emparejado (DT-24). El dispositivo es el de X-Device-Id, el de la sesión del
    * token o el deviceId del cuerpo del login; si no existe, se empareja en la base de la suite.
@@ -24,6 +42,15 @@ export interface TestApp {
   fetch(url: string, init?: RequestInit): Promise<Response>;
   close(): Promise<void>;
 }
+
+/** T128: la memoria simulada de PostgreSQL y de Chromium (abierto) que ve P-29. */
+export const SIMULATED_MEMORY = { databaseBytes: 268 * 2 ** 20, pdfBytes: 180 * 2 ** 20 };
+
+/** T132: cuántas veces se pidió detener el servidor (RF-ENE-04). */
+export const stops = { count: 0 };
+
+/** T128: cuántas veces se midió la memoria (MEMORY_PROBE). */
+export const memoryProbes = { count: 0 };
 
 export const TEST_DEVICE = 'dispositivo-de-pruebas';
 export const deviceSecret = (id: string) => `secreto-${id}`;
@@ -38,6 +65,7 @@ export function lanAddress(): string | null {
 }
 
 export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: Type[] = []): Promise<TestApp> {
+  const dataDir = mkdtempSync(join(tmpdir(), 'impocaribe-data-'));
   const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers })
     .overrideProvider(CLOCK)
     .useValue(clock)
@@ -51,8 +79,32 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
       version: '1.0.0-test',
       caFingerprint: 'AA:BB',
     })
+    .overrideProvider(DATA_DIR)
+    .useValue(dataDir)
     .overrideProvider(DB)
     .useValue(drizzle(suite.app))
+    // Las pruebas de alertas llaman a evaluateConditions con su reloj; en segundo plano movería los seq de las demás.
+    .overrideProvider(ALERT_CONDITIONS_ENABLED)
+    .useValue(false)
+    // Los respaldos se hacen contra la base de la suite, con su dueño; el programador lo llaman las pruebas.
+    .overrideProvider(MAINTENANCE_DB_URL)
+    .useValue(suite.url)
+    .overrideProvider(BACKUPS_ENABLED)
+    .useValue(false)
+    // T132: la energía se simula; las pruebas la cambian y llaman a Power.check. La parada al 5 % solo se cuenta.
+    .overrideProvider(POWER_PROVIDER)
+    .useValue(simulatedPower())
+    .overrideProvider(POWER_ENABLED)
+    .useValue(false)
+    .overrideProvider(POWER_SHUTDOWN)
+    .useValue(async () => {
+      stops.count++;
+    })
+    .overrideProvider(MEMORY_PROBE)
+    .useValue(async (pdfOpen: boolean) => {
+      memoryProbes.count++;
+      return { databaseBytes: SIMULATED_MEMORY.databaseBytes, pdfBytes: pdfOpen ? SIMULATED_MEMORY.pdfBytes : null };
+    })
     .compile();
   // rawBody como en producción (createApp): la firma del dispositivo y la idempotencia usan el cuerpo tal como llegó.
   const app = configureApp(
@@ -99,6 +151,7 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
     app,
     base,
     lanBase: lan ? base.replace('127.0.0.1', lan) : null,
+    dataDir,
     fetch: signedFetch,
     close: () => app.close(),
   };

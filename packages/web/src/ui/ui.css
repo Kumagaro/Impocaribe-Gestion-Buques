@@ -118,6 +118,37 @@
   height: var(--touch);
   font-size: 16px;
 }
+/* Ocupa todo el ancho, como los demás campos (el contenedor del campo es flex). */
+.ui-password {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+/* Más específico que .ui-field__control .ui-input: el texto nunca queda debajo del ojo. */
+.ui-password > input.ui-input {
+  padding-right: 44px;
+}
+.ui-password > input.ui-input[data-touch] {
+  padding-right: calc(var(--touch) + 4px);
+}
+.ui-password .ui-icon-button {
+  position: absolute;
+  /* Centrado sin transform: la pulsación (MOV-01) escala el botón con transform. */
+  top: 0;
+  bottom: 0;
+  right: 2px;
+  margin: auto 0;
+  border-radius: var(--r-sm);
+}
+/* El logo de la app (P-01 a P-04 y el menú lateral): el barco en el color principal. */
+.ui-logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 25%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
 .ui-input:focus {
   border-color: var(--accent);
   background: var(--surface);
@@ -533,6 +564,10 @@
   place-items: end stretch;
   padding: 0;
 }
+.ui-overlay--panel {
+  place-items: stretch end;
+  padding: 0;
+}
 .ui-overlay__veil {
   position: absolute;
   inset: 0;
@@ -545,6 +580,16 @@
   overflow: auto;
   background: var(--surface);
   color: var(--ink);
+}
+.ui-panel {
+  position: relative;
+  width: min(400px, 100%);
+  height: 100%;
+  overflow: auto;
+  background: var(--surface);
+  color: var(--ink);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow);
 }
 .ui-dialog {
   width: min(520px, 100%);
@@ -744,6 +789,19 @@
 }
 [aria-sort='descending'] .ui-table__sort::after {
   content: ' ▼';
+}
+/* MOV-02: la fila o tarjeta que cambió otro usuario se resalta 1,5 s y vuelve con un fundido; reducido, sin animar. */
+.ui-table tbody tr,
+.ui-list-card {
+  transition: background-color 250ms ease-out;
+}
+.ui-table[data-reduced] tbody tr,
+.ui-list-card[data-reduced] {
+  transition: none;
+}
+.ui-table tbody tr[data-changed],
+.ui-list-card[data-changed] {
+  background: var(--accent-soft);
 }
 .ui-table tbody tr:hover {
   background: var(--surface-2);

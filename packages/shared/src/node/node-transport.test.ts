@@ -18,8 +18,13 @@ async function start(name: string, cert: string, key: string, caFile: string) {
   const entry = { server: undefined as unknown as Server, url: '', received: 0 };
   entry.server = createServer({ cert: Buffer.concat([read(cert), read(caFile)]), key: read(key) }, (req, res) => {
     entry.received += 1;
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ path: req.url, auth: req.headers.authorization ?? null }));
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
+    req.on('end', () => {
+      const size = Buffer.concat(chunks).length;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ path: req.url, auth: req.headers.authorization ?? null, ...(size ? { size } : {}) }));
+    });
   });
   await new Promise<void>((resolve) => entry.server.listen(0, '127.0.0.1', resolve));
   entry.url = `https://127.0.0.1:${(entry.server.address() as AddressInfo).port}`;
@@ -55,6 +60,16 @@ describe('createNodeTransport', () => {
       body: '{"tons":"17.280"}',
     });
     expect(res.status).toBe(200);
+  });
+
+  it('T115: envía un cuerpo en bytes (un archivo en multipart)', async () => {
+    const transport = createNodeTransport(paired);
+    const res = await transport(`${servers.good!.url}/api/v1/updates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data; boundary=x' },
+      body: new Uint8Array(4096),
+    });
+    expect(await res.json()).toEqual({ path: '/api/v1/updates', auth: null, size: 4096 });
   });
 
   it('rechaza a un intruso con otra CA y el intruso no recibe la petición ni el token', async () => {

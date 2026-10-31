@@ -1,6 +1,7 @@
 # Dependencias y compilados
 node_modules/
 dist/
+dist-setup/
 out/
 *.tsbuildinfo
 
@@ -8,6 +9,9 @@ out/
 .env
 .env.*
 !.env.example
+
+# T125: paquetes de distribución (con instaladores) y la hoja del código de instalación
+/paquete/
 
 # Pruebas y reportes
 coverage/

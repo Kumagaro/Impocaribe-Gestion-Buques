@@ -5,7 +5,14 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest';
-import { createIdentity, IdentityExistsError, loadIdentity, type SecretProtector } from './identity.ts';
+import {
+  createIdentity,
+  exportIdentity,
+  IdentityExistsError,
+  importIdentity,
+  loadIdentity,
+  type SecretProtector,
+} from './identity.ts';
 import { windowsMachineProtector } from './protector.ts';
 
 // T033 · DT-18 y RF-RED-03: identidad del servidor (UUID y nombre IMPOCARIBE-XXXX), CA propia de la instalación y
@@ -134,5 +141,40 @@ describe('windowsMachineProtector (protección de datos de Windows para la máqu
         'La protección de datos de Windows solo existe en Windows: el servidor de producción corre en Windows.',
       );
     }
+  });
+});
+
+// T130 · RF-INS-07: la identidad viaja en el archivo de traslado y en la PC nueva se protege con su propia máquina.
+describe('traslado de la identidad', () => {
+  it('la exportada se importa en otra carpeta (otra PC) y es la misma identidad, con las claves protegidas', async () => {
+    const original = await createIdentity(dir, { protector: testProtector, clock });
+    const exported = await exportIdentity(dir, testProtector);
+    expect(exported.keyPem).toBe(original.keyPem);
+    expect(exported.caKeyPem).toMatch(/^-----BEGIN PRIVATE KEY-----/);
+    const other = join(dir, '..', 'otra-pc', 'identity');
+    // Otra máquina: otro protector.
+    const KEY2 = randomBytes(32);
+    const otherProtector: SecretProtector = {
+      async protect(data) {
+        const iv = randomBytes(12);
+        const c = createCipheriv('aes-256-gcm', KEY2, iv);
+        const body = Buffer.concat([c.update(data), c.final()]);
+        return Buffer.concat([iv, c.getAuthTag(), body]);
+      },
+      async unprotect(data) {
+        const d = createDecipheriv('aes-256-gcm', KEY2, data.subarray(0, 12));
+        d.setAuthTag(data.subarray(12, 28));
+        return Buffer.concat([d.update(data.subarray(28)), d.final()]);
+      },
+    };
+    await importIdentity(other, exported, otherProtector);
+    expect(await loadIdentity(other, otherProtector)).toEqual(original);
+    expect((await readFile(join(other, 'server.key.protected'))).toString('latin1')).not.toContain('PRIVATE KEY');
+  });
+
+  it('nunca sobre una identidad que ya existe', async () => {
+    await createIdentity(dir, { protector: testProtector, clock });
+    const exported = await exportIdentity(dir, testProtector);
+    await expect(importIdentity(dir, exported, testProtector)).rejects.toBeInstanceOf(IdentityExistsError);
   });
 });

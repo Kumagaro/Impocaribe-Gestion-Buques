@@ -14,6 +14,7 @@ import type { DeviceInfo } from '../../platform/platform';
 import { createSimulatedNetwork } from '../../platform/test-discovery';
 import { ConnectionScreen } from './Connection.screen';
 
+// HU-15: el dispositivo encuentra el servidor solo y se empareja de forma segura.
 // T038 · P-01 Conexión y emparejamiento (ui-spec), RF-CON-01, RF-RED-02 a 04, F-01: el hook real, las tres
 // presentaciones y la red simulada (test-discovery).
 vi.setConfig({ testTimeout: 30_000 });
@@ -221,5 +222,59 @@ describe('RF-RED-02 y F-01: sin servidor en la red', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Conectar' }));
     expect(await screen.findByRole('heading', { name: 'Servidor encontrado' })).not.toBeNull();
     expect(screen.getByText('Encontrado por la dirección escrita · pc-servidor')).not.toBeNull();
+  });
+
+  it('RF-RED-06: si no lo encuentra, lleva al Diagnóstico de red', async () => {
+    const t = await open({
+      discovery: createSimulatedNetwork({ servers: [] }),
+      otherRoutes: ['/login', '/diagnostico'],
+    });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir el Diagnóstico de red' }));
+    expect(t.router.state.location.pathname).toBe('/diagnostico');
+  });
+});
+
+// T127 · RF-INS-03: «Crear servidor en este equipo», solo en escritorio con el instalador completo (el ayudante).
+describe('P-01: crear el servidor en esta PC', () => {
+  const PC: DeviceInfo = { platform: 'windows', appVersion: '1.0.0', smallestWidthDp: 1024, name: 'PC-ALMACEN' };
+  const setup = {
+    bundleVersion: null,
+    readMove: vi.fn(),
+    pickFile: vi.fn(),
+    pickFolder: vi.fn(),
+    facts: vi.fn(),
+    checkCode: vi.fn(),
+    run: vi.fn(),
+    state: vi.fn(),
+    listen: vi.fn(),
+  };
+
+  it('sin servidor en la red lo ofrece y abre P-28; con uno, lo desactiva y dice por qué', async () => {
+    const t = await open({
+      device: 'desktop',
+      deviceInfo: PC,
+      serverSetup: setup,
+      discovery: createSimulatedNetwork({ servers: [] }),
+      otherRoutes: ['/login', '/servidor/crear'],
+    });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    // T130: también desde un respaldo de traslado.
+    expect(screen.getByRole('button', { name: 'Crear servidor desde un respaldo de traslado' })).not.toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Crear servidor en este equipo' }));
+    expect(t.router.state.location.pathname).toBe('/servidor/crear');
+    t.view.unmount();
+
+    await open({ device: 'desktop', deviceInfo: PC, serverSetup: setup });
+    await screen.findByRole('heading', { name: 'Servidor encontrado' });
+    const button = screen.getByRole('button', { name: 'Crear servidor en este equipo' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Ya hay un servidor en esta red (IMPOCARIBE-7F3C): solo puede haber uno.')).not.toBeNull();
+  });
+
+  it('sin el instalador completo (ni en el teléfono) no aparece', async () => {
+    await open({ device: 'desktop', deviceInfo: PC, discovery: createSimulatedNetwork({ servers: [] }) });
+    await screen.findByRole('heading', { name: 'No se encontró el servidor' }, { timeout: 15_000 });
+    expect(screen.queryByRole('button', { name: 'Crear servidor en este equipo' })).toBeNull();
   });
 });

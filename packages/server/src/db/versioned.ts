@@ -12,7 +12,7 @@ type Versioned = PgTable & { id: AnyPgColumn; rowVersion: AnyPgColumn };
 export async function updateVersioned<T extends Versioned>(
   tx: Tx,
   table: T,
-  id: string,
+  id: string | number,
   expectedVersion: number,
   values: Partial<T['$inferInsert']>,
 ): Promise<T['$inferSelect']> {

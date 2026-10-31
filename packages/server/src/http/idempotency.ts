@@ -35,7 +35,7 @@ export function idempotencyRequest(req: Request & { rawBody?: Buffer }): Idempot
 }
 
 /** Campos que nunca entran al hash guardado: con un hash simple del cuerpo se podría adivinar la contraseña. */
-const SECRETS = new Set(['password', 'confirm', 'current', 'code', 'temporaryPassword']);
+const SECRETS = new Set(['password', 'confirm', 'current', 'code', 'temporaryPassword', 'currentCode', 'newCode']);
 
 /** El cuerpo sin los secretos: el mismo intento con otro secreto se trata como repetición, que es lo prudente. */
 function withoutSecrets(body: string): string {

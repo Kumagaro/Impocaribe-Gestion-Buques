@@ -43,6 +43,90 @@
       "when": 1792073432273,
       "tag": "0005_devices_pairing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792254311622,
+      "tag": "0006_sync_notify",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792424799938,
+      "tag": "0007_company_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792509097214,
+      "tag": "0008_catalogs",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792514641757,
+      "tag": "0009_vessels_declarations",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792679950311,
+      "tag": "0010_orders_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792689615746,
+      "tag": "0011_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792782600406,
+      "tag": "0012_backup_password",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792783221659,
+      "tag": "0013_backups",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792856631341,
+      "tag": "0014_restores",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792867935903,
+      "tag": "0015_app_releases",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793029127822,
+      "tag": "0016_release_signature",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793244031968,
+      "tag": "0017_server_state",
+      "breakpoints": true
     }
   ]
 }
