@@ -1,6 +1,8 @@
 // T038 · Aceptación de P-01, P-03 y P-04 (ui-spec) contra el servidor real, en las tres clases, con el efecto
 // comprobado en la base y en la bitácora. Cada clase usa su propio usuario (setup.e2e.ts); las pruebas van en orden
 // porque la recuperación y el bloqueo cambian su estado.
+// T138 · HU-05: entrar y ver el tablero; el bloqueo tras 5 fallos. La sesión de 24 horas la cubren las pruebas de
+// integración del servidor (con el reloj simulado).
 import { fillLogin, pairApp, readState } from './support/access';
 import { expect, test, type Sql } from './support/fixtures';
 

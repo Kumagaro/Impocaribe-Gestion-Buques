@@ -29,7 +29,10 @@ import { Power } from '../power/power.ts';
 import { lanInterface } from '../setup/facts.ts';
 import { Realtime } from '../sync/realtime.ts';
 import { CLOCK, DB, MEMORY_PROBE, SERVER_INFO } from '../tokens.ts';
-import type { MemoryProbe } from './memory.ts';
+import type { MemoryProbe, MemoryReading } from './memory.ts';
+
+/** Medir la memoria lanza un PowerShell: P-29 pide el estado cada 5 s, así que se comparte una medición por 30 s. */
+export const MEMORY_EVERY_MS = 30_000;
 import {
   hashQrToken,
   PAIRING_TTL_MS,
@@ -68,7 +71,7 @@ export class LocalController {
     const [settings] = await this.db.select({ setup: systemSettings.networkSetup }).from(systemSettings);
     const rows = await this.db.select().from(devices).where(isNull(devices.revokedAt)).orderBy(asc(devices.pairedAt));
     const connected = this.realtime.connectedDeviceIds();
-    const measured = await this.memory(this.pdf.open);
+    const measured = await this.measureMemory();
     return {
       serverId,
       version,
@@ -90,6 +93,19 @@ export class LocalController {
       })),
       memory: { budgetBytes: SERVER_MEMORY_BUDGET_BYTES, serviceBytes: process.memoryUsage().rss, ...measured },
     };
+  }
+
+  private memoryCache: { at: number; pdfOpen: boolean; reading: Promise<MemoryReading> } | null = null;
+
+  /** Una sola medición a la vez y reutilizada; se repite si pasaron 30 s o se abrió o cerró el Chromium de los PDF. */
+  private measureMemory(): Promise<MemoryReading> {
+    const pdfOpen = this.pdf.open;
+    const now = this.clock.now().getTime();
+    const cached = this.memoryCache;
+    if (cached && cached.pdfOpen === pdfOpen && now - cached.at < MEMORY_EVERY_MS) return cached.reading;
+    const reading = this.memory(pdfOpen);
+    this.memoryCache = { at: now, pdfOpen, reading };
+    return reading;
   }
 
   /** T128 · RF-INS-11: las Apoderadas activas, para elegir a quién se restablece la contraseña (P-29). */

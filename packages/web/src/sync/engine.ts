@@ -278,6 +278,8 @@ export class SyncEngine {
     socket.on('close', () => {
       // Sin conexión no se sabe cómo está la energía del servidor: la banda de conexión ya lo dice.
       this.set({ power: null });
+      // RF-CON-05: si se cayó la red, la sincronización falla ya y la banda lo dice sin esperar al sondeo de 60 s.
+      if (this.socket === socket) void this.syncNow();
       this.reconnect(socket);
     });
     socket.on('error', () => undefined);

@@ -2,6 +2,7 @@
 // vez sobre la misma base, así que cada una usa sus propios nombres y chapas: la PC da de alta un transportista con un
 // camión de dos remolques y un chofer, y comprueba que la chapa repetida se bloquea; la tablet, un cliente con dos
 // destinatarios y uno desactivado; el teléfono, un transportista y el nombre repetido.
+// T138 · HU-08 (repetidos bloqueados, parecidos avisados) y HU-18 (el carné incompleto se explica al salir del campo).
 import { fillLogin, pairApp, readState } from './support/access';
 import { expect, test } from './support/fixtures';
 
@@ -79,6 +80,18 @@ test('P-18 a P-20: altas, repetidos bloqueados y destinatarios desactivados', as
     expect(await sql("SELECT carrier_id FROM drivers WHERE national_id = '84011905548'")).toEqual([
       { carrier_id: carrier!.id },
     ]);
+
+    // HU-18: el carné incompleto se explica al salir del campo; HU-08: el repetido se dice mientras se escribe.
+    await page.getByRole('button', { name: 'Nuevo chofer' }).click();
+    await side.getByLabel('Nombre y apellidos').fill('Pedro Luis Álvarez');
+    await side.getByLabel('Carné de identidad').fill('8401190554');
+    await side.getByLabel('Carné de identidad').blur();
+    await expect(side.getByText('El carné debe tener 11 dígitos (tiene 10).')).toBeVisible();
+    await side.getByLabel('Carné de identidad').fill('84011905548');
+    await expect(
+      side.getByText('Ya existe un chofer con el carné 84011905548: Juan Carlos Miranda.').first(),
+    ).toBeVisible();
+    await expect(side.getByRole('button', { name: 'Crear chofer' })).toBeDisabled();
     return;
   }
 
@@ -121,6 +134,11 @@ test('P-18 a P-20: altas, repetidos bloqueados y destinatarios desactivados', as
   await page.getByRole('button', { name: 'Nuevo transportista' }).click();
   await sheet.getByLabel('Nombre').fill('TRANSPORTES ARIMAO  E2E.');
   await expect(sheet.getByRole('button', { name: 'Crear transportista' })).toBeDisabled();
+  // HU-08: uno parecido solo avisa; puede ser otra empresa.
+  await sheet.getByLabel('Nombre').fill('Transporte Arimao E2E');
+  await sheet.getByLabel('Nombre').blur();
+  await expect(sheet.getByText('Hay un transportista parecido: Transportes Arimao E2E')).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'Crear transportista' })).toBeEnabled();
   expect(await sql("SELECT count(*)::int AS n FROM carriers WHERE name ILIKE 'transportes arimao%'")).toEqual([
     { n: 1 },
   ]);

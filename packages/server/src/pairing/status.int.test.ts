@@ -3,10 +3,11 @@ import { SERVER_MEMORY_BUDGET_BYTES } from '@impocaribe/shared/validation';
 import { networkInterfaces } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { appHeaders, SIMULATED_MEMORY } from '../../test/app.ts';
+import { appHeaders, memoryProbes, SIMULATED_MEMORY } from '../../test/app.ts';
 import { useScenario } from '../../test/scenario.ts';
 import { config } from '../config.ts';
 import { lanInterface } from '../setup/facts.ts';
+import { MEMORY_EVERY_MS } from './local.controller.ts';
 import { parseWorkingSets } from './memory.ts';
 
 // T128 · P-29 y plan §6.2 (GET /local/status), contra PostgreSQL real: el estado del servidor para su propia pantalla,
@@ -78,6 +79,17 @@ describe('estado del servidor (P-29)', () => {
     );
     expect(expected.length).toBeGreaterThan(0);
     expect(await res.json()).toEqual(expected);
+  });
+
+  it('las peticiones seguidas comparten una medición de memoria; pasados 30 s se mide otra vez', async () => {
+    clock.advance(MEMORY_EVERY_MS);
+    const before = memoryProbes.count;
+    await Promise.all([status(), status()]);
+    await status();
+    expect(memoryProbes.count - before).toBe(1);
+    clock.advance(MEMORY_EVERY_MS);
+    await status();
+    expect(memoryProbes.count - before).toBe(2);
   });
 
   it('desde otra IP responde 403', async () => {

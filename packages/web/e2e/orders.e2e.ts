@@ -2,6 +2,8 @@
 // vez, cada una con su buque, su DM y su camión: la PC emite (con sobregiro, excepción de capacidad y camión repetido)
 // y descarga el original; la tablet corrige y anula una orden emitida por otra persona y descarga una copia; el
 // teléfono encuentra en edición un borrador que otra persona tiene abierto (EST-06).
+// T138 · HU-02 (corregir y anular con motivo; sin motivo no se anula) y HU-03 (el saldo que calcula el servidor sigue
+// a cada emisión, corrección y anulación).
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { draftsApi, ordersApi } from '../src/api/endpoints/orders';
@@ -147,6 +149,10 @@ test('P-13 a P-16: emitir, corregir, anular, descargar y borradores', async ({ o
     await page.getByRole('button', { name: 'Anular' }).click();
     const dialog = page.getByRole('dialog', { name: `Anular ${order.number}` });
     await expect(dialog.getByText(/Se repondrán 20,000 t al saldo de la DM 80432/)).toBeVisible();
+    // HU-02: sin motivo no se anula.
+    await dialog.getByRole('button', { name: 'Anular' }).click();
+    await expect(dialog.getByText('Escriba el motivo: es obligatorio y queda en la bitácora.')).toBeVisible();
+    expect(await loaded(sql, '80432')).toBe('20.000');
     await dialog.getByLabel('Motivo').fill('El camión no se presentó al puerto');
     await dialog.getByRole('button', { name: 'Anular' }).click();
     await expect(page.getByText(`Se anuló la orden ${order.number}.`)).toBeVisible();

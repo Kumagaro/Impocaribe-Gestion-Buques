@@ -178,6 +178,19 @@ describe('avisos y reconexión (plan §6.4)', () => {
     expect(server.attempts.map((t) => t - again)).toEqual([1000]);
   });
 
+  it('si se cae el WebSocket con la red caída, marca sin conexión enseguida, sin esperar al sondeo', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval'] });
+    const server = createSyncServer();
+    const { engine } = await setup(server);
+    engine.start();
+    await vi.waitFor(() => expect(server.sockets).toHaveLength(1));
+    await vi.waitFor(() => expect(engine.status().online).toBe(true));
+    server.failRate = 1;
+    server.refuse = true;
+    server.sockets[0]!.drop(1006);
+    await vi.waitFor(() => expect(engine.status().online).toBe(false));
+  });
+
   it(`sin avisos, pregunta igual cada ${POLL_MS / 1000} s`, async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval'] });
     const server = createSyncServer();

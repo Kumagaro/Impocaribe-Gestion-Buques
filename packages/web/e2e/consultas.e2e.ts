@@ -2,6 +2,7 @@
 // cada una con su buque, su DM y su camión: la PC ve en el tablero, en menos de 5 s, la orden que emite otra persona y
 // la encuentra en la lista «Hoy» (y el filtro por chofer coincide con la base); la tablet busca la orden por su número
 // y una DM de hace 14 meses solo con «Buscar en el archivo»; el teléfono filtra la bitácora por la orden.
+// T138 · HU-10: buscar la orden por su número y la DM, y su ficha.
 import { ordersApi } from '../src/api/endpoints/orders';
 import { fillLogin, pairApp, readState } from './support/access';
 import { expect, test } from './support/fixtures';

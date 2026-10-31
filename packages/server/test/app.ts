@@ -49,6 +49,9 @@ export const SIMULATED_MEMORY = { databaseBytes: 268 * 2 ** 20, pdfBytes: 180 * 
 /** T132: cuántas veces se pidió detener el servidor (RF-ENE-04). */
 export const stops = { count: 0 };
 
+/** T128: cuántas veces se midió la memoria (MEMORY_PROBE). */
+export const memoryProbes = { count: 0 };
+
 export const TEST_DEVICE = 'dispositivo-de-pruebas';
 export const deviceSecret = (id: string) => `secreto-${id}`;
 
@@ -98,10 +101,10 @@ export async function createTestApp(suite: SuiteDb, clock: Clock, controllers: T
       stops.count++;
     })
     .overrideProvider(MEMORY_PROBE)
-    .useValue(async (pdfOpen: boolean) => ({
-      databaseBytes: SIMULATED_MEMORY.databaseBytes,
-      pdfBytes: pdfOpen ? SIMULATED_MEMORY.pdfBytes : null,
-    }))
+    .useValue(async (pdfOpen: boolean) => {
+      memoryProbes.count++;
+      return { databaseBytes: SIMULATED_MEMORY.databaseBytes, pdfBytes: pdfOpen ? SIMULATED_MEMORY.pdfBytes : null };
+    })
     .compile();
   // rawBody como en producción (createApp): la firma del dispositivo y la idempotencia usan el cuerpo tal como llegó.
   const app = configureApp(

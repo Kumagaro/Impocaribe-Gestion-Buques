@@ -1151,6 +1151,12 @@ Desde aquí, **toda pantalla lee de la copia local** y toda escritura registra s
   - *Cubre:* RF-UI-01, Const. art. XIV
   - *Depende:* F1 a F11
   - *Terminado:* pasa en tres ejecuciones seguidas.
+  - *Estado (2026-10-30):* recorridos completados y en verde contra el servidor real (una ejecución):
+    - **Pantallas:** `pnpm trace` da la trazabilidad completa. P-29 tiene su E2E (`server.e2e.ts`: estado sin sesión, confirmar y rechazar solicitudes, revocar con la Apoderada). P-28 está exenta solo de E2E (NO_E2E en `pnpm trace`): crear el servidor pide el permiso de administrador de Windows; la cubren las pruebas del asistente y del ayudante y la guía manual (A1 a A13).
+    - **HU que ninguna E2E citaba, ahora cubiertas:** HU-02 (anular sin motivo no se deja) y HU-03 en `orders.e2e.ts`; HU-05 en `access.e2e.ts`; HU-06 en `offline.e2e.ts` (nuevo: sin conexión, borrador en el dispositivo y subida como privado al volver); HU-08 y HU-18 en `catalogs.e2e.ts` (carné repetido, carné de 10 dígitos, nombre parecido); HU-09 en `deadline.e2e.ts` (nuevo: el día 30 se emite, el 31 se rechaza y la DM sale vencida); HU-10 en `consultas.e2e.ts`; HU-11 en `users.e2e.ts` (nuevo: desactivar cierra sus sesiones); HU-12 en `backups.e2e.ts`.
+    - **Fuera de la E2E del navegador, con su motivo:** HU-14 (la creación real, guía manual); HU-16 (la energía real: integración de T132 y guía manual D); la sesión de 24 horas de HU-05 y AL-03 y la liberación del restante de HU-09 (dependen del reloj o de tareas cada 10 minutos: pruebas de integración).
+    - **Arreglos que salieron al escribirlas:** P-29 no cargaba en desarrollo (StrictMode descartaba las respuestas); la medición de memoria de P-29 lanzaba un PowerShell en cada petición (ahora una cada 30 s, compartida); la banda «Sin conexión» tardaba hasta 60 s en salir al caerse la red (ahora sale al cerrarse el WebSocket).
+    - **Falta:** las tres ejecuciones seguidas de la batería completa. En este equipo no se repiten (mismo criterio que T122); la CI la corre en cada envío.
 
 - [ ] **T139. Simulación de un mes.** 15 usuarios concurrentes; verificación de D1 a D15, con cortes de red aleatorios y reintentos al final de cada día simulado.
   - *Depende:* T138

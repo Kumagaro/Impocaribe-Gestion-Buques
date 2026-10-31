@@ -70,12 +70,13 @@ export function useServerStatus() {
   const address = status?.network.address ?? null;
   const port = status?.network.port ?? null;
   const alive = useRef(true);
-  useEffect(
-    () => () => {
+  // Se vuelve a marcar al montar: StrictMode (desarrollo) desmonta y monta otra vez, y sin esto se descartaría todo.
+  useEffect(() => {
+    alive.current = true;
+    return () => {
       alive.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
   const loadStatus = useCallback(async () => {
     try {

@@ -2,6 +2,8 @@
 // respaldo es una sola para el sistema, así que lo hace la PC: la define, hace un respaldo a mano y empieza a restaurarlo
 // con una contraseña equivocada, que no cambia nada. La restauración completa cierra todas las sesiones (también las de
 // las otras pruebas que corren a la vez): la cubren las pruebas de integración del servidor (restore.int.test.ts).
+// T138 · HU-12: el respaldo manual y la restauración protegida por la contraseña; la restauración completa, en
+// restore.int.test.ts.
 import { fillLogin, pairApp, readState } from './support/access';
 import { expect, test } from './support/fixtures';
 
