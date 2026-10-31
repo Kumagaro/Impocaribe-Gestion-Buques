@@ -2,12 +2,11 @@
 // trae las alertas con la app cerrada. Mientras sea así, una banda lo dice con el botón para permitirlo; al volver de
 // los ajustes de Android se comprueba otra vez.
 import { useEffect, useState } from 'react';
-import { useAppSession } from '../session/SessionProvider';
+import { useOptionalSession } from '../session/SessionProvider';
 import { Button } from '../ui/controls';
 
 export function BatteryBand() {
-  const { session } = useAppSession();
-  const battery = session.device.batteryExclusion;
+  const battery = useOptionalSession()?.device.batteryExclusion;
   const [excluded, setExcluded] = useState(true);
 
   useEffect(() => {

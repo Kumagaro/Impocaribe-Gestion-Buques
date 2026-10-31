@@ -17,6 +17,15 @@ export const NOT_WEB: Record<string, string> = {
   'P-31': 'diálogo de Windows al apagar: verificación manual en Windows 10 y 11 (T133, T143)',
 };
 
+/**
+ * Pantallas web sin E2E en el navegador de pruebas (sí tienen historias y referencias), con el motivo y lo que las
+ * cubre en su lugar.
+ */
+export const NO_E2E: Record<string, string> = {
+  'P-28':
+    'crear el servidor pide el permiso de administrador de Windows e instala servicios en la PC: cubren el asistente sus pruebas con el ayudante simulado (CreateServer.test.tsx), el ayudante sus pruebas de integración y el recorrido real la guía manual (docs/pruebas-manuales.md, T135)',
+};
+
 const pad = (n: number, width: number) => String(n).padStart(width, '0');
 
 /**
@@ -79,6 +88,8 @@ export interface TraceInput {
   stories: { path: string; text: string }[];
   /** Nombres de las referencias visuales: «<historia>--<caso>--<clase>--<tema>.png». */
   references: string[];
+  /** Pantallas exentas solo de E2E, con el motivo (NO_E2E en pnpm trace). */
+  noE2eReasons?: Record<string, string>;
 }
 
 export interface TraceReport {
@@ -88,7 +99,7 @@ export interface TraceReport {
   noE2e: string[];
   /** Pantallas sin referencias visuales, con las clases que faltan. */
   noVisual: { id: string; missing: DeviceClass[] }[];
-  /** Pantallas exentas de E2E y referencias (no son web), con el motivo. */
+  /** Pantallas exentas de E2E y referencias (no son web) o solo de E2E, con el motivo. */
   exempt: { id: string; reason: string }[];
 }
 
@@ -118,7 +129,11 @@ export function trace(input: TraceInput): TraceReport {
       report.exempt.push({ id: s.id, reason: NOT_WEB[s.id]! });
       continue;
     }
-    if (!e2e.has(s.id)) report.noE2e.push(s.id);
+    if (!e2e.has(s.id)) {
+      const reason = input.noE2eReasons?.[s.id];
+      if (reason) report.exempt.push({ id: s.id, reason });
+      else report.noE2e.push(s.id);
+    }
     const have = visual.get(s.id) ?? new Set<DeviceClass>();
     const missing = s.classes.filter((c) => !have.has(c));
     if (missing.length) report.noVisual.push({ id: s.id, missing });
@@ -154,6 +169,7 @@ if (import.meta.main) {
     tests: load(TEST),
     stories: load(/\.stories\.tsx$/),
     references: readdirSync(join(repo, 'packages/web/e2e/visual/references')),
+    noE2eReasons: NO_E2E,
   });
   const lines = [
     ...(report.untested.length
@@ -162,7 +178,7 @@ if (import.meta.main) {
     ...(report.noE2e.length ? [`Pantallas sin E2E (${report.noE2e.length}): ${report.noE2e.join(', ')}`] : []),
     ...report.noVisual.map((v) => `${v.id} sin referencias visuales en: ${v.missing.join(', ')}`),
   ];
-  for (const e of report.exempt) console.log(`${e.id} exenta: ${e.reason}.`);
+  for (const e of report.exempt) console.log(`${e.id} exenta${NO_E2E[e.id] ? ' de E2E' : ''}: ${e.reason}.`);
   if (lines.length) {
     console.error(lines.join('\n'));
     process.exit(1);

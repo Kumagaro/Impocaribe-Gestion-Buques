@@ -6,6 +6,7 @@ import '../src/screens/auth/auth.css';
 import '../src/screens/profile/profile.css';
 import '../src/screens/users/users.css';
 import '../src/screens/diagnostics/diagnostics.css';
+import '../src/screens/server/server.css';
 import '../src/screens/company/company.css';
 import '../src/screens/settings/settings.css';
 import '../src/screens/catalogs/catalogs.css';

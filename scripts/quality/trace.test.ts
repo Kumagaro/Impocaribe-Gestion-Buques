@@ -69,6 +69,13 @@ describe('informe', () => {
     });
   });
 
+  it('una pantalla exenta solo de E2E sale con su motivo y sigue necesitando sus referencias', () => {
+    const r = trace({ ...base, noE2eReasons: { 'P-28': 'pide el permiso de administrador' } });
+    expect(r.noE2e).toEqual([]);
+    expect(r.exempt.map((e) => e.id)).toEqual(['P-28', 'P-31']);
+    expect(r.noVisual).toEqual([{ id: 'P-28', missing: ['desktop'] }]);
+  });
+
   it('un requisito sin prueba, una pantalla sin E2E y una clase sin referencia se informan', () => {
     const r = trace({
       ...base,

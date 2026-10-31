@@ -8,6 +8,9 @@ export function SessionProvider({ session, children }: { session: AppSession; ch
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 }
 
+/** La sesión o null: para las bandas del armazón, que las historias muestran sin SessionProvider. */
+export const useOptionalSession = (): AppSession | null => useContext(SessionContext);
+
 export function useAppSession(): { session: AppSession; state: SessionState } {
   const session = useContext(SessionContext);
   if (!session) throw new Error('useAppSession fuera de SessionProvider');
