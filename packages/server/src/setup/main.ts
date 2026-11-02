@@ -299,6 +299,9 @@ void (async () => {
   }
   // Antes que nada (también el diario): la carpeta de datos solo para el sistema y los administradores.
   await windowsSys.lockDown(l.data);
+  // lockDown restablece los permisos de lo de dentro: la base vuelve a ser accesible para su servicio.
+  const { pgdata } = paths(l);
+  if (await windowsSys.exists(join(pgdata, 'PG_VERSION'))) await windowsSys.databaseAccess(pgdata, false);
   const progress = await progressTo(pipe);
   let outcome: Outcome;
   try {

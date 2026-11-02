@@ -2,6 +2,7 @@
 // idempotente, anota si lo que dejó es suyo y solo deshace eso: lo que ya existía (otra instalación, Reparar) se
 // conserva. Si falla a medias, limpia lo suyo antes de fallar (engine.ts). Las contraseñas de la base se generan al
 // crearla y se guardan en ProgramData\Impocaribe\servicio, con permisos solo para el sistema y los administradores.
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Step, UndoInfo } from './engine.ts';
 import {
@@ -36,6 +37,12 @@ export interface Sys {
    * en ProgramData cualquier usuario puede crear carpetas, así que no se confía en una que ya existiera.
    */
   lockDown(path: string): Promise<void>;
+  /**
+   * La base no corre como administrador: initdb se quita esos privilegios y el servicio de `pg_ctl register` es
+   * NetworkService, así que lockDown los deja fuera. Da a la carpeta de la base acceso para NetworkService y, mientras
+   * se crea (`creating`), para quien instala; sin `creating`, se lo quita y deja dueños a los administradores.
+   */
+  databaseAccess(pgdata: string, creating: boolean): Promise<void>;
   /** GET local verificado con la CA del servidor (`ca`, PEM): si respondió 200. */
   ok(url: string, ca: string): Promise<boolean>;
   secret(): string;
@@ -133,13 +140,15 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
         }
         const dataExisted = await sys.exists(l.data);
         const s: Secrets = { postgres: sys.secret(), app: sys.secret() };
-        const pwfile = join(p.serviceDir, 'pw.tmp');
+        // En la carpeta temporal de quien instala: initdb, sin privilegios de administrador, no lee la de servicio.
+        const pwfile = join(tmpdir(), `impocaribe-pw-${sys.secret()}.tmp`);
         try {
           // Primero la carpeta solo para el sistema y los administradores (aunque alguien la hubiera creado antes), y
           // después los secretos.
           await sys.lockDown(l.data);
           await sys.writeFile(secretsFile, JSON.stringify(s));
           await sys.writeFile(pwfile, s.postgres);
+          await sys.databaseAccess(p.pgdata, true);
           await sys.run(exe('initdb'), [
             '-D',
             p.pgdata,
@@ -157,6 +166,7 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
           await sys.writeFile(join(p.pgdata, 'impocaribe.conf'), postgresqlConf());
           const conf = join(p.pgdata, 'postgresql.conf');
           await sys.writeFile(conf, `${await sys.readFile(conf)}\ninclude 'impocaribe.conf'\n`);
+          await sys.databaseAccess(p.pgdata, false);
         } catch (err) {
           await sys.remove(dataExisted ? p.pgdata : l.data);
           await sys.remove(secretsFile);

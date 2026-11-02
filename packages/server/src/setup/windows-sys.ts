@@ -10,6 +10,18 @@ import type { Sys } from './steps.ts';
 
 const exec = promisify(execFile);
 
+/** NetworkService: la cuenta con que `pg_ctl register` deja el servicio de la base. */
+const NETWORK_SERVICE = '*S-1-5-20';
+const ADMINISTRATORS = '*S-1-5-32-544';
+
+/** El SID de quien ejecuta el ayudante (el que dio el permiso de Windows). */
+async function installerSid(): Promise<string> {
+  const { stdout } = await exec('whoami', ['/user', '/fo', 'csv', '/nh'], { windowsHide: true });
+  const sid = /"(S-1-[\d-]+)"/.exec(stdout)?.[1];
+  if (!sid) throw new Error(`No se pudo saber qué usuario instala: ${stdout.trim()}`);
+  return sid;
+}
+
 function run(file: string, args: string[], options: { env?: Record<string, string>; input?: string } = {}) {
   return new Promise<string>((resolve, reject) => {
     const child = spawn(file, args, { env: { ...process.env, ...options.env }, windowsHide: true });
@@ -62,6 +74,19 @@ export const windowsSys: Sys = {
     await run('icacls', [path, '/inheritance:r', '/grant:r', '*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F']);
     // Lo de dentro pierde sus permisos propios y hereda solo estos (sin nada dentro, icacls no tiene qué hacer).
     await run('icacls', [`${path}\\*`, '/reset', '/T', '/C']).catch(() => undefined);
+  },
+  async databaseAccess(pgdata, creating) {
+    await mkdir(pgdata, { recursive: true });
+    // Solo atravesar la carpeta de datos hasta la de la base (sin herencia: no ve lo demás).
+    await run('icacls', [dirname(pgdata), '/grant', `${NETWORK_SERVICE}:(RX)`]);
+    await run('icacls', [pgdata, '/grant', `${NETWORK_SERVICE}:(OI)(CI)F`]);
+    const me = `*${await installerSid()}`;
+    if (creating) {
+      await run('icacls', [pgdata, '/grant', `${me}:(OI)(CI)F`]);
+      return;
+    }
+    await run('icacls', [pgdata, '/remove:g', me]);
+    await run('icacls', [pgdata, '/setowner', ADMINISTRATORS, '/T', '/C']);
   },
   ok(url, ca) {
     return new Promise((resolve) => {

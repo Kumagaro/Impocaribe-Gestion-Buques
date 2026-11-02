@@ -13,6 +13,8 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
   const services = new Set<string>();
   const running = new Set<string>();
   const rules = new Set<string>();
+  /** En orden: los permisos de la base y cada initdb, con el archivo de la contraseña que lee. */
+  const access: string[] = [];
   const power: Record<string, [number, number]> = { STANDBYIDLE: [1800, 900], HIBERNATEIDLE: [0, 3600] };
   const under = (dir: string) => [...files.keys()].filter((k) => k === dir || k.startsWith(`${dir}\\`));
   if (options.existingInstall) {
@@ -29,6 +31,7 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
       fail(file, args);
       const name = file.split('\\').pop()!;
       if (name === 'initdb.exe') {
+        access.push(`initdb ${args.find((a) => a.startsWith('--pwfile='))!}`);
         files.set(`${args[1]}\\PG_VERSION`, '16');
         files.set(`${args[1]}\\postgresql.conf`, '# por defecto');
       } else if (name === 'pg_ctl.exe' && args[0] === 'register') services.add(SERVICES.database);
@@ -86,6 +89,9 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
       files.set(path, text);
     },
     async lockDown() {},
+    async databaseAccess(pgdata, creating) {
+      access.push(`${creating ? 'crear' : 'servicio'} ${pgdata}`);
+    },
     async ok() {
       return running.has(SERVICES.server);
     },
@@ -105,7 +111,7 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
       saved = JSON.parse(JSON.stringify(d)) as JournalData;
     },
   };
-  return { sys, snapshot, journal, files, services, rules, power, running };
+  return { sys, snapshot, journal, files, services, rules, power, running, access };
 }
 
 const input = { bundle: BUNDLE, network: 'hotspot' as const, codeHash: '$argon2id$v=19$m=65536,t=3,p=1$c2Fs$aGFzaA' };
@@ -157,6 +163,19 @@ describe('crear el servidor', () => {
     expect(await undoSteps('create', steps, pc.journal, () => undefined)).toEqual({ ok: true });
     // Un paso que falla a medias limpia lo suyo (la energía, por ejemplo, ya había cambiado un valor).
     expect(pc.snapshot()).toEqual(before);
+  });
+
+  it('initdb corre sin privilegios de administrador: lee la contraseña fuera de la carpeta cerrada y la base queda para su servicio', async () => {
+    const pc = fakePc();
+    await runSteps('create', createSteps(pc.sys, l, input), pc.journal, () => undefined);
+    const pgdata = `${l.data}\\pgdata`;
+    expect(pc.access).toHaveLength(3);
+    expect(pc.access[0]).toBe(`crear ${pgdata}`);
+    expect(pc.access[1]).toMatch(/^initdb --pwfile=/);
+    expect(pc.access[1]).not.toContain(l.data);
+    expect(pc.access[2]).toBe(`servicio ${pgdata}`);
+    // El archivo de la contraseña no queda en ningún sitio.
+    expect([...pc.files.keys()].filter((k) => k.includes('impocaribe-pw-'))).toEqual([]);
   });
 
   it('lo que ya existía (otra instalación) se conserva al deshacer', async () => {
