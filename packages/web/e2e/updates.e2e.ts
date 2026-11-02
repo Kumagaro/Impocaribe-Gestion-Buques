@@ -1,9 +1,10 @@
 // T114 · P-26 Versiones de la app contra el servidor real: publicar con el archivo en multipart, verlo en la lista y
 // descargarlo con su huella, y marcar la mínima. Las versiones y la mínima son una sola para todo el sistema y las otras
-// pruebas corren a la vez: lo hace la PC, con números que no dejan fuera a nadie (la app de las pruebas es la 0.0.0) y
-// sin publicar una de Windows o Android más nueva (que mostraría AL-15 en las demás).
+// pruebas corren a la vez: lo hace la PC, con números que no dejan fuera a nadie (la de Windows es la misma que la app
+// de las pruebas, APP_VERSION) y sin publicar una de Windows o Android más nueva (que mostraría AL-15 en las demás).
 import { createHash } from 'node:crypto';
 import { fillLogin, pairApp, readState } from './support/access';
+import { APP_VERSION } from './support/api';
 import { SERVER_URL } from './support/env';
 import { expect, test } from './support/fixtures';
 
@@ -19,7 +20,7 @@ test('P-26: publicar el WebView, descargarlo y marcar la mínima de Windows', as
   await fillLogin(page, apoderada.username, apoderada.password);
   await expect(page.getByRole('heading', { name: 'Tablero' }).first()).toBeVisible();
   await page.evaluate(() => (location.hash = '#/versiones'));
-  await expect(page.getByText('Esta PC: 0.0.0 · al día')).toBeVisible();
+  await expect(page.getByText(`Esta PC: ${APP_VERSION} · al día`)).toBeVisible();
 
   // Publicar: la versión mal escrita se marca; con todo bien, sube el archivo.
   await page.getByRole('button', { name: 'Publicar una versión' }).click();
@@ -54,18 +55,20 @@ test('P-26: publicar el WebView, descargarlo y marcar la mínima de Windows', as
   // Una de Windows igual a la de la app y marcarla como mínima: no deja fuera a nadie.
   await page.getByRole('button', { name: 'Publicar una versión' }).click();
   await dialog.getByLabel('Plataforma').selectOption('windows');
-  await dialog.getByLabel('Versión').fill('0.0.0');
+  await dialog.getByLabel('Versión').fill(APP_VERSION);
   await dialog
     .getByLabel('Archivo')
-    .setInputFiles({ name: 'impocaribe-0.0.0.exe', mimeType: 'application/octet-stream', buffer: EXE });
+    .setInputFiles({ name: `impocaribe-${APP_VERSION}.exe`, mimeType: 'application/octet-stream', buffer: EXE });
   await dialog.getByRole('button', { name: 'Publicar' }).click();
-  await expect(page.getByText('Se publicó la 0.0.0. Los dispositivos verán el aviso.')).toBeVisible();
-  await page.getByRole('button', { name: 'Marcar como mínima la 0.0.0' }).click();
-  const confirm = page.getByRole('dialog', { name: 'Marcar la 0.0.0 de Windows (instalador ligero) como mínima' });
+  await expect(page.getByText(`Se publicó la ${APP_VERSION}. Los dispositivos verán el aviso.`)).toBeVisible();
+  await page.getByRole('button', { name: `Marcar como mínima la ${APP_VERSION}` }).click();
+  const confirm = page.getByRole('dialog', {
+    name: `Marcar la ${APP_VERSION} de Windows (instalador ligero) como mínima`,
+  });
   await expect(confirm.getByText('Ahora no hay ningún dispositivo con una versión anterior.')).toBeVisible();
   await confirm.getByRole('button', { name: 'Marcar como mínima' }).click();
-  await expect(page.getByText('La 0.0.0 es ahora la versión mínima.')).toBeVisible();
-  await expect(page.getByRole('row', { name: 'Versión 0.0.0' })).toContainText('Mínima');
+  await expect(page.getByText(`La ${APP_VERSION} es ahora la versión mínima.`)).toBeVisible();
+  await expect(page.getByRole('row', { name: `Versión ${APP_VERSION}` })).toContainText('Mínima');
   expect(await sql(`SELECT action, ok FROM audit_log WHERE action LIKE 'release.%' ORDER BY id`)).toEqual([
     { action: 'release.publish', ok: true },
     { action: 'release.publish', ok: true },

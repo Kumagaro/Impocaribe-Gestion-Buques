@@ -3,9 +3,13 @@
 import { createApiClient } from '../../src/api/client';
 import { postLogin } from '../../src/api/endpoints/auth';
 import { postPairSelf } from '../../src/api/endpoints/pairing';
+import { readFileSync } from 'node:fs';
 import { SERVER_URL } from './env';
 
-const APP_VERSION = '0.0.0';
+/** La de la app que se prueba: así la mínima que marque una prueba no deja fuera a los dispositivos de las demás. */
+export const APP_VERSION = (
+  JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as { version: string }
+).version;
 
 function client(device: { id: string; secret: string } | null, token: () => string | null = () => null) {
   return createApiClient({

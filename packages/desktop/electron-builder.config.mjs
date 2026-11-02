@@ -35,6 +35,8 @@ export default {
   productName: 'Órdenes de Carga',
   executableName: 'impocaribe',
   directories: { output: `release/${flavor}`, buildResources: 'resources' },
+  // El Electron ya instalado: sin esto, electron-builder pide a GitHub la lista de sumas y sin internet no construye.
+  electronDist: 'node_modules/electron/dist',
   // Solo lo que corre: el código compilado (sin mapas ni tipos), el logo y la clave pública de firma.
   files: [
     'package.json',
