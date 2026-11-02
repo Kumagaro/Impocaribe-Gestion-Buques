@@ -96,7 +96,23 @@ mkdirSync(out, { recursive: true });
 // El servidor compilado, con shared y solo las dependencias de producción.
 run('pnpm', ['--filter', '@impocaribe/shared', 'build']);
 run('pnpm', ['--filter', '@impocaribe/server', 'build']);
-run('pnpm', ['--filter', '@impocaribe/server', 'deploy', '--prod', join(out, 'server')]);
+// Dependencias planas, como npm (hoisted): con el diseño de pnpm son enlaces (junctions) a rutas de este equipo, y el
+// instalador los copia como carpetas sueltas sin las dependencias de cada una (en la 1.0.1 faltaba decimal.js).
+run('pnpm', [
+  '--filter',
+  '@impocaribe/server',
+  'deploy',
+  '--prod',
+  '--config.node-linker=hoisted',
+  join(out, 'server'),
+]);
+const links = readdirSync(join(out, 'server'), { recursive: true, withFileTypes: true }).filter((e) =>
+  e.isSymbolicLink(),
+);
+if (links.length > 0)
+  throw new Error(
+    `El servidor lleva enlaces que el instalador no conserva: ${join(links[0].parentPath, links[0].name)}`,
+  );
 
 mkdirSync(join(out, 'node'));
 cpSync(join(nodeDir, 'node.exe'), join(out, 'node', 'node.exe'));
