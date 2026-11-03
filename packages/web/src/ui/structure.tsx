@@ -392,15 +392,18 @@ export function Sidebar({
   return (
     <nav aria-label="Principal" className="ui-sidebar">
       {header}
-      {items.map((it, i) => (
-        <SidebarEntry
-          key={it.id}
-          item={it}
-          groupStart={it.group !== undefined && it.group !== items[i - 1]?.group}
-          current={current}
-          onNavigate={onNavigate}
-        />
-      ))}
+      {/* Solo la lista se desplaza: el logo (header) y el pie quedan fijos aunque haya muchas secciones. */}
+      <div className="ui-sidebar__list">
+        {items.map((it, i) => (
+          <SidebarEntry
+            key={it.id}
+            item={it}
+            groupStart={it.group !== undefined && it.group !== items[i - 1]?.group}
+            current={current}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
       {footer && <div className="ui-sidebar__foot">{footer}</div>}
     </nav>
   );

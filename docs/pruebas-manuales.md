@@ -56,6 +56,12 @@ Para la prueba de **actualizar** (A9) hace falta un **segundo paquete con una ve
 3. **Compruebe las huellas.** En PowerShell, dentro de la carpeta del paquete:
    `Get-FileHash .\impocaribe-completo-<versión>.exe -Algorithm SHA256`.
    **Debe** dar lo mismo que el `.sha256` del mismo nombre. Si no coincide, no lo instale: el archivo está dañado.
+4. **En la PC servidor, firewalls y VPN aparte del de Windows.** La creación del servidor abre sus puertos en el firewall de Windows, pero un firewall instalado aparte (simplewall, el de un antivirus…) o una VPN con «kill switch» siguen bloqueando a los demás equipos: los teléfonos se quedan en «Buscando el servidor». Si la PC tiene uno, permita en él las conexiones **entrantes desde la red local** a `C:\Program Files\Impocaribe\Server\node\node.exe`, en estos puertos:
+   - **TCP 8443:** el servidor;
+   - **UDP 47800:** la búsqueda de las apps;
+   - **UDP 5353:** el anuncio mDNS.
+
+   En simplewall: una regla de usuario por puerto (dirección entrante, acción permitir, aplicación `node.exe`). En una VPN: active «Permitir conexiones LAN» o desconéctela del todo. **Para comprobarlo**, con un teléfono en la misma wifi abra en Chrome `https://<dirección de la PC>:8443/api/v1/health` (la dirección sale en Estado del servidor); tras el aviso de seguridad debe verse `"status":"ok"`. Si no carga, algo en la PC o en la red bloquea (vea también C8).
 
 ---
 

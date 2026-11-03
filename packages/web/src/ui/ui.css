@@ -890,6 +890,9 @@
   align-items: center;
   gap: 4px;
   width: 88px;
+  /* Con muchas secciones se desplaza la barra, no la página. */
+  min-height: 0;
+  overflow-y: auto;
   padding: 12px 0;
   background: var(--surface);
   border-right: 1px solid var(--line);
@@ -923,9 +926,19 @@
   flex-direction: column;
   gap: 2px;
   width: 228px;
+  min-height: 0;
+  overflow: hidden;
   padding: 14px 10px;
   background: var(--surface);
   border-right: 1px solid var(--line);
+}
+.ui-sidebar__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .ui-sidebar__group {
   padding: 10px 10px 3px;
