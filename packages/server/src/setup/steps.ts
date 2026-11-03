@@ -235,6 +235,9 @@ export function createSteps(sys: Sys, l: Layout, input: CreateInput): Step[] {
           `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}') THEN ` +
             `CREATE ROLE ${DB_USER} LOGIN PASSWORD '${s.app.replace(/'/g, "''")}'; END IF; END $$`,
         );
+        // Las migraciones (las aplica este usuario, dueño de la base) crean el rol impocaribe_app. En PostgreSQL 16,
+        // CREATEROLE solo deja crear roles y administrar los que él crea; la app trabaja como impocaribe_app, sin él.
+        await psql(`ALTER ROLE ${DB_USER} CREATEROLE`);
         if ((await psql(`SELECT 1 FROM pg_database WHERE datname = '${DATABASE}'`)).trim() !== '1')
           await psql(`CREATE DATABASE ${DATABASE} OWNER ${DB_USER}`);
         if (input.move) {

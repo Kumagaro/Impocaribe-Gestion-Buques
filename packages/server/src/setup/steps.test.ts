@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runSteps, undoSteps, type Journal, type JournalData } from './engine.ts';
-import { layout, SERVICES } from './layout.ts';
+import { DB_USER, layout, SERVICES } from './layout.ts';
 import { acDc, createSteps, uninstallSteps, updateKeep, updateSteps, type Sys } from './steps.ts';
 
 // T126 · plan §10.3: los pasos de «Crear servidor» sobre una PC simulada que reproduce el efecto de cada comando. Un
@@ -15,6 +15,8 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
   const rules = new Set<string>();
   /** En orden: los permisos de la base y cada initdb, con el archivo de la contraseña que lee. */
   const access: string[] = [];
+  /** Lo que se ejecutó con psql, en orden. */
+  const sql: string[] = [];
   const power: Record<string, [number, number]> = { STANDBYIDLE: [1800, 900], HIBERNATEIDLE: [0, 3600] };
   const under = (dir: string) => [...files.keys()].filter((k) => k === dir || k.startsWith(`${dir}\\`));
   if (options.existingInstall) {
@@ -36,8 +38,10 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
         files.set(`${args[1]}\\postgresql.conf`, '# por defecto');
       } else if (name === 'pg_ctl.exe' && args[0] === 'register') services.add(SERVICES.database);
       else if (name === 'pg_ctl.exe' && args[0] === 'unregister') services.delete(SERVICES.database);
-      else if (name === 'psql.exe') return args.at(-1)!.startsWith('SELECT 1 FROM pg_database') ? '' : '';
-      else if (name === 'node.exe' && args[1] === 'identity') {
+      else if (name === 'psql.exe') {
+        sql.push(args.at(-1)!);
+        return '';
+      } else if (name === 'node.exe' && args[1] === 'identity') {
         const id = `${l.data}\\identity\\identity.json`;
         const created = !files.has(id);
         files.set(id, '{"name":"IMPOCARIBE-7F3C"}');
@@ -111,7 +115,7 @@ function fakePc(options: { existingInstall?: boolean; fail?: (file: string, args
       saved = JSON.parse(JSON.stringify(d)) as JournalData;
     },
   };
-  return { sys, snapshot, journal, files, services, rules, power, running, access };
+  return { sys, snapshot, journal, files, services, rules, power, running, access, sql };
 }
 
 const input = { bundle: BUNDLE, network: 'hotspot' as const, codeHash: '$argon2id$v=19$m=65536,t=3,p=1$c2Fs$aGFzaA' };
@@ -176,6 +180,12 @@ describe('crear el servidor', () => {
     expect(pc.access[2]).toBe(`servicio ${pgdata}`);
     // El archivo de la contraseña no queda en ningún sitio.
     expect([...pc.files.keys()].filter((k) => k.includes('impocaribe-pw-'))).toEqual([]);
+  });
+
+  it('el usuario de la base puede crear el rol de la app que crean las migraciones (CREATEROLE)', async () => {
+    const pc = fakePc();
+    await runSteps('create', createSteps(pc.sys, l, input), pc.journal, () => undefined);
+    expect(pc.sql).toContain(`ALTER ROLE ${DB_USER} CREATEROLE`);
   });
 
   it('lo que ya existía (otra instalación) se conserva al deshacer', async () => {
